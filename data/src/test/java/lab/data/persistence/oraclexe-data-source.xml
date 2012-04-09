@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oracle:oracle-connection-pool-data-source xmlns:oracle="java://oracle.jdbc.pool">
+    <string driver-type="thin"/>
+    <string server-name="localhost"/>
+    <integer port-number="1521"/>
+    <string database-name="XE"/>
+    <string user="HR"/>
+    <string password="hr"/>
+</oracle:oracle-connection-pool-data-source>
+

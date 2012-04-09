@@ -1,0 +1,52 @@
+Assemply Instructions
+---------------------
+
+    <?assemble @as="property"?>
+
+	- inject the containing object as "property" into its parent (setProperty or addProperty)
+
+    <?assemble @id="id"?>
+
+	- store the containing object under name "id" in the context
+
+    <?assemble name="value"?>
+
+    - add "value" as an addtional argument during injection
+
+Primitive Objects
+-----------------
+
+    <type attribute-name="value"/>
+
+where type is one of
+
+    boolean
+    byte
+    double
+    float
+    integer
+    long
+    short
+    string
+
+In this case, the property is injected using the name of the single attribute. This is equivalent to
+
+    <type value="value"><?assemble @as="attribute-name"?></type>
+
+Array Objects
+-------------
+
+    Use "..." immediately after type name to denote an array object.
+
+    <type...>
+        <?assemble @as="name"?>
+        <type .. />
+        <type .. />
+        ..
+    </type...>
+
+
+Generics
+--------
+
+    ?

@@ -1,0 +1,14 @@
+Pre-conversion Validation
+=========================
+
+Carried out against the string
+
+Conversion
+==========
+
+Conversion from string to a value of the target type
+
+Post-conversion Validation
+==========================
+
+Carried out against the converted value

@@ -1,0 +1,78 @@
+Data Association
+
+{
+    if (data({ ... }) {
+        if (data( ... )) {
+            if (data( ... )) {
+                DataCollection.addQuery("ShopingCartByCustomerAccount");
+            } else {
+                DataCollection.addQuery("ShopingCartByCustomerName");
+            }
+        } else {
+            DataCollection.addQuery("ShopingCartBySession");
+        }
+    } else {
+        DataCollection.addQuery("ShopingCartByTimestamp");
+    }
+
+    DataCollection.addQuery("CustomerInfo");
+}
+
+
+Data Perservation
+
+<init>
+
+    Strategy - A tree consisting of 'one-to-one' or 'one-to-many' relationships that defines 'practiced' update/insert paths
+
+        Notes:
+
+            - operations always start with root, but may terminate before reaching a leaf
+            - operations must follow the order: select, update, insert.
+
+        Examples:
+
+            - "customer" ::=
+                user_account 1<=>1 user_preference
+                             1<=>* address 1<=>* billing
+                             1<=>* billing
+
+                <strategy name="customer" table="user_account">
+                    <one table="user_preference"/>
+                    <many table="address">
+                        <many table="billing"/>
+                    </many>
+                    <many table="billing"/>
+                </strategy>
+
+            - "shopping" ::=
+                user_account 1<=>* order 1<=>* order_item *<~>1 merchandise
+                                         1<=>* payment *<~>1 billing
+            - "stocking" ::= products -> inventory
+
+    StorageModel.addStrategy("shopping").addStrategy("stocking").addTable(...);
+
+    StorageStrategy CreateOrder = StorageStrategy.for(PlaceOrder.class)
+        .update("memberpref", UserInformation.class)
+        .insert("purchase", PurchaseOrder.class)
+        .insert("purchase_item", OrderItem[].class);
+
+    ...
+
+    CreateOrder.execute(order, user, order, order.items);
+
+<preservation>
+
+    getDataStore().newBatchJob(data).update("department").insert("employee").execute();
+
+
+    * Shopping Cart
+
+    dataStore().newBatchJob(data)   // common data is in 'data'
+        .select("user_account")
+        .update("user_preference")  // user info in 'data'
+        .insert("order", data.order)   // order info in 'data' and 'data.order'
+        .insert("order_item", data.order, data.order.items) // items are in data, data.order, data.order.items
+            // data.order.items being an array causes multiple inserts
+        .execute();
+

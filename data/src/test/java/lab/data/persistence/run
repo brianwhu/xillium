@@ -1,0 +1,8 @@
+#!/bin/sh
+
+case $1 in
+-v) opt=$1; shift;;
+*) ;;
+esac
+
+java -cp ../lib/xillium-base.jar\;../lib/xillium-data.jar\;d:/software/ojdbc6.jar\;. lab/persistence/DataAccess $opt lab/persistence/oraclexe-data-source.xml lab/persistence/queries?.xml $*

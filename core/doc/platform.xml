@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xillium:platform xmlns:xillium="java://org.xillium.core.platform">
+    <service name="describe">
+        <request class="org.xillium.core.service.describe.DescribeRequest"/>
+        <acquire model=/>
+        <action/>
+        <preservation/>
+        <reflection/>
+    </service>
+</xillium:platform>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persist:persistence-strategies xmlns:persist="java://org.xillium.data.persistence.strategy">
+    <persistence-strategy name="Membership.CREATE">
+        <insert table="membership">
+            <class value="java:lab.data.Member"/>
+        </insert>
+        <insert table="memberpref">
+            <class value="java:lab.data.Member"/>
+        </insert>
+    </persistence-strategy>
+    <persistence-strategy name="Membership.UPDATE">
+        <update table="memberpref">
+            <class value="java:lab.data.Member"/>
+        </update>
+    </persistence-strategy>
+    <persistence-strategy name="ShoppingCart">
+        <update table="memberpref">
+            <class value="java:lab.data.ShoppingCartCreate"/>
+        </update>
+<!--
+        <insert table="purchase">
+            <class value="java:lab.data.Cart"/>
+        </insert>
+-->
+        <insert table="purchase_item">
+            <class value="java:lab.data.Cart[]"/>
+        </insert>
+    </persistence-strategy>
+</persist:persistence-strategies>
+

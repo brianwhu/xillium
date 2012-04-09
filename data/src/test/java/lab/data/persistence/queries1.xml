@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lab:storage-configuration xmlns:persist="java://org.xillium.data.persistence" xmlns:lab="java://lab.persistence">
+    <persist:parametric-query params="aLocationId:NUMERIC"><?assemble name="DepartmentsByLocation"?>
+        SELECT
+            D.DEPARTMENT_ID, DEPARTMENT_NAME, FIRST_NAME||' '||LAST_NAME DEPARTMENT_MANAGER
+        FROM
+            DEPARTMENTS D, EMPLOYEES E
+        WHERE
+            LOCATION_ID = ? AND D.MANAGER_ID = E.EMPLOYEE_ID
+        ORDER BY
+            DEPARTMENT_NAME
+    </persist:parametric-query>
+</lab:storage-configuration>
+

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lab:storage-configuration xmlns:persist="java://org.xillium.data.persistence" xmlns:lab="java://lab.persistence">
+    <persist:parametric-query params="aSalary:NUMERIC"><?assemble name="EmployeesWithSalaryAbove"?>
+        SELECT * FROM EMPLOYEES WHERE SALARY >= ? ORDER BY LAST_NAME
+    </persist:parametric-query>
+</lab:storage-configuration>
+

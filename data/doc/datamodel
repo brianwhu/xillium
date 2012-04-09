@@ -1,0 +1,41 @@
+Persistent Objects
+
+
+    ARTIFACT
+      a_serial      int     -- key
+      a_identity    vchar   -- artifact identity
+      a_revision    int     -- revision level default (-1)
+      a_title       vchar   -- artifact title
+      a_class       vchar   -- subclass table name
+      a_security    vchar   -- security tagging
+      a_description vchar
+      a_created     date
+      a_creator     vchar
+      a_updated     date
+
+    MEDIA
+      a_sequence (Key)
+      m_file_name
+      m_mime
+    
+Custom Object Type
+
+    Books ->
+
+    BOOK (A+R+C)
+      aSerial
+      bAuthor
+      bPublisher
+      bVersion
+
+
+Book.insert :=
+
+    INSERT ALL
+    INTO ARTIFACT (a_serial, aTitle, aOwner, aType, aClass, aCreateDate) VALUES(?, ?, ?, ?, ?, ?)
+    INTO REVISION (aSerial, rRake, rDate) VALUES(?, ?)
+    INTO MEDIA (cFileName, cExtension, cFormat) VALUES(?, ?, ?)
+    INTO BOOK (bAuthor, bPublish, bVersion) VALUES(?, ?, ?)
+
+Book.revise :=
+

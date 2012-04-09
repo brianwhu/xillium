@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<swing:j-frame title="UIM" xmlns:swing="java://javax.swing" xmlns:js="java://lab.uim.js">
+    <integer default-close-operation="java:javax.swing.JFrame.EXIT_ON_CLOSE"/>
+    <class class="java:java.util.List"/> <!-- this is not to be used -->
+    <j-menu-bar><?assemble position="java:java.awt.BorderLayout.NORTH"?>
+        <j-menu text="File">
+            <j-menu-item text="Open">
+                <js:javascript>
+                    <swing:j-file-chooser xmlns:fc="java://javax.swing.filechooser"><?assemble id="filechooser"?>
+                    	<string...><?assemble @id="ext.images"?>
+                    		<string value="gif"/>
+                    		<string value="png"/>
+                    		<string value="jpg"/>
+                    	</string...>
+                        <fc:file-name-extension-filter desc="Images" ext="java:$ext.images">
+                            <?assemble @as="ChoosableFileFilter"?>
+                        </fc:file-name-extension-filter>
+                    	<string...><?assemble @id="ext.docs"?>
+                    		<string value="doc"/>
+                    		<string value="pdf"/>
+                    		<string value="ppt"/>
+                    	</string...>
+                        <fc:file-name-extension-filter desc="Documents" ext="java:$ext.docs">
+                            <?assemble @as="ChoosableFileFilter"?>
+                        </fc:file-name-extension-filter>
+                    </swing:j-file-chooser>
+                    if (filechooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                        alert(filechooser.getSelectedFile().getName());
+                    }
+                </js:javascript>
+            </j-menu-item>
+            <j-menu-item text="Close"/>
+            <j-separator/>
+            <j-menu-item text="Exit">
+                <js:javascript>
+                    java.lang.System.exit(0);
+                </js:javascript>
+            </j-menu-item>
+        </j-menu>
+        <j-menu text="Help">
+            <j-menu-item text="Contents"/>
+            <j-separator/>
+            <j-menu-item text="About"/>
+        </j-menu>
+    </j-menu-bar>
+<j-split-pane orientation="java:javax.swing.JSplitPane.HORIZONTAL_SPLIT">
+<?assemble position="java:java.awt.BorderLayout.CENTER"?>
+    <j-scroll-pane><?assemble position="java:javax.swing.JSplitPane.LEFT"?>
+        <integer vertical-scroll-bar-policy="java:javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS"/>
+        <integer horizontal-scroll-bar-policy="java:javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED"/>
+        <j-viewport><?assemble @as="Viewport"?>
+            <j-tree xmlns:tree="java://javax.swing.tree">
+                <tree:default-mutable-tree-node value="Connections" has-child="true"><?assemble @id="tree.root"?>
+                </tree:default-mutable-tree-node>
+                <tree:default-tree-model root="java:$tree.root"><?assemble @as="Model"?></tree:default-tree-model>
+            </j-tree>
+        </j-viewport>
+    </j-scroll-pane>
+    <j-scroll-pane><?assemble position="java:javax.swing.JSplitPane.RIGHT"?>
+        <integer vertical-scroll-bar-policy="java:javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS"/>
+        <integer horizontal-scroll-bar-policy="java:javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED"/>
+        <j-viewport><?assemble @as="Viewport"?> 
+            <j-table rows="20" cols="6">
+            </j-table>
+        </j-viewport>
+    </j-scroll-pane>
+</j-split-pane>
+    <j-label text="Ready"><?assemble position="java:java.awt.BorderLayout.SOUTH"?></j-label>
+</swing:j-frame>
+

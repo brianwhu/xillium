@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<derby:client-data-source40 xmlns:derby="java://org.apache.derby.jdbc">
+    <string server-name="localhost"/>
+    <integer port-number="1527"/>
+    <string database-name="sun-appserv-samples"/>
+    <string user="APP"/>
+    <string password="APP"/>
+    <string create-database="create"/>
+</derby:client-data-source40>
+
