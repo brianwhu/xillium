@@ -1,5 +1,5 @@
-# Compiled source #
-###################
+# Compiled files #
+##################
 *.com
 *.class
 *.dll
@@ -24,8 +24,10 @@
 
 # Logs, temporaries, and databases #
 ####################################
+*.lck
 *.log
 *.swp
+*.tmp
 
 # OS generated files #
 ######################
