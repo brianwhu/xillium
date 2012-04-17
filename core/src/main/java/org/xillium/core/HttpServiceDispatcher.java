@@ -12,11 +12,11 @@ import org.json.*;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
-//import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 //import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-//import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.InputStreamResource;
 //import org.springframework.context.ApplicationContext;
-//import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -27,7 +27,6 @@ import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
 import org.xillium.core.conf.*;
-//import org.xillium.core.persistence.*;
 
 
 /**
@@ -42,14 +41,13 @@ public class HttpServiceDispatcher extends HttpServlet {
     private static final File TEMPORARY = null;
     private static final Logger _logger = Logger.getLogger(HttpServiceDispatcher.class.getName());
 
-    private final Map<String, Service.Bean> _services = new HashMap<String, Service.Bean>();
+    private final Map<String, Service> _services = new HashMap<String, Service>();
     private final Map<String, ParametricStatement> _storages = new HashMap<String, ParametricStatement>();
     private final org.xillium.data.validation.Dictionary _dict = new org.xillium.data.validation.Dictionary();
 
     // Wired in spring application context
     private WebApplicationContext _wac;
     private DataSourceTransactionManager _txm;
-    //private Persistence _persistence;
     private ExecutionEnvironment _env;
 
     public HttpServiceDispatcher() {
@@ -75,7 +73,7 @@ public class HttpServiceDispatcher extends HttpServlet {
         DataBinder binder = new DataBinder();
 
         try {
-            Service.Bean service;
+            Service service;
             String id;
 
             _logger.log(Level.INFO, "Request URI = " + req.getRequestURI());
@@ -83,7 +81,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             if (m.matches()) {
                 id = m.group(1);
                 _logger.log(Level.INFO, "Request service id = " + id);
-                service = (Service.Bean)_services.get(id);
+                service = (Service)_services.get(id);
                 if (service == null) {
                     _logger.log(Level.WARNING, "Request not recognized");
                     throw new RuntimeException("Request not recognized"); // should be 404
@@ -141,6 +139,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 
             // TODO: pre-service filter
 
+/*
             if (service instanceof Service.NonTransactional) {
                 binder = service.run(binder, _env);
             } else {
@@ -168,6 +167,11 @@ public class HttpServiceDispatcher extends HttpServlet {
                 _logger.log(Level.INFO, "commit");
                 _txm.commit(status);
             }
+*/
+            binder = service.run(binder, _env);
+
+            // TODO: post-service filter
+
         } catch (Throwable x) {
             _logger.log(Level.WARNING, "Exception caught in dispatcher", x);
 //            StringWriter sw = new StringWriter();
@@ -233,12 +237,13 @@ public class HttpServiceDispatcher extends HttpServlet {
                         String name = jis.getManifest().getMainAttributes().getValue(MODULE_NAME);
                         if (name != null) { // Xillium Module
                             factory.setBurnedIn(StorageConfiguration.class, _storages, name);
-                            factory.setBurnedIn(ServiceConfiguration.class, _services, name);
+                            //factory.setBurnedIn(ServiceConfiguration.class, _services, name);
                             JarEntry entry;
                             while ((entry = jis.getNextJarEntry()) != null) {
                                 if (SERVICE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Services:" + jar + ":" + entry.getName());
-                                    assembler.build(getJarEntryAsStream(jis));
+                                    //assembler.build(getJarEntryAsStream(jis));
+                                    createGenericApplicationContext(name, getJarEntryAsStream(jis));
                                 } else if (STORAGE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Storages:" + jar + ":" + entry.getName());
                                     assembler.build(getJarEntryAsStream(jis));
@@ -261,15 +266,20 @@ public class HttpServiceDispatcher extends HttpServlet {
         }
     }
 
-/*
-    private GenericApplicationContext createGenericApplicationContext(WebApplicationContext wac) {
-        GenericApplicationContext gac = new GenericApplicationContext(wac);
+    private GenericApplicationContext createGenericApplicationContext(String name, InputStream stream) {
+        GenericApplicationContext gac = new GenericApplicationContext(_wac);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
-        reader.loadBeanDefinitions(new InputStreamResource(this.getClass().getResourceAsStream("/module-template.xml")));
+        reader.loadBeanDefinitions(new InputStreamResource(stream));
+        gac.refresh();
+
+        for (String id: gac.getBeanNamesForType(Service.class)) {
+            _logger.log(Level.INFO, "Service '" + id + "' class=" + gac.getBean(id).getClass().getName());
+            _services.put(name + '/' + id, (Service)gac.getBean(id));
+        }
         return gac;
     }
-*/
+
     private static InputStream getJarEntryAsStream(JarInputStream jis) throws IOException {
         int length;
         byte[] buffer = new byte[1024*1024];

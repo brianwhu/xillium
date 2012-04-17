@@ -6,8 +6,8 @@ import org.xillium.data.*;
 /**
  * A Service
  */
-public class Service {
-    public interface Bean {
+public interface Service {
+    //public interface Bean {
         /**
          * Processes a service request.
          *
@@ -21,33 +21,35 @@ public class Service {
          * </ul>
          */
         public DataBinder run(DataBinder parameters, ExecutionEnvironment env) throws ServiceException;
-    }
+    //}
 
     /**
      * Implement Service.ReadOnly to create a read-only service.
      */
-    public interface ReadOnly extends Bean {
-    }
+    //public interface ReadOnly extends Bean {
+    //}
 
     /**
      * Implement Service.ReadWrite to create a read-write service.
      */
-    public interface ReadWrite extends Bean {
-    }
+    //public interface ReadWrite extends Bean {
+    //}
 
     /**
      * Implement Service.NonTransactional to create a non-transactional service.
      */
-    public interface NonTransactional extends Bean {
-    }
+    //public interface NonTransactional extends Bean {
+    //}
 
     /*!
      * XML specification object
      */
+/*
     public Service(String name, String className) {
         this.name = name;
         this.className = className;
     }
 
     public String name, className;
+*/
 }

@@ -4,7 +4,7 @@ package org.xillium.core;
 /**
  * Use of HTTP status code
  */
-public class ServiceException extends Exception {
+public class ServiceException extends RuntimeException {
     public ServiceException() {
     }
 
