@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <swing:j-frame title="UIM" xmlns:swing="java://javax.swing" xmlns:js="java://lab.uim.js">
     <integer default-close-operation="java:javax.swing.JFrame.EXIT_ON_CLOSE"/>
-    <class class="java:java.util.List"/> <!-- this is not to be used -->
+    <!-- <class class="java:java.util.List"/> this is not to be used -->
     <j-menu-bar><?assemble position="java:java.awt.BorderLayout.NORTH"?>
         <j-menu text="File">
             <j-menu-item text="Open">

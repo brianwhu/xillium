@@ -78,7 +78,6 @@ public class ExecutionEnvironment {
     }
 
     public StringBuilder print(StringBuilder sb) {
-        return sb.append("ExecutionEnvironment:Dictionary=").append(_dictionary.toString())
-                 .append(";DataSource=").append(_dataSource.toString());
+        return sb.append("ExecutionEnvironment:Dictionary=").append(_dictionary.toString()).append(";DataSource=").append(_dataSource.toString());
     }
 }

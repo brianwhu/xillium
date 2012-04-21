@@ -7,20 +7,18 @@ import java.util.logging.*;
 import java.util.regex.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
-import javax.sql.*;
+import javax.sql.DataSource;
 import org.json.*;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
-//import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.core.io.InputStreamResource;
-//import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
+//import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+//import org.springframework.transaction.TransactionDefinition;
+//import org.springframework.transaction.TransactionStatus;
+//import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.web.context.*;
 import org.springframework.web.context.support.*;
 import org.xillium.base.beans.*;
@@ -30,7 +28,13 @@ import org.xillium.core.conf.*;
 
 
 /**
- * Platform Service Dispatcher
+ * Platform Service Dispatcher.
+ *
+ * This servlet dispatches inbound HTTP calls to registered services based on request URI. A valid request URI is in the form of
+ *
+ *      /context/module/service?params=...
+ *
+ * When a request URI matches the above pattern, this servlet looks up a Service instance registered under the name 'module/service'.
  */
 public class HttpServiceDispatcher extends HttpServlet {
     private static final String MODULE_NAME = "Xillium-Module-Name";
@@ -47,7 +51,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 
     // Wired in spring application context
     private WebApplicationContext _wac;
-    private DataSourceTransactionManager _txm;
+    //private DataSourceTransactionManager _txm;
     private ExecutionEnvironment _env;
 
     public HttpServiceDispatcher() {
@@ -59,7 +63,7 @@ public class HttpServiceDispatcher extends HttpServlet {
      */
     public void init() throws ServletException {
         _wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
-        _txm = (DataSourceTransactionManager)_wac.getBean("transactionManager");
+        //_txm = (DataSourceTransactionManager)_wac.getBean("transactionManager");
         _env = new ExecutionEnvironment(_dict, (DataSource)_wac.getBean("dataSource"), _storages);
         _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
         scanServiceModules();
@@ -69,10 +73,6 @@ public class HttpServiceDispatcher extends HttpServlet {
      * Dispatcher entry point
      */
     protected void service(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        List<File> upload = new ArrayList<File>();
-        DataBinder binder = new DataBinder();
-
-        try {
             Service service;
             String id;
 
@@ -84,14 +84,22 @@ public class HttpServiceDispatcher extends HttpServlet {
                 service = (Service)_services.get(id);
                 if (service == null) {
                     _logger.log(Level.WARNING, "Request not recognized");
-                    throw new RuntimeException("Request not recognized"); // should be 404
+                    //throw new RuntimeException("Request not recognized"); // should be 404
+                    res.sendError(404);
+                    return;
                 }
             } else {
                 _logger.log(Level.WARNING, "Request not recognized");
-                throw new RuntimeException("Request not recognized"); // should be 404
+                //throw new RuntimeException("Request not recognized"); // should be 404
+                res.sendError(404);
+                return;
             }
             _logger.log(Level.INFO, "SERVICE class = " + service.getClass().getName());
 
+        List<File> upload = new ArrayList<File>();
+        DataBinder binder = new DataBinder();
+
+        try {
             if (ServletFileUpload.isMultipartContent(req)) {
                 try {
                     FileItemIterator it = new ServletFileUpload().getItemIterator(req);
@@ -237,12 +245,10 @@ public class HttpServiceDispatcher extends HttpServlet {
                         String name = jis.getManifest().getMainAttributes().getValue(MODULE_NAME);
                         if (name != null) { // Xillium Module
                             factory.setBurnedIn(StorageConfiguration.class, _storages, name);
-                            //factory.setBurnedIn(ServiceConfiguration.class, _services, name);
                             JarEntry entry;
                             while ((entry = jis.getNextJarEntry()) != null) {
                                 if (SERVICE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Services:" + jar + ":" + entry.getName());
-                                    //assembler.build(getJarEntryAsStream(jis));
                                     createGenericApplicationContext(name, getJarEntryAsStream(jis));
                                 } else if (STORAGE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Storages:" + jar + ":" + entry.getName());

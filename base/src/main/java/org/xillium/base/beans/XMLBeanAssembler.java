@@ -87,7 +87,7 @@ public class XMLBeanAssembler extends DefaultHandler {
             Class type = Class.forName(fixPotentialArrayName(name));
             list.add(new TypedValue(type.getClass(), type));
         } catch (ClassNotFoundException y) {
-            _logger.info(name + " looked like a class reference but is not");
+            _logger.fine(name + " looked like a class reference but is not");
         }
     }
 
@@ -106,7 +106,7 @@ public class XMLBeanAssembler extends DefaultHandler {
             } else if ((dot = value.lastIndexOf('.')) > 5) {
                 try {
                     // public static refernce? (don't override access control)
-                    _logger.info("public static refernce? " + value);
+                    _logger.fine("public static refernce? " + value);
                     Object object = Class.forName(value.substring(5, dot)).getField(value.substring(dot+1)).get(null);
                     Class type = object.getClass();
                     list.add(new TypedValue(type, object));
@@ -114,7 +114,7 @@ public class XMLBeanAssembler extends DefaultHandler {
                         list.add(new TypedValue(type, object));
                     }
                 } catch (Exception x) {
-                    _logger.info(value + " looked like a static reference but is not");
+                    _logger.fine(value + " looked like a static reference but is not");
                     // class reference?
                     guessClassReference(list, value.substring(5));
                 }
@@ -155,7 +155,7 @@ public class XMLBeanAssembler extends DefaultHandler {
         // always try String as the last resort
         list.add(new TypedValue(String.class, value));
 
-_logger.info("guessUntypedValue: number of possibilities " + list.size());
+_logger.fine("guessUntypedValue: number of possibilities " + list.size());
         return list;
     }
 
@@ -172,7 +172,7 @@ _logger.info("guessUntypedValue: number of possibilities " + list.size());
     }
 
 private void traceArgs(Object... property) {
-    for (int i = 0; i < property.length; ++i) { _logger.info("       args " + property[i].getClass().getName() + " :: " + property[i]); }
+    for (int i = 0; i < property.length; ++i) { _logger.fine("       args " + property[i].getClass().getName() + " :: " + property[i]); }
 }
 
     private void addSetProperty(Object bean, Class[] type, String name, Object... property)
@@ -186,27 +186,27 @@ private void traceArgs(Object... property) {
         }
 
         try {
-            _logger.info("trying set" + name + "() on " + bean.getClass() + ": " + property.length);
+            _logger.fine("trying set" + name + "() on " + bean.getClass() + ": " + property.length);
 traceArgs(property);
             Beans.invoke(bean, "set" + name, property);
-            _logger.info("... successful");
+            _logger.fine("... successful");
         } catch (NoSuchMethodException x) {
             try {
-                _logger.info("trying set() on " + bean.getClass() + ": " + property.length);
+                _logger.fine("trying set() on " + bean.getClass() + ": " + property.length);
 traceArgs(property);
                 Beans.invoke(bean, "set", property);
-                _logger.info("... successful");
+                _logger.fine("... successful");
             } catch (NoSuchMethodException x1) {
                 try {
-                    _logger.info("trying add" + name + "() on " + bean.getClass() + ": " + property.length);
+                    _logger.fine("trying add" + name + "() on " + bean.getClass() + ": " + property.length);
 traceArgs(property);
                     Beans.invoke(bean, "add" + name, property);
-                    _logger.info("... successful");
+                    _logger.fine("... successful");
                 } catch (NoSuchMethodException x2) {
-                    _logger.info("trying add() on " + bean.getClass() + ": " + property.length);
+                    _logger.fine("trying add() on " + bean.getClass() + ": " + property.length);
 traceArgs(property);
                     Beans.invoke(bean, "add", property);
-                    _logger.info("... successful");
+                    _logger.fine("... successful");
                 }
             }
         }
@@ -384,7 +384,7 @@ traceArgs(property);
      * @see org.xml.sax.ContentHandler#startDocument
      */
     public void startDocument() {
-        //_logger.info("startDocument");
+        //_logger.fine("startDocument");
     }
 
     /**
@@ -400,7 +400,7 @@ traceArgs(property);
      * @see org.xml.sax.ContentHandler#endDocument
      */
     public void endDocument() {
-        //_logger.info("endDocument");
+        //_logger.fine("endDocument");
     }
 
     /**
@@ -422,15 +422,15 @@ traceArgs(property);
          * 2. If no class found, assume the element maps to a String.
          * 3. Otherwise, construct a new object of the class with element attributes.
          */
-        _logger.info("Consider element " + l);
-        _logger.info("             uri " + uri);
-        _logger.info("               q " + q);
+        _logger.fine("Consider element " + l);
+        _logger.fine("             uri " + uri);
+        _logger.fine("               q " + q);
         ElementInfo info = new ElementInfo();
 
         // Record java packages defined on this element as xmlns
         for (int i = 0; i < a.getLength(); ++i) {
-        _logger.info("            attr " + a.getQName(i) + "=" + a.getValue(i));
-        _logger.info("                 " + a.getQName(i) + ":" + a.getURI(i));
+        _logger.fine("            attr " + a.getQName(i) + "=" + a.getValue(i));
+        _logger.fine("                 " + a.getQName(i) + ":" + a.getURI(i));
             if (a.getQName(i).startsWith("xmlns:") && a.getValue(i).startsWith("java://")) {
                 info.pkgs.put(a.getQName(i).substring(6), a.getValue(i).substring(7));
             }
@@ -457,7 +457,7 @@ traceArgs(property);
             info.jpkg = _stack.get(_stack.size()-1).jpkg;
         }
 
-        _logger.info("to create element with package = " + info.jpkg);
+        _logger.fine("to create element with package = " + info.jpkg);
         try {
             info.name = (info.jpkg != null) ? info.jpkg + '.' + Beans.toCamelCase(l) : Beans.toCamelCase(l);
             try {
@@ -486,7 +486,7 @@ traceArgs(property);
 	                        Object[] args = new Object[arguments.size()];
 	                        while (arguments.load(args, 0)) {
 	                            try {
-	                                _logger.info("to create " + info.name + " with args: " + args.length);
+	                                _logger.fine("to create " + info.name + " with args: " + args.length);
 	                                info.data = _factory.create(info.name, args);
 	                                info.type = info.data.getClass();
 	                                break;
@@ -494,7 +494,7 @@ traceArgs(property);
 	                                throw x;
 	                            } catch (Exception x) {
 	                                last = x;
-	                                _logger.info("failure in creating object: " + x.getClass());
+	                                _logger.fine("failure in creating object: " + x.getClass());
 	                            }
 	                        }
 	
@@ -503,26 +503,28 @@ traceArgs(property);
 	                        }
 	                    }
 	                } else {
-	                    _logger.info("Create " + info.name + " with the default constructor");
+	                    _logger.fine("Create " + info.name + " with the default constructor");
 	                    info.data = _factory.create(info.name);
 	                    info.type = info.data.getClass();
 	                }
 	            }
             } catch (ClassNotFoundException x) {
                 // no class by the element name is found, assumed String
-                _logger.log(Level.WARNING, "can't find class " + info.name, x);
                 if (!_lenient) {
                     throw new BeanAssemblyException("No class associated with element " + q);
-                }
+                } else {
+					_logger.log(Level.WARNING, "can't find class " + info.name, x);
+				}
             }
             _stack.add(info);
-            //_logger.info(">>ElementInfo: " + info.type.getName() + " in " + info);
+            //_logger.fine(">>ElementInfo: " + info.type.getName() + " in " + info);
             // all other exceptions indicate mismatches between the beans and the XML schema
         } catch (Exception x) {
-            _logger.log(Level.SEVERE, "can't create object for this element", x);
             if (!_lenient) {
                 throw new BeanAssemblyException("Failed to assemble bean from element " + q, x);
-            }
+            } else {
+				_logger.log(Level.SEVERE, "can't create object for this element", x);
+			}
         }
     }
 
@@ -546,21 +548,25 @@ traceArgs(property);
          * 2. Add the element to parent.
          */
         ElementInfo element = _stack.remove(_stack.size()-1);
-_logger.info("endElement " + element);
+_logger.fine("endElement " + element);
         if (element.type == null) {
-_logger.warning("Element " + element.name + " not created ");
+			_logger.warning("Element " + element.name + " not created ");
             return;
         } else if (_chars.length() > 0) {
             try {
                 injectProperty(element.data, String.class, _chars.toString(), null, null);
             } catch (Exception x) {
-_logger.info("Failed to set characters to parent " + element.data);
+				if (!_lenient) {
+					throw new BeanAssemblyException("Failed to set characters to object " + element.type.getName(), x);
+				} else {
+					_logger.warning("Failed to set characters to parent " + element.data);
+				}
             }
         }
         _chars.setLength(0);
-        _logger.info("<<ElementInfo: " + element.type.getName() + " in " + element);
-        _logger.info("    @as is " + element.inst.get("@as"));
-        _logger.info("    @id is " + element.inst.get("@id"));
+        _logger.fine("<<ElementInfo: " + element.type.getName() + " in " + element);
+        _logger.fine("    @as is " + element.inst.get("@as"));
+        _logger.fine("    @id is " + element.inst.get("@id"));
 
         if (List.class.isAssignableFrom(element.data.getClass()) && element.name.endsWith("...")) {
         	List list = (List)element.data;
@@ -578,11 +584,15 @@ _logger.info("Failed to set characters to parent " + element.data);
         } else if (!_stack.isEmpty()) {
             // inject into the parent as a property
             ElementInfo parent = _stack.get(_stack.size()-1);
-            _logger.info("Parent is " + parent.data.getClass().getName());
+            _logger.fine("Parent is " + parent.data.getClass().getName());
             try {
                 injectProperty(parent.data, element.type, element.data, element.inst.get("@as"), element.args.complete());
             } catch (Exception x) {
-_logger.log(Level.WARNING, "Failed to set value " + element.data + " to parent " + parent.data, x);
+				if (!_lenient) {
+					throw new BeanAssemblyException("Failed to set value " + element.data + " to parent " + parent.data, x);
+				} else {
+					_logger.log(Level.WARNING, "Failed to set value " + element.data + " to parent " + parent.data, x);
+				}
             }
         }
         _top = element.data;
@@ -620,8 +630,8 @@ _logger.log(Level.WARNING, "Failed to set value " + element.data + " to parent "
 
     private static final Pattern PROCESSING_INSTRUCTION = Pattern.compile("(@?[\\w_]+) *= *\"([^\"]+)\"");
     public void processingInstruction(String target, String data) throws SAXException {
-        _logger.info("Processing Instruction " + target);
-        _logger.info("Processing Instruction data: " + data);
+        _logger.fine("Processing Instruction " + target);
+        _logger.fine("Processing Instruction data: " + data);
         if (target.equals("assemble")) {
             if (!_stack.isEmpty()) {
                 ElementInfo element = _stack.get(_stack.size()-1);
@@ -634,9 +644,9 @@ _logger.log(Level.WARNING, "Failed to set value " + element.data + " to parent "
                         } else {
                             element.args.add(guessUntypedValue(name, matcher.group(2)));
                         }
-                        _logger.info("Processing Instruction for " + element.data.getClass());
-                        _logger.info("\ttarget = " + target);
-                        _logger.info("\t" + name + "=" + matcher.group(2));
+                        _logger.fine("Processing Instruction for " + element.data.getClass());
+                        _logger.fine("\ttarget = " + target);
+                        _logger.fine("\t" + name + "=" + matcher.group(2));
                     }
                 }
             }
