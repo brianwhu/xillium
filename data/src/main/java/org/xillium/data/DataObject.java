@@ -17,15 +17,17 @@ public interface DataObject {
          * @return a string that contains the JSON representation of the structure of the DataObject
          */
         public static String describe(Class<? extends DataObject> type) {
-            StringBuilder sb = new StringBuilder("{\n");
+            StringBuilder sb = new StringBuilder("[\n");
             print(sb, null, type);
             sb.deleteCharAt(sb.length()-2);
-            sb.append("}");
+            sb.append("]");
             return sb.toString();
         }
 
         private static void print(StringBuilder sb, String prefix, Class<? extends DataObject> type) {
             for (Field field: type.getDeclaredFields()) {
+                if ((field.getModifiers() & Modifier.TRANSIENT) != 0) continue;
+
                 String name = (prefix != null) ? prefix + '.' + field.getName() : field.getName();
                 Class<?> ftype = field.getType();
 
@@ -36,7 +38,7 @@ public interface DataObject {
                 if (DataObject.class.isAssignableFrom(ftype)) {
                     print(sb, name, (Class<? extends DataObject>)ftype);
                 } else {
-                    sb.append("\"").append(name).append("\":{type:\"").append(ftype.getName()).append('"');
+                    sb.append("{name:\"").append(name).append("\",type:\"").append(ftype.getName()).append('"');
                     subtype t = field.getAnnotation(subtype.class);
                     if (t != null) {
                         sb.append(",specialization:\"").append(t.value()).append('"');
@@ -68,7 +70,7 @@ public interface DataObject {
 
                     values v = field.getAnnotation(values.class);
                     if (v != null) {
-                        sb.append(",values: \"(");
+                        sb.append(",values:\"(");
                         for (String value: v.value()) sb.append(value).append(',');
                         sb.deleteCharAt(sb.length()-1);
                         sb.append(")\"");

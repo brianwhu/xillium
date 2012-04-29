@@ -12,10 +12,10 @@ import org.json.*;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.context.support.GenericApplicationContext;
-//import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 //import org.springframework.transaction.TransactionDefinition;
 //import org.springframework.transaction.TransactionStatus;
 //import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -46,6 +46,7 @@ public class HttpServiceDispatcher extends HttpServlet {
     private static final Logger _logger = Logger.getLogger(HttpServiceDispatcher.class.getName());
 
     private final Map<String, Service> _services = new HashMap<String, Service>();
+    private final Map<String, String> _descriptions = new HashMap<String, String>();
     private final Map<String, ParametricStatement> _storages = new HashMap<String, ParametricStatement>();
     private final org.xillium.data.validation.Dictionary _dict = new org.xillium.data.validation.Dictionary();
 
@@ -73,28 +74,35 @@ public class HttpServiceDispatcher extends HttpServlet {
      * Dispatcher entry point
      */
     protected void service(HttpServletRequest req, HttpServletResponse res) throws IOException {
-            Service service;
-            String id;
+        Service service;
+        String id;
 
-            _logger.log(Level.INFO, "Request URI = " + req.getRequestURI());
-            Matcher m = URI_REGEX.matcher(req.getRequestURI());
-            if (m.matches()) {
-                id = m.group(1);
-                _logger.log(Level.INFO, "Request service id = " + id);
-                service = (Service)_services.get(id);
-                if (service == null) {
-                    _logger.log(Level.WARNING, "Request not recognized");
-                    //throw new RuntimeException("Request not recognized"); // should be 404
-                    res.sendError(404);
-                    return;
-                }
-            } else {
+        _logger.log(Level.INFO, "Request URI = " + req.getRequestURI());
+        Matcher m = URI_REGEX.matcher(req.getRequestURI());
+        if (m.matches()) {
+            id = m.group(1);
+            _logger.log(Level.INFO, "Request service id = " + id);
+
+            service = (Service)_services.get(id);
+            if (service == null) {
                 _logger.log(Level.WARNING, "Request not recognized");
-                //throw new RuntimeException("Request not recognized"); // should be 404
                 res.sendError(404);
                 return;
             }
-            _logger.log(Level.INFO, "SERVICE class = " + service.getClass().getName());
+
+            Map<String, String[]> pmap = req.getParameterMap();
+            String[] desc;
+            if (pmap.size() == 1 && (desc = pmap.get("desc")) != null && desc.length == 1 && desc[0].length() == 0) {
+                res.setHeader("ContentType", "application/json");
+                res.getWriter().append(_descriptions.get(id)).flush();
+                return;
+            }
+        } else {
+            _logger.log(Level.WARNING, "Request not recognized");
+            res.sendError(404);
+            return;
+        }
+        _logger.log(Level.INFO, "SERVICE class = " + service.getClass().getName());
 
         List<File> upload = new ArrayList<File>();
         DataBinder binder = new DataBinder();
@@ -249,7 +257,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                             while ((entry = jis.getNextJarEntry()) != null) {
                                 if (SERVICE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Services:" + jar + ":" + entry.getName());
-                                    createGenericApplicationContext(name, getJarEntryAsStream(jis));
+                                    loadServiceModule(name, getJarEntryAsStream(jis));
                                 } else if (STORAGE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Storages:" + jar + ":" + entry.getName());
                                     assembler.build(getJarEntryAsStream(jis));
@@ -272,7 +280,7 @@ public class HttpServiceDispatcher extends HttpServlet {
         }
     }
 
-    private GenericApplicationContext createGenericApplicationContext(String name, InputStream stream) {
+    private GenericApplicationContext loadServiceModule(String name, InputStream stream) {
         GenericApplicationContext gac = new GenericApplicationContext(_wac);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
@@ -280,9 +288,27 @@ public class HttpServiceDispatcher extends HttpServlet {
         gac.refresh();
 
         for (String id: gac.getBeanNamesForType(Service.class)) {
-            _logger.log(Level.INFO, "Service '" + id + "' class=" + gac.getBean(id).getClass().getName());
-            _services.put(name + '/' + id, (Service)gac.getBean(id));
+            String fullname = name + '/' + id;
+
+            BeanDefinition def = gac.getBeanDefinition(id);
+            try {
+                Class<?> request = Class.forName(def.getBeanClassName()+"$Request");
+                if (DataObject.class.isAssignableFrom(request)) {
+                    _logger.log(Level.INFO, "Service '" + fullname + "' request description captured");
+                    _descriptions.put(fullname, DataObject.Util.describe((Class<? extends DataObject>)request));
+                } else {
+                    _logger.log(Level.WARNING, "Service '" + fullname + "' defines a Request type that is not a DataObject");
+                    _descriptions.put(fullname, "{}");
+                }
+            } catch (ClassNotFoundException x) {
+                _logger.log(Level.WARNING, "Service '" + fullname + "' does not expose its request structure");
+                _descriptions.put(fullname, "{}");
+            }
+
+            _logger.log(Level.INFO, "Service '" + fullname + "' class=" + gac.getBean(id).getClass().getName());
+            _services.put(fullname, (Service)gac.getBean(id));
         }
+
         return gac;
     }
 
