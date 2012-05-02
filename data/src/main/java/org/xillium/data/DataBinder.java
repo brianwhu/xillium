@@ -1,7 +1,6 @@
 package org.xillium.data;
 
 import java.util.*;
-//import java.sql.ResultSet;
 
 
 /**
@@ -29,5 +28,14 @@ public class DataBinder extends HashMap<String, String> {
 
     public Object getNamedObject(String name) {
         return _named.get(name);
+    }
+
+    public int estimateMaximumBytes() {
+        int count = this.size();
+        for (String key: _rsets.keySet()) {
+            CachedResultSet crs = _rsets.get(key);
+            count += crs.columns.length*crs.rows.size();
+        }
+        return count * 64;
     }
 }

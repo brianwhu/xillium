@@ -47,7 +47,9 @@ public class DataAccess {
             //ResultSet rset = DepartmentsByLocation.intoResultSet(conn, data);
             DepartmentsByLocation.executeSelect(conn, data, new ParametricQuery.ResultSetWorker<Object>() {
                 public Object process(ResultSet rset) throws Exception {
-                    System.out.println(Beans.toString(new CachedResultSet("Departments", rset)));
+                    CachedResultSet crs = new CachedResultSet(rset);
+                    System.out.println(Beans.toString(crs));
+                    System.out.println(new JSONBuilder(1024).serialize(crs));
                     return null;
                 }
             });
@@ -55,7 +57,9 @@ public class DataAccess {
             //rset = EmployeesWithSalaryAbove.intoResultSet(conn, data);
             EmployeesWithSalaryAbove.executeSelect(conn, data, new ParametricQuery.ResultSetWorker<Object>() {
                 public Object process(ResultSet rset) throws Exception {
-                    System.out.println(Beans.toString(new CachedResultSet("Employees", rset)));
+                    CachedResultSet crs = new CachedResultSet(rset);
+                    System.out.println(Beans.toString(crs));
+                    System.out.println(new JSONBuilder(1024).serialize(crs));
                     return null;
                 }
             });
