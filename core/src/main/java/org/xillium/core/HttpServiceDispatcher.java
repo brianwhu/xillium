@@ -8,7 +8,7 @@ import java.util.regex.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.sql.DataSource;
-import org.json.*;
+//import org.json.*;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
@@ -25,20 +25,31 @@ import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
 import org.xillium.core.conf.*;
+import org.xillium.core.intrinsic.*;
 
 
 /**
  * Platform Service Dispatcher.
  *
  * This servlet dispatches inbound HTTP calls to registered services based on request URI. A valid request URI is in the form of
- *
- *      /context/module/service?params=...
- *
+ * <pre>
+ *      /[context]/[module]/[service]?[params]=...
+ * </pre>
  * When a request URI matches the above pattern, this servlet looks up a Service instance registered under the name 'module/service'.
+ * <p/>
+ * The fabric of operation, administration, and maintenance (foam)
+ * <ul>
+ *	<li><code>/[context]/x!ll!um/[service]</code><p/>
+ *		<ul>
+ *			<li>service_list</li>
+ *			<li>service_desc - parameter description</li>
+ *		</ul>
+ *	</li>
+ * </ul>
  */
 public class HttpServiceDispatcher extends HttpServlet {
     private static final String MODULE_NAME = "Xillium-Module-Name";
-    private static final String VALIDATION_CONFIG = "validation-configuration.xml";
+    private static final String REQUEST_VOCABULARY = "request-vocabulary.xml";
     private static final String SERVICE_CONFIG = "service-configuration.xml";
     private static final String STORAGE_CONFIG = "storage-configuration.xml";
     private static final Pattern URI_REGEX = Pattern.compile("/[^/?]+/([^/?]+/[^/?]+)"); // '/context/module/service'
@@ -46,12 +57,11 @@ public class HttpServiceDispatcher extends HttpServlet {
     private static final Logger _logger = Logger.getLogger(HttpServiceDispatcher.class.getName());
 
     private final Map<String, Service> _services = new HashMap<String, Service>();
-    private final Map<String, String> _descriptions = new HashMap<String, String>();
     private final Map<String, ParametricStatement> _storages = new HashMap<String, ParametricStatement>();
     private final org.xillium.data.validation.Dictionary _dict = new org.xillium.data.validation.Dictionary();
 
     // Wired in spring application context
-    private WebApplicationContext _wac;
+    //private WebApplicationContext _wac;
     //private DataSourceTransactionManager _txm;
     private ExecutionEnvironment _env;
 
@@ -63,11 +73,11 @@ public class HttpServiceDispatcher extends HttpServlet {
      * Initializes persistence store.
      */
     public void init() throws ServletException {
-        _wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
-        //_txm = (DataSourceTransactionManager)_wac.getBean("transactionManager");
-        _env = new ExecutionEnvironment(_dict, (DataSource)_wac.getBean("dataSource"), _storages);
+        WebApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+        //_txm = (DataSourceTransactionManager)wac.getBean("transactionManager");
+        _env = new ExecutionEnvironment(_dict, (DataSource)wac.getBean("dataSource"), _storages);
         _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
-        scanServiceModules();
+        scanServiceModules(wac);
     }
 
     /**
@@ -89,7 +99,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                 res.sendError(404);
                 return;
             }
-
+/*
             Map<String, String[]> pmap = req.getParameterMap();
             String[] desc;
             if (pmap.size() == 1 && (desc = pmap.get("desc")) != null && desc.length == 1 && desc[0].length() == 0) {
@@ -97,6 +107,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                 res.getWriter().append(_descriptions.get(id)).flush();
                 return;
             }
+*/
         } else {
             _logger.log(Level.WARNING, "Request not recognized");
             res.sendError(404);
@@ -203,20 +214,33 @@ public class HttpServiceDispatcher extends HttpServlet {
         } finally {
             res.setHeader("ContentType", "application/json");
             try {
-                JSONObject result = new JSONObject();
+                JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
+                //JSONObject result = new JSONObject();
 
+                jb.quote("attibutes").append(":{");
                 Iterator<String> it = binder.keySet().iterator();
                 for (int i = 0; it.hasNext(); ++i) {
                     String key = it.next();
-                    result.put(key, binder.get(key));
+                    String val = binder.get(key);
+                    if (val.startsWith("json:")) {
+                        //result.put(key, new JSONObject(val.substring(5)));
+                        jb.quote(key).append(':').append(val.substring(5));
+                    } else {
+                        //result.put(key, binder.get(key));
+                        jb.serialize(key, val);
+                    }
+                    jb.append(',');
                 }
+                jb.replaceLast('}').append(',');
 
+                jb.quote("tables").append(":{");
                 Set<String> rsets = binder.getResultSetNames();
-                JSONObject resultsets = new JSONObject();
+                //JSONObject resultsets = new JSONObject();
                 it = rsets.iterator();
                 while (it.hasNext()) {
                     CachedResultSet rset = binder.getResultSet(it.next());
-
+                    jb.serialize(rset);
+/*
                     JSONObject resultset = new JSONObject();
                     resultset.put("columns", new JSONArray(rset.columns));
 
@@ -225,12 +249,16 @@ public class HttpServiceDispatcher extends HttpServlet {
                     resultset.put("rows", rows);
 
                     resultsets.put(rset.name, resultset);
+*/
+                    jb.append(',');
                 }
-                result.put("ResultSets", resultsets);
+                //result.put("ResultSets", resultsets);
+                jb.replaceLast('}');
 
-                res.getWriter().append(result.toString()).flush();
-            } catch (JSONException x) {
-                res.getWriter().append(x.getClass().getName() + ':' + x.getMessage()).flush();
+                jb.append('}');
+
+                //res.getWriter().append(result.toString()).flush();
+                res.getWriter().append(jb.toString()).flush();
             } finally {
                 for (File tmp: upload) {
                     try { tmp.delete(); } catch (Exception x) {}
@@ -239,8 +267,12 @@ public class HttpServiceDispatcher extends HttpServlet {
         }
     }
 
-    private void scanServiceModules() throws ServletException {
+    private void scanServiceModules(WebApplicationContext wac) throws ServletException {
         ServletContext context = getServletContext();
+
+        // if intrinsic services are wanted
+        Map<String, String> descriptions = new HashMap<String, String>();
+
         try {
             BurnedInArgumentsObjectFactory factory = new BurnedInArgumentsObjectFactory(ValidationConfiguration.class, _dict);
             XMLBeanAssembler assembler = new XMLBeanAssembler(factory);
@@ -257,12 +289,12 @@ public class HttpServiceDispatcher extends HttpServlet {
                             while ((entry = jis.getNextJarEntry()) != null) {
                                 if (SERVICE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Services:" + jar + ":" + entry.getName());
-                                    loadServiceModule(name, getJarEntryAsStream(jis));
+                                    loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions);
                                 } else if (STORAGE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Storages:" + jar + ":" + entry.getName());
                                     assembler.build(getJarEntryAsStream(jis));
-                                } else if (VALIDATION_CONFIG.equals(entry.getName())) {
-                                    _logger.log(Level.INFO, "Validation:" + jar + ":" + entry.getName());
+                                } else if (REQUEST_VOCABULARY.equals(entry.getName())) {
+                                    _logger.log(Level.INFO, "RequestVocabulary:" + jar + ":" + entry.getName());
                                     assembler.build(getJarEntryAsStream(jis));
                                 }
                             }
@@ -278,10 +310,13 @@ public class HttpServiceDispatcher extends HttpServlet {
         } catch (Exception x) {
             throw new ServletException("Failed to construct an XMLBeanAssembler", x);
         }
+
+        _services.put("x!ll!um/desc", new DescService(descriptions));
+        _services.put("x!ll!um/list", new ListService(_services));
     }
 
-    private GenericApplicationContext loadServiceModule(String name, InputStream stream) {
-        GenericApplicationContext gac = new GenericApplicationContext(_wac);
+    private GenericApplicationContext loadServiceModule(WebApplicationContext wac, String name, InputStream stream, Map<String, String> desc) {
+        GenericApplicationContext gac = new GenericApplicationContext(wac);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
         reader.loadBeanDefinitions(new InputStreamResource(stream));
@@ -295,14 +330,14 @@ public class HttpServiceDispatcher extends HttpServlet {
                 Class<?> request = Class.forName(def.getBeanClassName()+"$Request");
                 if (DataObject.class.isAssignableFrom(request)) {
                     _logger.log(Level.INFO, "Service '" + fullname + "' request description captured");
-                    _descriptions.put(fullname, DataObject.Util.describe((Class<? extends DataObject>)request));
+                    desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
                 } else {
                     _logger.log(Level.WARNING, "Service '" + fullname + "' defines a Request type that is not a DataObject");
-                    _descriptions.put(fullname, "{}");
+                    desc.put(fullname, "json:{}");
                 }
             } catch (ClassNotFoundException x) {
                 _logger.log(Level.WARNING, "Service '" + fullname + "' does not expose its request structure");
-                _descriptions.put(fullname, "{}");
+                desc.put(fullname, "json:{}");
             }
 
             _logger.log(Level.INFO, "Service '" + fullname + "' class=" + gac.getBean(id).getClass().getName());

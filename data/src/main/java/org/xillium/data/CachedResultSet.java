@@ -3,7 +3,7 @@ package org.xillium.data;
 import java.sql.*;
 import java.util.*;
 import org.xillium.base.beans.Beans;
-//import org.xillium.data.validation.*;
+import org.xillium.base.beans.JSONBuilder;
 import org.xillium.data.persistence.*;
 
 
@@ -11,25 +11,17 @@ import org.xillium.data.persistence.*;
  * A flattened copy of a result set
  */
 public class CachedResultSet {
-    public final String name;
     public final String[] columns;
     public final List<Object[]> rows;
 
     public static class Builder implements ParametricQuery.ResultSetWorker<CachedResultSet> {
-        public Builder(String name) {
-            this.name = name;
-        }
-
         public CachedResultSet process(ResultSet rs) throws SQLException {
-            return new CachedResultSet(name, rs);
+            return new CachedResultSet(rs);
         }
-
-        private final String name;
     }
 
     // for JAXB
     private CachedResultSet() {
-        name = null;
         columns = null;
         rows = null;
     }
@@ -39,8 +31,7 @@ public class CachedResultSet {
      *
      * Closes the JDBC result set after retrieval.
      */
-    public CachedResultSet(String name, ResultSet rset) throws SQLException {
-        this.name = name;
+    public CachedResultSet(ResultSet rset) throws SQLException {
         try {
             ResultSetMetaData metaData = rset.getMetaData();
             int width = metaData.getColumnCount();
@@ -65,5 +56,12 @@ public class CachedResultSet {
         } finally {
             rset.close();
         }
+    }
+
+    /**
+     * Inside an object: serialized the cached result set into JSON.
+     */
+    public JSONBuilder toJSON(JSONBuilder jb) {
+        return jb.append('{').serialize("columns", columns).append(',').serialize("rows", rows).append('}');
     }
 }
