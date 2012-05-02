@@ -17,7 +17,11 @@ public interface DataObject {
          * @return a string that contains the JSON representation of the structure of the DataObject
          */
         public static String describe(Class<? extends DataObject> type) {
-            StringBuilder sb = new StringBuilder("[\n");
+            return describe(new StringBuilder(), type);
+        }
+
+        public static String describe(StringBuilder sb, Class<? extends DataObject> type) {
+            sb.append("[\n");
             print(sb, null, type);
             sb.deleteCharAt(sb.length()-2);
             sb.append("]");
