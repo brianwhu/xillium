@@ -83,8 +83,9 @@ public class Dictionary {
         int present = 0;
         String absent = null;
 
-        for (Field field: data.getClass().getDeclaredFields()) {
-            field.setAccessible(true);
+        for (Field field: data.getClass().getFields()) {
+            if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) continue;
+
             Class<?> ftype = field.getType();
             String name = field.getName();
             String qualified = prefix != null ? prefix + '.' + name : name;

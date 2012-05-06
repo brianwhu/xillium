@@ -80,9 +80,7 @@ public class ParametricStatement {
         //statement.clearParameters();
         for (int i = 0; i < _params.length; ++i) {
             try {
-                Field field = type.getDeclaredField(_params[i].name);
-                field.setAccessible(true);
-                statement.setObject(i+1, field.get(object), _params[i].type);
+                statement.setObject(i+1, type.getField(_params[i].name).get(object), _params[i].type);
             } catch (NoSuchFieldException x) {
                 if (_params[i].nullable) {
                     statement.setNull(i+1, _params[i].type);
