@@ -23,6 +23,9 @@
         <property name="username" value="${jdbc.username}"/>
         <property name="password" value="${jdbc.password}"/>
     </bean>
+    <bean id="persistence" class="org.xillium.core.Persistence">
+        <constructor-arg index="0"><ref bean="dataSource"/></constructor-arg>
+    </bean>
 
     <!--
     ** Spring jdbc transaction manager
