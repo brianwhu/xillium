@@ -1,12 +1,13 @@
 package org.xillium.core.intrinsic;
 
 import java.sql.*;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.*;
 import org.xillium.base.beans.JSONBuilder;
 import org.xillium.data.*;
 import org.xillium.core.*;
-//import org.xillium.data.validation.*;
+import org.xillium.data.validation.*;
 //import org.xillium.data.persistence.*;
 //import org.springframework.transaction.annotation.*;
 //import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -23,7 +24,7 @@ public class ListService implements Service {
         _services = services;
     }
 
-    public DataBinder run(DataBinder binder, ExecutionEnvironment env) throws ServiceException {
+    public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
         Set<String> keys = _services.keySet();
         binder.put("services", new JSONBuilder(keys.size()*16).append("json:").serialize(keys).toString());
         return binder;

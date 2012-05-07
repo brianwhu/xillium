@@ -1,6 +1,7 @@
 package org.xillium.core;
 
 import org.xillium.data.*;
+import org.xillium.data.validation.Dictionary;
 
 
 /**
@@ -16,5 +17,5 @@ public interface Service {
 	 * @throws ServiceException if the service fails for any reason. If the service is wrapped inside a transaction, the transaction
 	 *         is rolled back.
 	 */
-	public DataBinder run(DataBinder parameters, ExecutionEnvironment env) throws ServiceException;
+	public DataBinder run(DataBinder parameters, Dictionary dict, Persistence persist) throws ServiceException;
 }

@@ -8,7 +8,6 @@ import java.util.regex.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.sql.DataSource;
-//import org.json.*;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
@@ -16,9 +15,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.context.support.GenericApplicationContext;
-//import org.springframework.transaction.TransactionDefinition;
-//import org.springframework.transaction.TransactionStatus;
-//import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.web.context.*;
 import org.springframework.web.context.support.*;
 import org.xillium.base.beans.*;
@@ -57,27 +53,23 @@ public class HttpServiceDispatcher extends HttpServlet {
     private static final Logger _logger = Logger.getLogger(HttpServiceDispatcher.class.getName());
 
     private final Map<String, Service> _services = new HashMap<String, Service>();
-    private final Map<String, ParametricStatement> _storages = new HashMap<String, ParametricStatement>();
     private final org.xillium.data.validation.Dictionary _dict = new org.xillium.data.validation.Dictionary();
 
     // Wired in spring application context
-    //private WebApplicationContext _wac;
-    //private DataSourceTransactionManager _txm;
-    private ExecutionEnvironment _env;
+    private Persistence _persistence;
 
     public HttpServiceDispatcher() {
         _logger.log(Level.INFO, "START HTTP service dispatcher " + getClass().getName());
     }
 
     /**
-     * Initializes persistence store.
+     * Initializes the servlet
      */
     public void init() throws ServletException {
         WebApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
-        //_txm = (DataSourceTransactionManager)wac.getBean("transactionManager");
-        _env = new ExecutionEnvironment(_dict, (DataSource)wac.getBean("dataSource"), _storages);
+        _persistence = (Persistence)wac.getBean("persistence");
         _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
-        scanServiceModules(wac);
+        scanServiceModules(wac, _persistence.getStatementMap());
     }
 
     /**
@@ -99,15 +91,6 @@ public class HttpServiceDispatcher extends HttpServlet {
                 res.sendError(404);
                 return;
             }
-/*
-            Map<String, String[]> pmap = req.getParameterMap();
-            String[] desc;
-            if (pmap.size() == 1 && (desc = pmap.get("desc")) != null && desc.length == 1 && desc[0].length() == 0) {
-                res.setHeader("ContentType", "application/json");
-                res.getWriter().append(_descriptions.get(id)).flush();
-                return;
-            }
-*/
         } else {
             _logger.log(Level.WARNING, "Request not recognized");
             res.sendError(404);
@@ -166,36 +149,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 
             // TODO: pre-service filter
 
-/*
-            if (service instanceof Service.NonTransactional) {
-                binder = service.run(binder, _env);
-            } else {
-                DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-                def.setName('[' + id + ":TRANSACTION]");
-                def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
-                def.setReadOnly(service instanceof Service.ReadOnly);
-                TransactionStatus status = _txm.getTransaction(def);
-
-                try {
-                    binder = service.run(binder, _env);
-                } catch (ServiceException x) {
-                    _logger.log(Level.WARNING, "rollback");
-                    _txm.rollback(status);
-                    throw x;
-                } catch (RuntimeException x) {
-                    _logger.log(Level.WARNING, "rollback");
-                    _txm.rollback(status);
-                    throw x;
-                } catch (Throwable t) {
-                    _logger.log(Level.INFO, "commit upon unknown throwable");
-                    _txm.commit(status);
-                    throw t;
-                }
-                _logger.log(Level.INFO, "commit");
-                _txm.commit(status);
-            }
-*/
-            binder = service.run(binder, _env);
+            binder = service.run(binder, _dict, _persistence);
 
             // TODO: post-service filter
 
@@ -215,7 +169,6 @@ public class HttpServiceDispatcher extends HttpServlet {
             res.setHeader("ContentType", "application/json");
             try {
                 JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
-                //JSONObject result = new JSONObject();
 
                 jb.quote("attibutes").append(":{");
                 Iterator<String> it = binder.keySet().iterator();
@@ -223,10 +176,8 @@ public class HttpServiceDispatcher extends HttpServlet {
                     String key = it.next();
                     String val = binder.get(key);
                     if (val.startsWith("json:")) {
-                        //result.put(key, new JSONObject(val.substring(5)));
                         jb.quote(key).append(':').append(val.substring(5));
                     } else {
-                        //result.put(key, binder.get(key));
                         jb.serialize(key, val);
                     }
                     jb.append(',');
@@ -235,29 +186,16 @@ public class HttpServiceDispatcher extends HttpServlet {
 
                 jb.quote("tables").append(":{");
                 Set<String> rsets = binder.getResultSetNames();
-                //JSONObject resultsets = new JSONObject();
                 it = rsets.iterator();
                 while (it.hasNext()) {
                     CachedResultSet rset = binder.getResultSet(it.next());
                     jb.serialize(rset);
-/*
-                    JSONObject resultset = new JSONObject();
-                    resultset.put("columns", new JSONArray(rset.columns));
-
-                    JSONArray rows = new JSONArray();
-                    for (Iterator<Object[]> i = rset.rows.iterator(); i.hasNext(); rows.put(new JSONArray(i.next())));
-                    resultset.put("rows", rows);
-
-                    resultsets.put(rset.name, resultset);
-*/
                     jb.append(',');
                 }
-                //result.put("ResultSets", resultsets);
                 jb.replaceLast('}');
 
                 jb.append('}');
 
-                //res.getWriter().append(result.toString()).flush();
                 res.getWriter().append(jb.toString()).flush();
             } finally {
                 for (File tmp: upload) {
@@ -267,7 +205,7 @@ public class HttpServiceDispatcher extends HttpServlet {
         }
     }
 
-    private void scanServiceModules(WebApplicationContext wac) throws ServletException {
+    private void scanServiceModules(WebApplicationContext wac, Map<String, ParametricStatement> statements) throws ServletException {
         ServletContext context = getServletContext();
 
         // if intrinsic services are wanted
@@ -283,8 +221,8 @@ public class HttpServiceDispatcher extends HttpServlet {
                     JarInputStream jis = new JarInputStream(context.getResourceAsStream(jar));
                     try {
                         String name = jis.getManifest().getMainAttributes().getValue(MODULE_NAME);
-                        if (name != null) { // Xillium Module
-                            factory.setBurnedIn(StorageConfiguration.class, _storages, name);
+                        if (name != null) { // a Xillium Module
+                            factory.setBurnedIn(StorageConfiguration.class, statements, name);
                             JarEntry entry;
                             while ((entry = jis.getNextJarEntry()) != null) {
                                 if (SERVICE_CONFIG.equals(entry.getName())) {

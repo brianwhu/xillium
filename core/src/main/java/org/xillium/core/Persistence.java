@@ -1,8 +1,7 @@
 package org.xillium.core;
 
 import java.sql.*;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 import javax.sql.DataSource;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
@@ -11,22 +10,13 @@ import org.xillium.core.*;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 
-public class ExecutionEnvironment {
-    private Dictionary _dictionary;
-    private DataSource _dataSource;
-    private Map<String, ParametricStatement> _statements;
+public class Persistence {
+    private final DataSource _dataSource;
+    private final Map<String, ParametricStatement> _statements;
 
-    ExecutionEnvironment(Dictionary dictionary, DataSource source, Map<String, ParametricStatement> statements) {
-        _dictionary = dictionary;
+    public Persistence(DataSource source) {
         _dataSource = source;
-        _statements = statements;
-    }
-
-    /**
-     * Acquires a data validation dictionary.
-     */
-    public <T extends DataObject> T collect(T data, DataBinder binder) throws SecurityException, DataValidationException {
-        return _dictionary.collect(data, binder);
+        _statements = new HashMap<String, ParametricStatement>();
     }
 
     /**
@@ -78,6 +68,10 @@ public class ExecutionEnvironment {
     }
 
     public StringBuilder print(StringBuilder sb) {
-        return sb.append("ExecutionEnvironment:Dictionary=").append(_dictionary.toString()).append(";DataSource=").append(_dataSource.toString());
+        return sb.append("Persistence:DataSource=").append(_dataSource.toString());
+    }
+
+    Map<String, ParametricStatement> getStatementMap() {
+        return _statements;
     }
 }
