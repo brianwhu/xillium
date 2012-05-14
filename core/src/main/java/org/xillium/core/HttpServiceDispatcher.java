@@ -67,9 +67,19 @@ public class HttpServiceDispatcher extends HttpServlet {
      */
     public void init() throws ServletException {
         WebApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
-        _persistence = (Persistence)wac.getBean("persistence");
         _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
-        scanServiceModules(wac, _persistence.getStatementMap());
+        _persistence = (Persistence)wac.getBean("persistence");
+        List<PlatformLifeCycleAware> picas = scanServiceModules(wac, _persistence.getStatementMap());
+
+        _logger.info("Let all PlatformLifeCycleAware objects configure themselves");
+        for (PlatformLifeCycleAware plca: picas) {
+            plca.configure();
+        }
+
+        _logger.info("Now all PlatformLifeCycleAware objects can be initialized");
+        for (PlatformLifeCycleAware plca: picas) {
+            plca.initialize();
+        }
     }
 
     /**
@@ -205,8 +215,9 @@ public class HttpServiceDispatcher extends HttpServlet {
         }
     }
 
-    private void scanServiceModules(WebApplicationContext wac, Map<String, ParametricStatement> statements) throws ServletException {
+    private List<PlatformLifeCycleAware> scanServiceModules(WebApplicationContext wac, Map<String, ParametricStatement> statements) throws ServletException {
         ServletContext context = getServletContext();
+        List<PlatformLifeCycleAware> plca = new ArrayList<PlatformLifeCycleAware>();
 
         // if intrinsic services are wanted
         Map<String, String> descriptions = new HashMap<String, String>();
@@ -227,7 +238,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                             while ((entry = jis.getNextJarEntry()) != null) {
                                 if (SERVICE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Services:" + jar + ":" + entry.getName());
-                                    loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions);
+                                    loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plca);
                                 } else if (STORAGE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Storages:" + jar + ":" + entry.getName());
                                     assembler.build(getJarEntryAsStream(jis));
@@ -251,9 +262,11 @@ public class HttpServiceDispatcher extends HttpServlet {
 
         _services.put("x!ll!um/desc", new DescService(descriptions));
         _services.put("x!ll!um/list", new ListService(_services));
+
+        return plca;
     }
 
-    private GenericApplicationContext loadServiceModule(WebApplicationContext wac, String name, InputStream stream, Map<String, String> desc) {
+    private void loadServiceModule(WebApplicationContext wac, String name, InputStream stream, Map<String, String> desc, List<PlatformLifeCycleAware> plca) {
         GenericApplicationContext gac = new GenericApplicationContext(wac);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
@@ -282,7 +295,9 @@ public class HttpServiceDispatcher extends HttpServlet {
             _services.put(fullname, (Service)gac.getBean(id));
         }
 
-        return gac;
+        for (String id: gac.getBeanNamesForType(PlatformLifeCycleAware.class)) {
+            plca.add((PlatformLifeCycleAware)gac.getBean(id));
+        }
     }
 
     private static InputStream getJarEntryAsStream(JarInputStream jis) throws IOException {

@@ -5,7 +5,8 @@ import org.xillium.data.validation.Dictionary;
 
 
 /**
- * A Service interface. Transactions should be managed using Spring's @Transactional annotation on the implementation class.
+ * A Service interface. Transactions should be managed using Spring's @org.springframework.transaction.annotation.Transactional
+ * annotation on the implementation class or method.
  */
 public interface Service {
 	/**
