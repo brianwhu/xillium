@@ -14,6 +14,7 @@ import org.apache.commons.fileupload.util.Streams;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.web.context.*;
 import org.springframework.web.context.support.*;
@@ -45,9 +46,11 @@ import org.xillium.core.intrinsic.*;
  */
 public class HttpServiceDispatcher extends HttpServlet {
     private static final String MODULE_NAME = "Xillium-Module-Name";
+    private static final String MODULE_TYPE = "Xillium-Module-Type";
     private static final String REQUEST_VOCABULARY = "request-vocabulary.xml";
     private static final String SERVICE_CONFIG = "service-configuration.xml";
     private static final String STORAGE_CONFIG = "storage-configuration.xml";
+
     private static final Pattern URI_REGEX = Pattern.compile("/[^/?]+/([^/?]+/[^/?]+)"); // '/context/module/service'
     private static final File TEMPORARY = null;
     private static final Logger _logger = Logger.getLogger(HttpServiceDispatcher.class.getName());
@@ -66,18 +69,33 @@ public class HttpServiceDispatcher extends HttpServlet {
      * Initializes the servlet
      */
     public void init() throws ServletException {
-        WebApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+        ApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
         _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
         _persistence = (Persistence)wac.getBean("persistence");
-        List<PlatformLifeCycleAware> picas = scanServiceModules(wac, _persistence.getStatementMap());
 
-        _logger.info("Let all PlatformLifeCycleAware objects configure themselves");
-        for (PlatformLifeCycleAware plca: picas) {
+        List<PlatformLifeCycleAware> plcas = new ArrayList<PlatformLifeCycleAware>();
+        wac = scanServiceModules(wac, plcas, true);
+
+        _logger.info("SUPER modules loaded, now let all super PlatformLifeCycleAware objects configure themselves");
+        for (PlatformLifeCycleAware plca: plcas) {
             plca.configure();
         }
 
-        _logger.info("Now all PlatformLifeCycleAware objects can be initialized");
-        for (PlatformLifeCycleAware plca: picas) {
+        _logger.info("Now all super PlatformLifeCycleAware objects can be initialized");
+        for (PlatformLifeCycleAware plca: plcas) {
+            plca.initialize();
+        }
+
+        plcas.clear();
+        scanServiceModules(wac, plcas, false);
+
+        _logger.info("NORMAL modules loaded, now let all normal PlatformLifeCycleAware objects configure themselves");
+        for (PlatformLifeCycleAware plca: plcas) {
+            plca.configure();
+        }
+
+        _logger.info("Now all normal PlatformLifeCycleAware objects can be initialized");
+        for (PlatformLifeCycleAware plca: plcas) {
             plca.initialize();
         }
     }
@@ -215,9 +233,8 @@ public class HttpServiceDispatcher extends HttpServlet {
         }
     }
 
-    private List<PlatformLifeCycleAware> scanServiceModules(WebApplicationContext wac, Map<String, ParametricStatement> statements) throws ServletException {
+    private ApplicationContext scanServiceModules(ApplicationContext wac, List<PlatformLifeCycleAware> plcas, boolean isSuper) throws ServletException {
         ServletContext context = getServletContext();
-        List<PlatformLifeCycleAware> plca = new ArrayList<PlatformLifeCycleAware>();
 
         // if intrinsic services are wanted
         Map<String, String> descriptions = new HashMap<String, String>();
@@ -232,13 +249,19 @@ public class HttpServiceDispatcher extends HttpServlet {
                     JarInputStream jis = new JarInputStream(context.getResourceAsStream(jar));
                     try {
                         String name = jis.getManifest().getMainAttributes().getValue(MODULE_NAME);
-                        if (name != null) { // a Xillium Module
-                            factory.setBurnedIn(StorageConfiguration.class, statements, name);
+						// only look into Xillium modules of the right type (super or normal)
+                        if (name != null && (!isSuper || "super".equals(jis.getManifest().getMainAttributes().getValue(MODULE_TYPE)))) {
+                            _logger.fine("Scanning module " + name + ", super=" + isSuper);
+                            factory.setBurnedIn(StorageConfiguration.class, _persistence.getStatementMap(), name);
                             JarEntry entry;
                             while ((entry = jis.getNextJarEntry()) != null) {
                                 if (SERVICE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Services:" + jar + ":" + entry.getName());
-                                    loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plca);
+                                    if (isSuper) {
+                                        wac = loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plcas);
+                                    } else {
+                                        loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plcas);
+                                    }
                                 } else if (STORAGE_CONFIG.equals(entry.getName())) {
                                     _logger.log(Level.INFO, "Storages:" + jar + ":" + entry.getName());
                                     assembler.build(getJarEntryAsStream(jis));
@@ -263,10 +286,10 @@ public class HttpServiceDispatcher extends HttpServlet {
         _services.put("x!ll!um/desc", new DescService(descriptions));
         _services.put("x!ll!um/list", new ListService(_services));
 
-        return plca;
+        return wac;
     }
 
-    private void loadServiceModule(WebApplicationContext wac, String name, InputStream stream, Map<String, String> desc, List<PlatformLifeCycleAware> plca) {
+    private ApplicationContext loadServiceModule(ApplicationContext wac, String name, InputStream stream, Map<String, String> desc, List<PlatformLifeCycleAware> plcas) {
         GenericApplicationContext gac = new GenericApplicationContext(wac);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
@@ -296,8 +319,10 @@ public class HttpServiceDispatcher extends HttpServlet {
         }
 
         for (String id: gac.getBeanNamesForType(PlatformLifeCycleAware.class)) {
-            plca.add((PlatformLifeCycleAware)gac.getBean(id));
+            plcas.add((PlatformLifeCycleAware)gac.getBean(id));
         }
+
+        return gac;
     }
 
     private static InputStream getJarEntryAsStream(JarInputStream jis) throws IOException {
