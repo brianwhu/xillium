@@ -36,8 +36,9 @@ public class ParametricQuery extends ParametricStatement {
      * The ResultSetWorker must close the result set before returning.
      */
     public <T> T executeSelect(Connection conn, DataObject object, ResultSetWorker<T> worker) throws Exception {
-        PreparedStatement statement = prepare(conn, object);
+        PreparedStatement statement = conn.prepareStatement(_sql);
         try {
+            load(statement, object);
             return worker.process(statement.executeQuery());
         } finally {
             statement.close();

@@ -18,7 +18,7 @@ public class ParametricStatement {
         /**
          * Constructs a named formal parameter with name <code>n</code> and type <code>t</code>.
          *
-         * If n ends with '?' the parameter accepts null values.
+         * If the name ends with '?' the parameter accepts null values.
          */
         public Param(String n, int t) {
             if (n.endsWith("?")) {
@@ -72,7 +72,7 @@ public class ParametricStatement {
             throw new IllegalArgumentException("Wrong number of parameters in '" + sql +'\'');
         }
     }
-
+/*
     protected PreparedStatement prepare(Connection conn, DataObject object) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql, Statement.RETURN_GENERATED_KEYS);
 
@@ -95,31 +95,53 @@ public class ParametricStatement {
         }
         return statement;
     }
+*/
+    protected PreparedStatement load(PreparedStatement statement, DataObject object) throws SQLException {
+        Class type = object.getClass();
 
-/*
-    private void prepare(Connection conn, DataBinder binder) throws SQLException {
-        if (_statement == null) {
-            _statement = conn.prepareStatement(_sql);
-        }
-
-        _statement.clearParameters();
-        for (int i = 0; i < _parameters.length; ++i) {
+        for (int i = 0; i < _params.length; ++i) {
             try {
-                _statement.setObject(i+1, ?, _parameters[i].type);
+                statement.setObject(i+1, type.getField(_params[i].name).get(object), _params[i].type);
+            } catch (NoSuchFieldException x) {
+                if (_params[i].nullable) {
+                    statement.setNull(i+1, _params[i].type);
+                } else {
+                    statement.close();
+                    throw new SQLException("Failed to retrieve non-nullable '" + _params[i].name + "' from DataObject (" + type.getName() + ')', x);
+                }
             } catch (Exception x) {
-                throw new SQLException("Failed to retrieve parameter from DataBinder", x);
+                statement.close();
+                throw new SQLException("Exception in retrieval of '" + _params[i].name + "' from DataObject (" + type.getName() + ')', x);
             }
         }
+        return statement;
     }
-*/
 
     /**
      * Executes an UPDATE or DELETE statement
      */
     public int executeUpdate(Connection conn, DataObject object) throws SQLException {
-        PreparedStatement statement = prepare(conn, object);
+        PreparedStatement statement = conn.prepareStatement(_sql);
         try {
+            load(statement, object);
             return statement.executeUpdate();
+        } finally {
+            statement.close();
+        }
+    }
+
+    /**
+     * Executes a batch UPDATE or DELETE statement
+     */
+    public int executeUpdate(Connection conn, DataObject[] objects) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(_sql);
+        try {
+            for (DataObject object: objects) {
+                load(statement, object);
+                statement.addBatch();
+            }
+            int count = 0; for (int affected: statement.executeBatch()) count += affected;
+            return count;
         } finally {
             statement.close();
         }
@@ -129,14 +151,41 @@ public class ParametricStatement {
      * Executes an INSERT statement
      */
     public long[] executeInsert(Connection conn, DataObject object, boolean generatedKeys) throws SQLException {
-        PreparedStatement statement = prepare(conn, object);
+        PreparedStatement statement = conn.prepareStatement(_sql, Statement.RETURN_GENERATED_KEYS);
         try {
+            load(statement, object);
             long[] keys = new long[statement.executeUpdate()];
             if (generatedKeys) {
                 ResultSet rs = statement.getGeneratedKeys();
                 for (int i = 0; rs.next(); ++i) {
                     keys[i] = rs.getLong(1);
                 }
+                rs.close();
+            }
+            return keys;
+        } finally {
+            statement.close();
+        }
+    }
+
+    /**
+     * Executes a batch INSERT statement
+     */
+    public long[] executeInsert(Connection conn, DataObject[] objects, boolean generatedKeys) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(_sql, Statement.RETURN_GENERATED_KEYS);
+        try {
+            for (DataObject object: objects) {
+                load(statement, object);
+                statement.addBatch();
+            }
+            int count = 0; for (int affected: statement.executeBatch()) count += affected;
+            long[] keys = new long[count];
+            if (generatedKeys) {
+                ResultSet rs = statement.getGeneratedKeys();
+                for (int i = 0; rs.next(); ++i) {
+                    keys[i] = rs.getLong(1);
+                }
+                rs.close();
             }
             return keys;
         } finally {
@@ -173,5 +222,5 @@ public class ParametricStatement {
     }
 
     private final Param[] _params;
-    private String _sql;
+    protected String _sql;
 }

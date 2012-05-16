@@ -2,7 +2,7 @@ package org.xillium.data.persistence;
 
 import org.xillium.base.beans.Beans;
 import org.xillium.data.*;
-import java.math.BigDecimal;
+//import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 import java.lang.reflect.Field;
@@ -54,20 +54,23 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                         try {
                             c2f.field.set(object, value);
                         } catch (IllegalArgumentException x) {
-                            // Oracle && BigDecimal/Timestamp?
-                            if (value instanceof BigDecimal) {
+                            // size of "value" bigger than that of "field"?
+                            if (value instanceof Number) {
                                 try {
+									Number number = (Number)value;
                                     Class ftype = c2f.field.getType();
                                     if (Double.class.isAssignableFrom(ftype)) {
-                                        c2f.field.set(object, ((BigDecimal)value).doubleValue());
+                                        c2f.field.set(object, number.doubleValue());
                                     } else if (Float.class.isAssignableFrom(ftype)) {
-                                        c2f.field.set(object, ((BigDecimal)value).floatValue());
+                                        c2f.field.set(object, number.floatValue());
                                     } else if (Long.class.isAssignableFrom(ftype)) {
-                                        c2f.field.set(object, ((BigDecimal)value).longValue());
+                                        c2f.field.set(object, number.longValue());
                                     } else if (Integer.class.isAssignableFrom(ftype)) {
-                                        c2f.field.set(object, ((BigDecimal)value).intValue());
+                                        c2f.field.set(object, number.intValue());
+                                    } else if (Short.class.isAssignableFrom(ftype)) {
+                                        c2f.field.set(object, number.shortValue());
                                     } else {
-                                        c2f.field.set(object, ((BigDecimal)value).shortValue());
+                                        c2f.field.set(object, number.byteValue());
                                     }
                                 } catch (Throwable t) {
                                     throw x;
