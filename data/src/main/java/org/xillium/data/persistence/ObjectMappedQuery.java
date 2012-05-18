@@ -22,13 +22,17 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
         }
     }
 
-	private class ResultSetMapper implements ParametricQuery.ResultSetWorker<List<T>> {
-        private volatile List<Column2Field> _list; // lazily initialized with double checked locking
+	private class ResultSetMapper implements ParametricQuery.ResultSetWorker<Collector<T>> {
+        private final Collector<T> _collector;
 
-		public List<T> process(ResultSet rs) throws SQLException, InstantiationException, IllegalAccessException {
+        public ResultSetMapper(Collector<T> c) {
+            _collector = c;
+        }
+
+		public Collector<T> process(ResultSet rs) throws SQLException, InstantiationException, IllegalAccessException {
 			try {
                 if (_list == null) {
-                    synchronized(this) {
+                    synchronized(ObjectMappedQuery.this) {
                         if (_list == null) {
                             List<Column2Field> list = new ArrayList<Column2Field>();
                             ResultSetMetaData meta = rs.getMetaData();
@@ -45,7 +49,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                     }
 				}
 
-				List<T> rows = new ArrayList<T>();
+				//List<T> rows = new ArrayList<T>();
 				while (rs.next()) {
 					T object = _type.newInstance();
 					for (Column2Field c2f: _list) {
@@ -86,17 +90,21 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                             }
                         }
 					}
-					rows.add(object);
+					//rows.add(object);
+                    _collector.add(object);
 				}
-				return rows;
+				//return rows;
+                return _collector;
 			} finally {
 				rs.close();
 			}
 		}
 	}
 
+    private static class ListCollector<T> extends ArrayList<T> implements Collector<T> {}
 	private final Class<T> _type;
-	private final ResultSetMapper _mapper = new ResultSetMapper();
+	private final ResultSetMapper _lister = new ResultSetMapper(new ListCollector<T>());
+    private volatile List<Column2Field> _list; // lazily initialized with double checked locking
 
     public ObjectMappedQuery(Param[] parameters, String sql, Class<T> type) throws IllegalArgumentException {
 		super(parameters, sql);
@@ -112,7 +120,17 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
         }
     }
 
+	/**
+	 * Execute the query and returns the results as a list of objects.
+	 */
     public List<T> getResults(Connection conn, DataObject object) throws Exception {
-		return super.executeSelect(conn, object, _mapper);
+		return (List<T>)super.executeSelect(conn, object, _lister);
+    }
+
+	/**
+	 * Execute the query and passes the results to a Collector.
+	 */
+    public Collector<T> getResults(Connection conn, DataObject object, Collector<T> collector) throws Exception {
+		return super.executeSelect(conn, object, new ResultSetMapper(collector));
     }
 }

@@ -6,7 +6,7 @@ package org.xillium.base.beans;
 
 
 /**
-* A collection of commonly used String manipulation utilities.
+* A collection of commonly used String related utilities.
 */
 public class Strings {
     static final byte[] HEX_CHARS = {
@@ -24,4 +24,12 @@ public class Strings {
         }
         return new String(hex, "ASCII");
     }
+
+	public static StringBuilder appendStackTrace(StringBuilder sb, Throwable t) {
+		sb.append(t.getClass()).append('\n');
+		for (StackTraceElement e: t.getStackTrace()) {
+			sb.append(e.toString()).append('\n');
+		}
+		return sb;
+	}
 }

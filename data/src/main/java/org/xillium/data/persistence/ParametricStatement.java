@@ -55,7 +55,8 @@ public class ParametricStatement {
                 }
             }
         } else {
-            throw new NullPointerException();
+            //throw new NullPointerException();
+            _params = NoParams;
         }
     }
 
@@ -97,21 +98,23 @@ public class ParametricStatement {
     }
 */
     protected PreparedStatement load(PreparedStatement statement, DataObject object) throws SQLException {
-        Class type = object.getClass();
+        if (_params.length > 0) {
+            Class type = object.getClass();
 
-        for (int i = 0; i < _params.length; ++i) {
-            try {
-                statement.setObject(i+1, type.getField(_params[i].name).get(object), _params[i].type);
-            } catch (NoSuchFieldException x) {
-                if (_params[i].nullable) {
-                    statement.setNull(i+1, _params[i].type);
-                } else {
+            for (int i = 0; i < _params.length; ++i) {
+                try {
+                    statement.setObject(i+1, type.getField(_params[i].name).get(object), _params[i].type);
+                } catch (NoSuchFieldException x) {
+                    if (_params[i].nullable) {
+                        statement.setNull(i+1, _params[i].type);
+                    } else {
+                        statement.close();
+                        throw new SQLException("Failed to retrieve non-nullable '" + _params[i].name + "' from DataObject (" + type.getName() + ')', x);
+                    }
+                } catch (Exception x) {
                     statement.close();
-                    throw new SQLException("Failed to retrieve non-nullable '" + _params[i].name + "' from DataObject (" + type.getName() + ')', x);
+                    throw new SQLException("Exception in retrieval of '" + _params[i].name + "' from DataObject (" + type.getName() + ')', x);
                 }
-            } catch (Exception x) {
-                statement.close();
-                throw new SQLException("Exception in retrieval of '" + _params[i].name + "' from DataObject (" + type.getName() + ')', x);
             }
         }
         return statement;
@@ -221,6 +224,7 @@ public class ParametricStatement {
         return sb;
     }
 
+    private static final Param[] NoParams = new Param[0];
     private final Param[] _params;
     protected String _sql;
 }
