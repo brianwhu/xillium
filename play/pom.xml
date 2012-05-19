@@ -33,4 +33,12 @@
         </plugins>
     </build>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-jaxrs</artifactId>
+            <version>1.9.6</version>
+        </dependency>
+    </dependencies>
+
 </project>

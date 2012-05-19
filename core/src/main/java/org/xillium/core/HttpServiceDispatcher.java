@@ -198,7 +198,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             try {
                 JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
 
-                jb.quote("attibutes").append(":{");
+                jb.quote("values").append(":{");
                 Iterator<String> it = binder.keySet().iterator();
                 for (int i = 0; it.hasNext(); ++i) {
                     String key = it.next();
@@ -248,28 +248,31 @@ public class HttpServiceDispatcher extends HttpServlet {
                 try {
                     JarInputStream jis = new JarInputStream(context.getResourceAsStream(jar));
                     try {
-                        String name = jis.getManifest().getMainAttributes().getValue(MODULE_NAME);
 						// only look into Xillium modules of the right type (super or normal)
-                        if (name != null && (!isSuper || "super".equals(jis.getManifest().getMainAttributes().getValue(MODULE_TYPE)))) {
-                            _logger.fine("Scanning module " + name + ", super=" + isSuper);
-                            factory.setBurnedIn(StorageConfiguration.class, _persistence.getStatementMap(), name);
-                            JarEntry entry;
-                            while ((entry = jis.getNextJarEntry()) != null) {
-                                if (SERVICE_CONFIG.equals(entry.getName())) {
-                                    _logger.log(Level.INFO, "Services:" + jar + ":" + entry.getName());
-                                    if (isSuper) {
-                                        wac = loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plcas);
-                                    } else {
-                                        loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plcas);
-                                    }
-                                } else if (STORAGE_CONFIG.equals(entry.getName())) {
-                                    _logger.log(Level.INFO, "Storages:" + jar + ":" + entry.getName());
-                                    assembler.build(getJarEntryAsStream(jis));
-                                } else if (REQUEST_VOCABULARY.equals(entry.getName())) {
-                                    _logger.log(Level.INFO, "RequestVocabulary:" + jar + ":" + entry.getName());
-                                    assembler.build(getJarEntryAsStream(jis));
-                                }
-                            }
+                        String name = jis.getManifest().getMainAttributes().getValue(MODULE_NAME);
+                        if (name != null) {
+							String type = jis.getManifest().getMainAttributes().getValue(MODULE_TYPE);
+							if (isSuper && "super".equals(type) || !isSuper && !"super".equals(type)) {
+								_logger.fine("Scanning module " + name + ", super=" + isSuper);
+								factory.setBurnedIn(StorageConfiguration.class, _persistence.getStatementMap(), name);
+								JarEntry entry;
+								while ((entry = jis.getNextJarEntry()) != null) {
+									if (SERVICE_CONFIG.equals(entry.getName())) {
+										_logger.log(Level.INFO, "Services:" + jar + ":" + entry.getName());
+										if (isSuper) {
+											wac = loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plcas);
+										} else {
+											loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plcas);
+										}
+									} else if (STORAGE_CONFIG.equals(entry.getName())) {
+										_logger.log(Level.INFO, "Storages:" + jar + ":" + entry.getName());
+										assembler.build(getJarEntryAsStream(jis));
+									} else if (REQUEST_VOCABULARY.equals(entry.getName())) {
+										_logger.log(Level.INFO, "RequestVocabulary:" + jar + ":" + entry.getName());
+										assembler.build(getJarEntryAsStream(jis));
+									}
+								}
+							}
                         }
                     } finally {
                         jis.close();
