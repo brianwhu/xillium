@@ -8,7 +8,7 @@ import java.text.MessageFormat;
 public class ShortLoggerFormatter extends Formatter {
     private static final String LOG_MSG_PREFIX = "##";
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
-    private static final MessageFormat formatter = new MessageFormat("{0,date} {0,time}");
+    private static final MessageFormat formatter = new MessageFormat("{0,date,short} {0,time,short}");
 
     private Object args[] = new Object[]{ new Date() };
     private StringBuffer text = new StringBuffer(LOG_MSG_PREFIX);

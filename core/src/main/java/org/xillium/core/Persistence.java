@@ -20,6 +20,14 @@ public class Persistence {
     }
 
     /**
+     * Obtains a connection that is bound to the current transaction, which will be released automatically
+     * upon transaction commit/rollback.
+     */
+    public Connection getConnection() {
+        return DataSourceUtils.getConnection(_dataSource);
+    }
+
+    /**
      * Executes an UPDATE/DELETE statement.
      */
     public int executeUpdate(String name, DataObject object) throws SQLException {

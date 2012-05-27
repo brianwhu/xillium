@@ -45,22 +45,26 @@ public class ParametricStatement {
                 int colon = params[i].indexOf(':');
                 if (colon > 0) {
                     try {
-                        int type = java.sql.Types.class.getField(params[i].substring(colon+1)).getInt(null);
+						int type = Integer.parseInt(params[i].substring(colon+1));
                         _params[i] = new Param(params[i].substring(0, colon), type);
-                    } catch (Exception x) {
-                        throw new IllegalArgumentException("Parameter specification", x);
-                    }
+					} catch (NumberFormatException t) {
+						try {
+							int type = java.sql.Types.class.getField(params[i].substring(colon+1)).getInt(null);
+							_params[i] = new Param(params[i].substring(0, colon), type);
+						} catch (Exception x) {
+							throw new IllegalArgumentException("Parameter specification", x);
+						}
+					}
                 } else {
                     throw new IllegalArgumentException("Parameter specification: missing type in " + params[i]);
                 }
             }
         } else {
-            //throw new NullPointerException();
             _params = NoParams;
         }
     }
 
-    public void set(String sql) throws IllegalArgumentException {
+    public ParametricStatement set(String sql) throws IllegalArgumentException {
         int count = 0;
         int qmark = sql.indexOf('?');
         while (qmark > 0) {
@@ -72,31 +76,9 @@ public class ParametricStatement {
         } else {
             throw new IllegalArgumentException("Wrong number of parameters in '" + sql +'\'');
         }
+		return this;
     }
-/*
-    protected PreparedStatement prepare(Connection conn, DataObject object) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(_sql, Statement.RETURN_GENERATED_KEYS);
 
-        Class type = object.getClass();
-        //statement.clearParameters();
-        for (int i = 0; i < _params.length; ++i) {
-            try {
-                statement.setObject(i+1, type.getField(_params[i].name).get(object), _params[i].type);
-            } catch (NoSuchFieldException x) {
-                if (_params[i].nullable) {
-                    statement.setNull(i+1, _params[i].type);
-                } else {
-                    statement.close();
-            throw new SQLException("Failed to retrieve '" + _params[i].name + "' from DataObject (" + type.getName() + ')', x);
-                }
-            } catch (Exception x) {
-                statement.close();
-            throw new SQLException("Failed to retrieve '" + _params[i].name + "' from DataObject (" + type.getName() + ')', x);
-            }
-        }
-        return statement;
-    }
-*/
     protected PreparedStatement load(PreparedStatement statement, DataObject object) throws SQLException {
         if (_params.length > 0) {
             Class type = object.getClass();
@@ -121,7 +103,9 @@ public class ParametricStatement {
     }
 
     /**
-     * Executes an UPDATE or DELETE statement
+     * Executes an UPDATE or DELETE statement.
+     *
+     * @returns the number of rows affected
      */
     public int executeUpdate(Connection conn, DataObject object) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql);
@@ -134,7 +118,9 @@ public class ParametricStatement {
     }
 
     /**
-     * Executes a batch UPDATE or DELETE statement
+     * Executes a batch UPDATE or DELETE statement.
+     *
+     * @returns the number of rows affected
      */
     public int executeUpdate(Connection conn, DataObject[] objects) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql);
@@ -151,7 +137,10 @@ public class ParametricStatement {
     }
 
     /**
-     * Executes an INSERT statement
+     * Executes an INSERT statement.
+     *
+     * @returns an array whose length indicates the number of rows inserted. If generatedKeys is true, the array
+     *          contains the keys; otherwise the content of the array is not defined.
      */
     public long[] executeInsert(Connection conn, DataObject object, boolean generatedKeys) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql, Statement.RETURN_GENERATED_KEYS);
@@ -172,7 +161,10 @@ public class ParametricStatement {
     }
 
     /**
-     * Executes a batch INSERT statement
+     * Executes a batch INSERT statement.
+     *
+     * @returns an array whose length indicates the number of rows inserted. If generatedKeys is true, the array
+     *          contains the keys; otherwise the content of the array is not defined.
      */
     public long[] executeInsert(Connection conn, DataObject[] objects, boolean generatedKeys) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql, Statement.RETURN_GENERATED_KEYS);
@@ -196,25 +188,6 @@ public class ParametricStatement {
         }
     }
 
-/*
-    public ResultSet intoResultSet(Connection conn, DataObject object) throws SQLException {
-        PreparedStatement statement = prepare(conn, object);
-        try {
-            return statement.executeQuery();
-        } finally {
-            statement.close();
-        }
-    }
-
-    public <T> void executeQuery(Connection conn, DataObject object, ResultSetWorker<T> worker) throws Exception {
-        PreparedStatement statement = prepare(conn, object);
-        try {
-            return worker.process(statement.executeQuery());
-        } finally {
-            statement.close();
-        }
-    }
-*/
     public StringBuilder print(StringBuilder sb) {
         sb.append('[');
         for (Param param: _params) {

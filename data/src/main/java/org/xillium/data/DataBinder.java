@@ -34,7 +34,9 @@ public class DataBinder extends HashMap<String, String> {
         int count = this.size();
         for (String key: _rsets.keySet()) {
             CachedResultSet crs = _rsets.get(key);
-            count += crs.columns.length*crs.rows.size();
+            if (crs.rows != null) {
+                count += crs.columns.length*crs.rows.size();
+            }
         }
         return count * 64;
     }

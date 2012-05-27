@@ -192,18 +192,20 @@ public class HttpServiceDispatcher extends HttpServlet {
             if (message == null || message.length() == 0) {
             	message = x.getClass().getName();
             }
-            binder.put("_exception", message);
+            binder.put("_x_", message);
         } finally {
-            res.setHeader("ContentType", "application/json");
+            res.setHeader("Content-Type", "application/json;charset=UTF-8");
             try {
                 JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
 
-                jb.quote("values").append(":{");
+                jb.quote("params").append(":{ ");
                 Iterator<String> it = binder.keySet().iterator();
                 for (int i = 0; it.hasNext(); ++i) {
                     String key = it.next();
                     String val = binder.get(key);
-                    if (val.startsWith("json:")) {
+                    if (val == null) {
+                        jb.quote(key).append(":null");
+                    } else if (val.startsWith("json:")) {
                         jb.quote(key).append(':').append(val.substring(5));
                     } else {
                         jb.serialize(key, val);
@@ -212,12 +214,13 @@ public class HttpServiceDispatcher extends HttpServlet {
                 }
                 jb.replaceLast('}').append(',');
 
-                jb.quote("tables").append(":{");
+                jb.quote("tables").append(":{ ");
                 Set<String> rsets = binder.getResultSetNames();
                 it = rsets.iterator();
                 while (it.hasNext()) {
-                    CachedResultSet rset = binder.getResultSet(it.next());
-                    jb.serialize(rset);
+                    String name = it.next();
+                    jb.quote(name).append(":");
+                    binder.getResultSet(name).toJSON(jb);
                     jb.append(',');
                 }
                 jb.replaceLast('}');
@@ -313,8 +316,13 @@ public class HttpServiceDispatcher extends HttpServlet {
                     desc.put(fullname, "json:{}");
                 }
             } catch (ClassNotFoundException x) {
-                _logger.log(Level.WARNING, "Service '" + fullname + "' does not expose its request structure");
-                desc.put(fullname, "json:{}");
+                try {
+                    Class<? extends DataObject> request = ((DynamicService)gac.getBean(id)).getRequestType();
+                    desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
+                } catch (Exception t) {
+                    _logger.warning("Service '" + fullname + "' does not expose its request structure" + t.getClass());
+                    desc.put(fullname, "json:{}");
+                }
             }
 
             _logger.log(Level.INFO, "Service '" + fullname + "' class=" + gac.getBean(id).getClass().getName());
