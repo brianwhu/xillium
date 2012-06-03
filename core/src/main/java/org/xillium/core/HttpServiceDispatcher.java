@@ -36,10 +36,10 @@ import org.xillium.core.intrinsic.*;
  * <p/>
  * The fabric of operation, administration, and maintenance (foam)
  * <ul>
- *	<li><code>/[context]/x!ll!um/[service]</code><p/>
+ *	<li><code>/[context]/x!/[service]</code><p/>
  *		<ul>
- *			<li>service_list</li>
- *			<li>service_desc - parameter description</li>
+ *			<li>list</li>
+ *			<li>desc - parameter description</li>
  *		</ul>
  *	</li>
  * </ul>
@@ -289,8 +289,8 @@ public class HttpServiceDispatcher extends HttpServlet {
             throw new ServletException("Failed to construct an XMLBeanAssembler", x);
         }
 
-        _services.put("x!ll!um/desc", new DescService(descriptions));
-        _services.put("x!ll!um/list", new ListService(_services));
+        _services.put("x!/desc", new DescService(descriptions));
+        _services.put("x!/list", new ListService(_services));
 
         return wac;
     }

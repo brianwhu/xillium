@@ -19,7 +19,7 @@ public class SubmitPurchaseOrderData implements DataObject {
     public Product[] products;
 
     @required @subtype("DollarAmount") @range(min="0.00", max="10000.00")
-    public Double subTotal;
+    public double subTotal;
 
     @range(min="0.00", max="1.00")
     public Double taxRate;

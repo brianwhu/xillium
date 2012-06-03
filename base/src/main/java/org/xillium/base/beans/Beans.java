@@ -89,7 +89,7 @@ public class Beans {
         } else if (type == char.class) {
             return Character.class;
         } else {
-            throw new RuntimeException(type.getName());
+            return type;
         }
     }
 

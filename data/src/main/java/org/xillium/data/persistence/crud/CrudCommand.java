@@ -115,7 +115,7 @@ public class CrudCommand {
 		CtClass cc = pool.makeClass(classname);
 		cc.addInterface(pool.getCtClass("org.xillium.data.DataObject"));
 		ConstPool cp = cc.getClassFile().getConstPool();
-		//List<ParametricStatement> statements = new ArrayList<ParametricStatement>();
+
 		List<String> fragments = new ArrayList<String>();
 		Set<String> unique = new HashSet<String>();
 
@@ -269,7 +269,7 @@ public class CrudCommand {
 					unique.add(name);
 				}
 
-				CtField field = new CtField(pool.getCtClass(sqlClassName(rsmeta, idx)), Beans.toLowerCamelCase(name, '_'), cc);
+				CtField field = new CtField(pool.getCtClass(sqlTypeName(rsmeta, idx)), Beans.toLowerCamelCase(name, '_'), cc);
                 field.setModifiers(java.lang.reflect.Modifier.PUBLIC);
 				AnnotationsAttribute attr = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
 
@@ -294,7 +294,6 @@ public class CrudCommand {
 			columns.close();
 			stmt.close();
 
-        	//ParametricStatement statement = null;
 			switch (action.op) {
 			case CREATE:
 				fragments.add("org.xillium.data.persistence.ParametricStatement");
@@ -317,8 +316,6 @@ public class CrudCommand {
             case SEARCH:
                 break;
 			}
-
-			//statements.add(statement);
 		}
 
 		if (action.op == Operation.RETRIEVE) {
@@ -360,12 +357,11 @@ public class CrudCommand {
         return sb.toString();
     }
 
-	private static String sqlClassName(ResultSetMetaData rsmeta, int index) throws SQLException {
+	private static String sqlTypeName(ResultSetMetaData rsmeta, int index) throws SQLException {
 		switch (rsmeta.getColumnType(index)) {
 		case Types.NUMERIC:
 			int precision = rsmeta.getPrecision(index);
-			int scale = rsmeta.getScale(index);
-			if (scale == 0) {
+			if (rsmeta.getScale(index) == 0) {
 				if (precision > 9) {
 					return "java.lang.Long";
 				} else if (precision > 4) {

@@ -1,6 +1,7 @@
 package org.xillium.data.validation;
 
 import org.xillium.base.Trace;
+import org.xillium.base.beans.Beans;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.regex.*;
@@ -41,6 +42,7 @@ public class Validator {
     public Validator(String name, Class<?> type, Field field) throws IllegalArgumentException {
         Trace.g.std.note(Validator.class, "Enter Validator.<init>(" + name + ", " + field + ')');
         _name = name;
+        type = Beans.boxPrimitive(type);
 
         try {
             _valueOf = type == String.class ? null : type.getMethod("valueOf", String.class);

@@ -38,7 +38,7 @@ public class CachedResultSet {
 
             this.columns = new String[width];
             for (int i = 0; i < width; ++i) {
-                columns[i] = Beans.toCamelCase(metaData.getColumnName(i+1).toLowerCase(), '_');
+                columns[i] = Beans.toLowerCamelCase(metaData.getColumnName(i+1), '_');
             }
 
             if (rset.next()) {
