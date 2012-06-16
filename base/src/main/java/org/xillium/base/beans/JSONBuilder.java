@@ -76,18 +76,30 @@ public class JSONBuilder {
             Class<?> t = value.getClass();
             if (t.isArray()) {
                 _sb.append('[');
-                for (int i = 0; i < Array.getLength(value); ++i) {
+                boolean hasElements = false;
+                for (int i = 0, ii = Array.getLength(value); i < ii; ++i) {
                     serialize(Array.get(value, i));
                     _sb.append(',');
+                    hasElements = true;
                 }
-                _sb.setCharAt(_sb.length()-1, ']');
+                if (hasElements) {
+                    _sb.setCharAt(_sb.length()-1, ']');
+                } else {
+                    _sb.append(']');
+                }
             } else if (Iterable.class.isAssignableFrom(t)) {
                 _sb.append('[');
+                boolean hasElements = false;
                 for (Object object: (Iterable<?>)value) {
                     serialize(object);
                     _sb.append(',');
+                    hasElements = true;
                 }
-                _sb.setCharAt(_sb.length()-1, ']');
+                if (hasElements) {
+                    _sb.setCharAt(_sb.length()-1, ']');
+                } else {
+                    _sb.append(']');
+                }
             } else if (Number.class.isAssignableFrom(t) || Boolean.class.isAssignableFrom(t)) {
                 _sb.append(value.toString());
             } else if (String.class == t) {

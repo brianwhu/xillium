@@ -45,16 +45,16 @@ public class ParametricStatement {
                 int colon = params[i].indexOf(':');
                 if (colon > 0) {
                     try {
-						int type = Integer.parseInt(params[i].substring(colon+1));
+                        int type = Integer.parseInt(params[i].substring(colon+1));
                         _params[i] = new Param(params[i].substring(0, colon), type);
-					} catch (NumberFormatException t) {
-						try {
-							int type = java.sql.Types.class.getField(params[i].substring(colon+1)).getInt(null);
-							_params[i] = new Param(params[i].substring(0, colon), type);
-						} catch (Exception x) {
-							throw new IllegalArgumentException("Parameter specification", x);
-						}
-					}
+                    } catch (NumberFormatException t) {
+                        try {
+                            int type = java.sql.Types.class.getField(params[i].substring(colon+1)).getInt(null);
+                            _params[i] = new Param(params[i].substring(0, colon), type);
+                        } catch (Exception x) {
+                            throw new IllegalArgumentException("Parameter specification", x);
+                        }
+                    }
                 } else {
                     throw new IllegalArgumentException("Parameter specification: missing type in " + params[i]);
                 }
@@ -76,12 +76,12 @@ public class ParametricStatement {
         } else {
             throw new IllegalArgumentException("Wrong number of parameters in '" + sql +'\'');
         }
-		return this;
+        return this;
     }
 
     protected PreparedStatement load(PreparedStatement statement, DataObject object) throws SQLException {
         if (_params.length > 0) {
-            Class type = object.getClass();
+            Class<? extends DataObject> type = object.getClass();
 
             for (int i = 0; i < _params.length; ++i) {
                 try {
@@ -129,7 +129,7 @@ public class ParametricStatement {
                 load(statement, object);
                 statement.addBatch();
             }
-            int count = 0; for (int affected: statement.executeBatch()) count += affected;
+            int count = getAffectedRowCount(statement.executeBatch());
             return count;
         } finally {
             statement.close();
@@ -166,23 +166,14 @@ public class ParametricStatement {
      * @returns an array whose length indicates the number of rows inserted. If generatedKeys is true, the array
      *          contains the keys; otherwise the content of the array is not defined.
      */
-    public long[] executeInsert(Connection conn, DataObject[] objects, boolean generatedKeys) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(_sql, Statement.RETURN_GENERATED_KEYS);
+    public int executeInsert(Connection conn, DataObject[] objects) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(_sql);
         try {
             for (DataObject object: objects) {
                 load(statement, object);
                 statement.addBatch();
             }
-            int count = 0; for (int affected: statement.executeBatch()) count += affected;
-            long[] keys = new long[count];
-            if (generatedKeys) {
-                ResultSet rs = statement.getGeneratedKeys();
-                for (int i = 0; rs.next(); ++i) {
-                    keys[i] = rs.getLong(1);
-                }
-                rs.close();
-            }
-            return keys;
+            return getAffectedRowCount(statement.executeBatch());
         } finally {
             statement.close();
         }
@@ -200,4 +191,21 @@ public class ParametricStatement {
     private static final Param[] NoParams = new Param[0];
     private final Param[] _params;
     protected String _sql;
+
+    private static int getAffectedRowCount(int[] results) {
+        int count = 0;
+        for (int affected: results) {
+            switch (affected) {
+            case Statement.SUCCESS_NO_INFO:
+                count++;
+                break;
+            case Statement.EXECUTE_FAILED:
+                break;
+            default:
+                count += affected;
+                break;
+            }
+        }
+        return count;
+    }
 }
