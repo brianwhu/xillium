@@ -19,4 +19,11 @@ public interface Service {
 	 *         is rolled back.
 	 */
 	public DataBinder run(DataBinder parameters, Dictionary dict, Persistence persist) throws ServiceException;
+
+	/**
+	 * Marker interface to indicate a secured service.
+	 */
+	public static interface Secured extends Service {
+		public void authorize(String deployment, DataBinder parameters, Persistence persist) throws AuthorizationException;
+	}
 }

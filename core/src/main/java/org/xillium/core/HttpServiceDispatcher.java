@@ -1,10 +1,12 @@
 package org.xillium.core;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.jar.*;
 import java.util.logging.*;
 import java.util.regex.*;
+import javax.management.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.sql.DataSource;
@@ -22,6 +24,7 @@ import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
 import org.xillium.core.conf.*;
+import org.xillium.core.management.*;
 import org.xillium.core.intrinsic.*;
 
 
@@ -125,6 +128,11 @@ public class HttpServiceDispatcher extends HttpServlet {
             return;
         }
         _logger.log(Level.INFO, "SERVICE class = " + service.getClass().getName());
+/*
+		for (Class<?> ifc: service.getClass().getInterfaces()) {
+			_logger.log(Level.INFO, "\timplementing " + ifc.getName());
+		}
+*/
 
         List<File> upload = new ArrayList<File>();
         DataBinder binder = new DataBinder();
@@ -176,6 +184,10 @@ public class HttpServiceDispatcher extends HttpServlet {
             }
 
             // TODO: pre-service filter
+			if (service instanceof Service.Secured) {
+				_logger.info("Trying to authorize invocation of a secured service");
+				((Service.Secured)service).authorize(id, binder, _persistence);
+			}
 
             binder = service.run(binder, _dict, _persistence);
 
@@ -194,6 +206,8 @@ public class HttpServiceDispatcher extends HttpServlet {
             }
             binder.put("_x_", message);
         } finally {
+            res.setHeader("Access-Control-Allow-Headers", "origin,x-prototype-version,x-requested-with,accept");
+            res.setHeader("Access-Control-Allow-Origin", "*");
             res.setHeader("Content-Type", "application/json;charset=UTF-8");
             try {
                 JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
@@ -331,6 +345,15 @@ public class HttpServiceDispatcher extends HttpServlet {
 
         for (String id: gac.getBeanNamesForType(PlatformLifeCycleAware.class)) {
             plcas.add((PlatformLifeCycleAware)gac.getBean(id));
+        }
+
+		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        for (String id: gac.getBeanNamesForType(Manageable.class)) {
+            try {
+				mbs.registerMBean(gac.getBean(id), new ObjectName("org.xillium.core.management:type=" + id));
+			} catch (Exception x) {
+				_logger.warning("MBean '" + id + "' failed to register: " + x.getMessage());
+			}
         }
 
         return gac;

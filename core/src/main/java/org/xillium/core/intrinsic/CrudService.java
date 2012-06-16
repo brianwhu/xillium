@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Service description.
  */
-public class CrudService implements DynamicService {
+public class CrudService extends SecuredService implements DynamicService {
     private static final Logger _logger = Logger.getLogger(CrudService.class.getName());
 
     private final CrudCommand _command;
