@@ -59,6 +59,14 @@ public class CachedResultSet {
     }
 
     /**
+     * Explicitly creates a CachedResultSet.
+     */
+    public CachedResultSet(String[] columns, List<Object[]> rows) {
+        this.columns = columns;
+        this.rows = rows;
+    }
+
+    /**
      * Inside an object: serialized the cached result set into JSON.
      */
     public JSONBuilder toJSON(JSONBuilder jb) {
