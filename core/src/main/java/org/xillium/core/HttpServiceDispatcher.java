@@ -192,6 +192,14 @@ public class HttpServiceDispatcher extends HttpServlet {
             binder = service.run(binder, _dict, _persistence);
 
             // TODO: post-service filter
+			try {
+				Runnable task = (Runnable)binder.getNamedObject("PostServiceTask");
+				if (task != null) {
+					task.run();
+				}
+			} catch (Throwable t) {
+				_logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
+			}
 
         } catch (Throwable x) {
             _logger.log(Level.WARNING, "Exception caught in dispatcher", x);
