@@ -28,7 +28,7 @@ public class ValidationTest {
 
         //Dictionary dictionary = new Dictionary("core").addDataDictionary(StandardDataTypes.class);
         //Dictionary dictionary = (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory(), Trace.g.std).build("lab/validation/dictionary.xml");
-        Dictionary dictionary = (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory()).build("lab/validation/dictionary.xml");
+        Dictionary dictionary = (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory()).build("lab/data/validation/dictionary.xml");
         System.err.println("Dictionary = " + Beans.toString(dictionary));
 
         DataBinder binder = new DataBinder();
@@ -60,7 +60,7 @@ public class ValidationTest {
 
         //Trace.g.std.configure(new NullTrace());
         long now = System.currentTimeMillis();
-        DataObject object = dictionary.collect((DataObject)Class.forName("lab.validation." + TestCase).newInstance(), binder);
+        DataObject object = dictionary.collect((DataObject)Class.forName("lab.data.validation." + TestCase).newInstance(), binder);
         //for (int i = 0; i < 300; ++i) {
             //btrd = dictionary.collect(btrd, binder);
         //}
