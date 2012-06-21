@@ -55,6 +55,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
 					for (Column2Field c2f: _c2fs) {
 						c2f.field.setAccessible(true);
                         Object value = rs.getObject(c2f.index);
+                        if (value == null) continue;
                         try {
                             c2f.field.set(object, value);
                         } catch (IllegalArgumentException x) {
