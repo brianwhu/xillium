@@ -6,7 +6,7 @@ import java.util.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.xillium.play.TestFailureException;
 import org.xillium.play.TestSuite;
@@ -71,7 +71,7 @@ public class JsohServer implements TestTarget {
     		wr.flush();
 
             InputStream in = connection.getInputStream();
-			Map<String,Object> binder = _mapper.readValue(in, Map.class);
+			Map<String, Object> binder = _mapper.readValue(in, Map.class);
             in.close();
 			wr.close();
 			//connection.close();
