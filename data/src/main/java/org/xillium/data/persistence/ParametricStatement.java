@@ -80,12 +80,22 @@ public class ParametricStatement {
     }
 
     protected PreparedStatement load(PreparedStatement statement, DataObject object) throws SQLException {
+//System.err.println("PreparedStatement: loading " + _sql);
         if (_params.length > 0) {
             Class<? extends DataObject> type = object.getClass();
 
             for (int i = 0; i < _params.length; ++i) {
                 try {
-                    statement.setObject(i+1, type.getField(_params[i].name).get(object), _params[i].type);
+                    Field field = type.getField(_params[i].name);
+                    if (field.getType().isEnum()) {
+                        if (Types.VARCHAR == _params[i].type) {
+                            statement.setObject(i+1, field.get(object).toString(), _params[i].type);
+                        } else {
+                            statement.setObject(i+1, ((Enum)field.get(object)).ordinal(), _params[i].type);
+                        }
+                    } else {
+                        statement.setObject(i+1, field.get(object), _params[i].type);
+                    }
                 } catch (NoSuchFieldException x) {
                     if (_params[i].nullable) {
                         statement.setNull(i+1, _params[i].type);
