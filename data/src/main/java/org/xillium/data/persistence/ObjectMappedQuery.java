@@ -102,7 +102,17 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
 		}
 	}
 
-    private static class ListCollector<T> extends ArrayList<T> implements Collector<T> {}
+    private static class ListCollector<T> extends ArrayList<T> implements Collector<T> {
+    }
+
+    private static class SingleObjectCollector<T> implements Collector<T> {
+        public T value;
+        public boolean add(T object) {
+            value = object;
+            return true;
+        }
+    }
+
 	private final Class<T> _type;
 	//private final ResultSetMapper _lister = new ResultSetMapper(new ListCollector<T>());
     private volatile List<Column2Field> _c2fs; // lazily initialized with double checked locking
@@ -126,6 +136,13 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
 	 */
     public List<T> getResults(Connection conn, DataObject object) throws Exception {
 		return (List<T>)super.executeSelect(conn, object, new ResultSetMapper(new ListCollector<T>()));
+    }
+
+	/**
+	 * Execute the query and returns the results as a list of objects.
+	 */
+    public T getObject(Connection conn, DataObject object) throws Exception {
+		return ((SingleObjectCollector<T>)super.executeSelect(conn, object, new ResultSetMapper(new SingleObjectCollector<T>()))).value;
     }
 
 	/**

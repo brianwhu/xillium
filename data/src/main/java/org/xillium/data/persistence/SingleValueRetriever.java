@@ -1,10 +1,6 @@
 package org.xillium.data.persistence;
 
-//import org.xillium.data.*;
-//import java.math.BigDecimal;
 import java.sql.*;
-//import java.util.*;
-//import java.lang.reflect.Field;
 
 
 /**
