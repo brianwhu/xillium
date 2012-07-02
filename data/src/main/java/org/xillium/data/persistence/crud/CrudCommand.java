@@ -47,6 +47,11 @@ public class CrudCommand {
 		}
 	}
 
+    /**
+     * Constructs a CrudCommand.
+     *
+     * The name of the last table is taken as the name of the model.
+     */
     public CrudCommand(Connection connection, String prefix, String tables, Action action) throws Exception {
         String[] names = tables.split(" *, *");
         _oper = action.op;
@@ -74,6 +79,11 @@ public class CrudCommand {
         return _name;
     }
 
+    /**
+     * Returns an array of ParametricStatement's that perform the designated CRUD operation on the tables.
+     *
+     * For RETRIEVE and SEARCH operations the array contains only 1 statement.
+     */ 
     public ParametricStatement[] getStatements() {
 		try {
 			return (ParametricStatement[])_type.getDeclaredField(STATEMENT_FIELD_NAME).get(null);
@@ -82,31 +92,14 @@ public class CrudCommand {
 		}
     }
 
-	private static final int COLUMN_NAME = 4;
-	private static final int COLUMN_TYPE = 5;	// java.sql.Types.#
-	private static final int COLUMN_SIZE = 7;
-	private static final int IS_NULLABLE = 11;
-	private static final int FKEY_TABLE  = 3;
-	private static final int FKEY_COLUMN = 8;
-	private static final int PKEY_COLUMN = 4;
-
-    private void addAnnotation(AnnotationsAttribute attr, ConstPool cp, String aclass) {
-        javassist.bytecode.annotation.Annotation annotation = new javassist.bytecode.annotation.Annotation(aclass, cp);
-        attr.addAnnotation(annotation);
-    }
-
-    private void addAnnotation(AnnotationsAttribute attr, ConstPool cp, String aclass, String attribute, MemberValue value) {
-        javassist.bytecode.annotation.Annotation annotation = new javassist.bytecode.annotation.Annotation(aclass, cp);
-        annotation.addMemberValue(attribute, value);
-        attr.addAnnotation(annotation);
-    }
-
-    private Class<? extends DataObject> modelFromTables(Connection connection, String classname, Action action, String... tablenames) throws Exception {
+    /**
+     * Creates a new Java model class for carrying out the CRUD action on the entity represented by the list of tables.
+     */
+    public static Class<? extends DataObject>
+    modelFromTables(Connection connection, String classname, Action action, String... tablenames) throws Exception {
 		if (!action.isValid()) {
 			throw new RuntimeException("Invalid CRUD action: update without column list");
 		}
-
-		//String name = Beans.toCamelCase(tablenames[tablenames.length-1], '_') + "CrudRequest";
 
 		ClassPool pool = ClassPool.getDefault();
         // this line is necessary for web applications (web container class loader in play)
@@ -146,14 +139,21 @@ public class CrudCommand {
 			if (i > 0) {
 				keys = meta.getImportedKeys(connection.getCatalog(), null, tablenames[i]);
 				while (keys.next()) {
-					if (keys.getString(FKEY_TABLE).equals(tablenames[0])) {
+                    String jointable = null;
+                    for (int j = 0; j < i; ++j) {
+                        if (keys.getString(FKEY_TABLE).equals(tablenames[j])) {
+                            jointable = tablenames[j];
+                            break;
+                        }
+                    }
+                    if (jointable != null) {
 						String column = keys.getString(FKEY_COLUMN);
 						isaKeys.add(column);
                         if (action.op == Operation.RETRIEVE || action.op == Operation.SEARCH) {
     /*SQL*/     		    if (vals.length() > 0) {
     /*SQL*/         		    vals.append(" AND ");
     /*SQL*/     		    }
-    /*SQL*/     		    vals.append(tablenames[i]).append('.').append(column).append('=').append(tablenames[0]).append('.').append(column);
+    /*SQL*/     		    vals.append(tablenames[i]).append('.').append(column).append('=').append(jointable).append('.').append(column);
                         }
 					}
 				}
@@ -338,7 +338,7 @@ public class CrudCommand {
 			pool.getCtClass(CrudCommand.class.getName()), "buildStatements", fragments.toArray(new String[fragments.size()])
 		));
 
-		return cc.toClass(this.getClass().getClassLoader(), this.getClass().getProtectionDomain());
+		return cc.toClass(CrudCommand.class.getClassLoader(), CrudCommand.class.getProtectionDomain());
     }
 
 	public static ParametricStatement[] buildStatements(String[] args) throws Exception {
@@ -348,6 +348,25 @@ public class CrudCommand {
 		}
 		return stmts;
 	}
+
+	private static final int COLUMN_NAME = 4;
+	private static final int COLUMN_TYPE = 5;	// java.sql.Types.#
+	private static final int COLUMN_SIZE = 7;
+	private static final int IS_NULLABLE = 11;
+	private static final int FKEY_TABLE  = 3;
+	private static final int FKEY_COLUMN = 8;
+	private static final int PKEY_COLUMN = 4;
+
+    private static void addAnnotation(AnnotationsAttribute attr, ConstPool cp, String aclass) {
+        javassist.bytecode.annotation.Annotation annotation = new javassist.bytecode.annotation.Annotation(aclass, cp);
+        attr.addAnnotation(annotation);
+    }
+
+    private static void addAnnotation(AnnotationsAttribute attr, ConstPool cp, String aclass, String attribute, MemberValue value) {
+        javassist.bytecode.annotation.Annotation annotation = new javassist.bytecode.annotation.Annotation(aclass, cp);
+        annotation.addMemberValue(attribute, value);
+        attr.addAnnotation(annotation);
+    }
 
     private static String className(String pkg, String name, Action action) {
         StringBuilder sb = new StringBuilder(pkg).append('.').append(name).append(Beans.toCamelCase(action.op.toString(), '_'));
