@@ -29,4 +29,13 @@ public abstract class ManagedComponent implements Manageable {
 		));
 		_status = status;
 	}
+
+    public void sendAlert(Manageable.Severity severity, String message, long sequence) {
+		if (jmxBroadcaster != null) jmxBroadcaster.sendNotification(new AlertNotification(
+            severity,
+			this,
+			sequence,
+			message
+		));
+    }
 }

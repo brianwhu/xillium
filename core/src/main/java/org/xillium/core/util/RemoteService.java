@@ -38,8 +38,8 @@ public class RemoteService {
                 in.close();
             }
 		} catch (Exception x) {
-			x.printStackTrace();
-            throw new RuntimeException(x);
+			//x.printStackTrace();
+            throw new RuntimeException("RemoteServiceCallFailure", x);
 		}
 	}
 }

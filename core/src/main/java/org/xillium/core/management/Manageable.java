@@ -15,5 +15,10 @@ public interface Manageable {
 		DYSFUNCTIONAL
 	}
 
+    public enum Severity {
+		INFORMATIONAL,
+		ALERT
+	}
+
 	public Status getStatus();
 }
