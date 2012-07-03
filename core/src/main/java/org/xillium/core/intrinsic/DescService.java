@@ -14,7 +14,7 @@ import org.xillium.data.validation.*;
 /**
  * Service description.
  */
-public class DescService implements Service {
+public class DescService extends SecuredService {
     private static final Logger _logger = Logger.getLogger(DescService.class.getName());
     private final Map<String, String> _descs;
 

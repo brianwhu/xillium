@@ -83,8 +83,9 @@ _logger.info("CrudService.run: request = " + DataObject.Util.describe(request.ge
                 break;
             case RETRIEVE:
             case SEARCH:
-                CachedResultSet rs = ((ParametricQuery)_command.getStatements()[0]).executeSelect(connection, request, new CachedResultSet.Builder());
-                binder.putResultSet(_command.getName(), rs);
+                binder.putResultSet(_command.getName(),
+                    ((ParametricQuery)_command.getStatements()[0]).executeSelect(connection, request, new CachedResultSet.Builder())
+                );
                 break;
             }
         } catch (Exception x) {

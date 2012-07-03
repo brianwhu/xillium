@@ -66,6 +66,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 
     public HttpServiceDispatcher() {
         _logger.log(Level.INFO, "START HTTP service dispatcher " + getClass().getName());
+        _logger.log(Level.INFO, "java.util.logging.config.class=" + System.getProperty("java.util.logging.config.class"));
     }
 
     /**
@@ -110,25 +111,25 @@ public class HttpServiceDispatcher extends HttpServlet {
         Service service;
         String id;
 
-        _logger.log(Level.INFO, "Request URI = " + req.getRequestURI());
+        _logger.fine("Request URI = " + req.getRequestURI());
         Matcher m = URI_REGEX.matcher(req.getRequestURI());
         if (m.matches()) {
             id = m.group(1);
-            _logger.log(Level.INFO, "Request service id = " + id);
+            _logger.fine("Request service id = " + id);
 
             service = (Service)_services.get(id);
             if (service == null) {
-                _logger.log(Level.WARNING, "Request not recognized");
+                _logger.warning("Request not recognized");
                 res.sendError(404);
                 return;
             }
         } else {
-            _logger.log(Level.WARNING, "Request not recognized");
+            _logger.warning("Request not recognized");
             res.sendError(404);
             return;
         }
-        _logger.log(Level.INFO, "SERVICE class = " + service.getClass().getName());
 /*
+        _logger.log(Level.INFO, "SERVICE class = " + service.getClass().getName());
 		for (Class<?> ifc: service.getClass().getInterfaces()) {
 			_logger.log(Level.INFO, "\timplementing " + ifc.getName());
 		}
@@ -185,7 +186,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 
             // TODO: pre-service filter
 			if (service instanceof Service.Secured) {
-				_logger.info("Trying to authorize invocation of a secured service");
+				_logger.fine("Trying to authorize invocation of a secured service");
 				((Service.Secured)service).authorize(id, binder, _persistence);
 			}
 
@@ -202,7 +203,6 @@ public class HttpServiceDispatcher extends HttpServlet {
 			}
 
         } catch (Throwable x) {
-            _logger.log(Level.WARNING, "Exception caught in dispatcher", x);
 //            StringWriter sw = new StringWriter();
 //            PrintWriter pw = new PrintWriter(sw);
 //            x.printStackTrace(pw);
@@ -213,6 +213,8 @@ public class HttpServiceDispatcher extends HttpServlet {
             	message = x.getClass().getName();
             }
             binder.put("_x_", message);
+            _logger.warning("Exception caught in dispatcher: " + message);
+            _logger.log(Level.FINE, "Exception stack trace:", x);
         } finally {
             res.setHeader("Access-Control-Allow-Headers", "origin,x-prototype-version,x-requested-with,accept");
             res.setHeader("Access-Control-Allow-Origin", "*");
@@ -268,7 +270,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             BurnedInArgumentsObjectFactory factory = new BurnedInArgumentsObjectFactory(ValidationConfiguration.class, _dict);
             XMLBeanAssembler assembler = new XMLBeanAssembler(factory);
             Set<String> jars = context.getResourcePaths("/WEB-INF/lib/");
-            _logger.log(Level.INFO, "There are " + jars.size() + " resource paths");
+            _logger.info("There are " + jars.size() + " resource paths");
             for (String jar : jars) {
                 try {
                     JarInputStream jis = new JarInputStream(context.getResourceAsStream(jar));
@@ -283,17 +285,17 @@ public class HttpServiceDispatcher extends HttpServlet {
 								JarEntry entry;
 								while ((entry = jis.getNextJarEntry()) != null) {
 									if (SERVICE_CONFIG.equals(entry.getName())) {
-										_logger.log(Level.INFO, "Services:" + jar + ":" + entry.getName());
+										_logger.info("Services:" + jar + ":" + entry.getName());
 										if (isSuper) {
 											wac = loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plcas);
 										} else {
 											loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plcas);
 										}
 									} else if (STORAGE_CONFIG.equals(entry.getName())) {
-										_logger.log(Level.INFO, "Storages:" + jar + ":" + entry.getName());
+										_logger.info("Storages:" + jar + ":" + entry.getName());
 										assembler.build(getJarEntryAsStream(jis));
 									} else if (REQUEST_VOCABULARY.equals(entry.getName())) {
-										_logger.log(Level.INFO, "RequestVocabulary:" + jar + ":" + entry.getName());
+										_logger.info("RequestVocabulary:" + jar + ":" + entry.getName());
 										assembler.build(getJarEntryAsStream(jis));
 									}
 								}
@@ -331,10 +333,10 @@ public class HttpServiceDispatcher extends HttpServlet {
             try {
                 Class<?> request = Class.forName(def.getBeanClassName()+"$Request");
                 if (DataObject.class.isAssignableFrom(request)) {
-                    _logger.log(Level.INFO, "Service '" + fullname + "' request description captured");
+                    _logger.info("Service '" + fullname + "' request description captured");
                     desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
                 } else {
-                    _logger.log(Level.WARNING, "Service '" + fullname + "' defines a Request type that is not a DataObject");
+                    _logger.warning("Service '" + fullname + "' defines a Request type that is not a DataObject");
                     desc.put(fullname, "json:{}");
                 }
             } catch (ClassNotFoundException x) {
@@ -347,7 +349,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                 }
             }
 
-            _logger.log(Level.INFO, "Service '" + fullname + "' class=" + gac.getBean(id).getClass().getName());
+            _logger.info("Service '" + fullname + "' class=" + gac.getBean(id).getClass().getName());
             _services.put(fullname, (Service)gac.getBean(id));
         }
 

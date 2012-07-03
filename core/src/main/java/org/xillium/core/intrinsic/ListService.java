@@ -3,6 +3,7 @@ package org.xillium.core.intrinsic;
 import java.sql.*;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.*;
 import org.xillium.base.beans.JSONBuilder;
 import org.xillium.data.*;
@@ -16,7 +17,7 @@ import org.xillium.data.validation.*;
 /**
  * Service listing.
  */
-public class ListService implements Service {
+public class ListService extends SecuredService {
     private static final Logger _logger = Logger.getLogger(ListService.class.getName());
     private final Map<String, Service> _services;
 
@@ -25,7 +26,7 @@ public class ListService implements Service {
     }
 
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
-        Set<String> keys = _services.keySet();
+        Set<String> keys = new TreeSet<String>(_services.keySet());
         binder.put("services", new JSONBuilder(keys.size()*16).append("json:").serialize(keys).toString());
         return binder;
     }
