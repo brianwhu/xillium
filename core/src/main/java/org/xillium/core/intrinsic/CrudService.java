@@ -64,7 +64,7 @@ public class CrudService extends SecuredService implements DynamicService {
         int count = 0;
         try {
             DataObject request = dict.collect(_command.getRequestType().newInstance(), binder);
-_logger.info("CrudService.run: request = " + DataObject.Util.describe(request.getClass()));
+_logger.fine("CrudService.run: request = " + DataObject.Util.describe(request.getClass()));
             Connection connection = persist.getConnection();
 
             switch (_command.getOperation()) {

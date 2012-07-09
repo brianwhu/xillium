@@ -22,7 +22,7 @@ public class RemoteService {
 	public static Response call(String server, String service, String... params) {
 		try {
             URL url = new URL(server + '/' + service);
-			System.err.println("Calling " + url);
+			//System.err.println("Calling " + url);
 			URLConnection connection = url.openConnection();
 			connection.setDoOutput(true);
 			PrintWriter pw = new PrintWriter(connection.getOutputStream());
