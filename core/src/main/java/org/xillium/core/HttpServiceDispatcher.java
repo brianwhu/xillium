@@ -184,6 +184,12 @@ public class HttpServiceDispatcher extends HttpServlet {
                 }
             }
 
+            // auto-parameters
+            binder.put(Service.REQUEST_CLIENT_ADDR, req.getRemoteAddr());
+            binder.put(Service.REQUEST_CLIENT_PORT, String.valueOf(req.getRemotePort()));
+            binder.put(Service.REQUEST_SERVER_PORT, String.valueOf(req.getServerPort()));
+            binder.put(Service.REQUEST_HTTP_METHOD, req.getMethod());
+
             // TODO: pre-service filter
 			if (service instanceof Service.Secured) {
 				_logger.fine("Trying to authorize invocation of a secured service");
@@ -194,14 +200,13 @@ public class HttpServiceDispatcher extends HttpServlet {
 
             // TODO: post-service filter
 			try {
-				Runnable task = (Runnable)binder.getNamedObject("PostServiceTask");
+				Runnable task = (Runnable)binder.getNamedObject(Service.SERVICE_POST_ACTION);
 				if (task != null) {
 					task.run();
 				}
 			} catch (Throwable t) {
 				_logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
 			}
-
         } catch (Throwable x) {
 //            StringWriter sw = new StringWriter();
 //            PrintWriter pw = new PrintWriter(sw);
@@ -212,7 +217,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             if (message == null || message.length() == 0) {
             	message = x.getClass().getName();
             }
-            binder.put("_x_", message);
+            binder.put(Service.FAILURE_MESSAGE, message);
             _logger.warning("Exception caught in dispatcher: " + message);
             _logger.log(Level.FINE, "Exception stack trace:", x);
         } finally {

@@ -9,6 +9,17 @@ import org.xillium.data.validation.Dictionary;
  * annotation on the implementation class or method.
  */
 public interface Service {
+    public static final String REQUEST_CLIENT_ADDR = "#client_addr#";
+    public static final String REQUEST_CLIENT_PORT = "#client_port#";
+    public static final String REQUEST_SERVER_PORT = "#server_port#";
+    public static final String REQUEST_HTTP_METHOD = "#http_method#";
+    public static final String SERVICE_POST_ACTION = "#post_action#";
+
+    /**
+     * A failure message is a string suitable for display to an end user. This value is only present when the service fails.
+     */
+    public static final String FAILURE_MESSAGE = "_message_";
+
 	/**
 	 * Processes a service request. This method runs in a thread parallel to other service calls, and must return as quickly as possible.
 	 *
