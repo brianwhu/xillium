@@ -52,9 +52,11 @@ public class DataBinder extends HashMap<String, String> {
      */
     public int clearAutoValues() {
         int count = 0;
-        for (String key: keySet()) {
+        Iterator<Map.Entry<String, String>> it = entrySet().iterator();
+        while (it.hasNext()) {
+            String key = it.next().getKey();
             if (key.charAt(0) == '#' && key.charAt(key.length()-1) == '#') {
-                remove(key);
+                it.remove();
                 ++count;
             }
         }
