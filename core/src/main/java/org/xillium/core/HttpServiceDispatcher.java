@@ -20,6 +20,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.web.context.*;
 import org.springframework.web.context.support.*;
+import org.xillium.base.etc.Arrays;
 import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
@@ -208,11 +209,6 @@ public class HttpServiceDispatcher extends HttpServlet {
 				_logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
 			}
         } catch (Throwable x) {
-//            StringWriter sw = new StringWriter();
-//            PrintWriter pw = new PrintWriter(sw);
-//            x.printStackTrace(pw);
-//            pw.flush();
-//            binder.put("_exception", sw.getBuffer().toString());
             String message = x.getMessage();
             if (message == null || message.length() == 0) {
             	message = x.getClass().getName();
@@ -220,43 +216,61 @@ public class HttpServiceDispatcher extends HttpServlet {
             binder.put(Service.FAILURE_MESSAGE, message);
             _logger.warning("Exception caught in dispatcher: " + message);
             _logger.log(Level.FINE, "Exception stack trace:", x);
+
+            CharArrayWriter sw = new CharArrayWriter();
+            x.printStackTrace(new PrintWriter(sw));
+            binder.put(Service.FAILURE_STACK, sw.toString());
+/*
+            Throwable t;
+            while ((t = x.getCause()) != null) {
+                x = t;
+            }
+            binder.put(Service.FAILURE_STACK, Arrays.toString(x.getStackTrace()).replaceAll(", ", "\n"));
+*/
         } finally {
             res.setHeader("Access-Control-Allow-Headers", "origin,x-prototype-version,x-requested-with,accept");
             res.setHeader("Access-Control-Allow-Origin", "*");
             res.setHeader("Content-Type", "application/json;charset=UTF-8");
             try {
-                JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
+                binder.clearAutoValues();
+                String json = binder.get(Service.SERVICE_JSON_TUNNEL);
 
-                jb.quote("params").append(":{ ");
-                Iterator<String> it = binder.keySet().iterator();
-                for (int i = 0; it.hasNext(); ++i) {
-                    String key = it.next();
-                    String val = binder.get(key);
-                    if (val == null) {
-                        jb.quote(key).append(":null");
-                    } else if (val.startsWith("json:")) {
-                        jb.quote(key).append(':').append(val.substring(5));
-                    } else {
-                        jb.serialize(key, val);
+                if (json == null) {
+                    JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
+
+                    jb.quote("params").append(":{ ");
+                    Iterator<String> it = binder.keySet().iterator();
+                    for (int i = 0; it.hasNext(); ++i) {
+                        String key = it.next();
+                        String val = binder.get(key);
+                        if (val == null) {
+                            jb.quote(key).append(":null");
+                        } else if (val.startsWith("json:")) {
+                            jb.quote(key).append(':').append(val.substring(5));
+                        } else {
+                            jb.serialize(key, val);
+                        }
+                        jb.append(',');
                     }
-                    jb.append(',');
+                    jb.replaceLast('}').append(',');
+
+                    jb.quote("tables").append(":{ ");
+                    Set<String> rsets = binder.getResultSetNames();
+                    it = rsets.iterator();
+                    while (it.hasNext()) {
+                        String name = it.next();
+                        jb.quote(name).append(":");
+                        binder.getResultSet(name).toJSON(jb);
+                        jb.append(',');
+                    }
+                    jb.replaceLast('}');
+
+                    jb.append('}');
+
+                    json = jb.toString();
                 }
-                jb.replaceLast('}').append(',');
 
-                jb.quote("tables").append(":{ ");
-                Set<String> rsets = binder.getResultSetNames();
-                it = rsets.iterator();
-                while (it.hasNext()) {
-                    String name = it.next();
-                    jb.quote(name).append(":");
-                    binder.getResultSet(name).toJSON(jb);
-                    jb.append(',');
-                }
-                jb.replaceLast('}');
-
-                jb.append('}');
-
-                res.getWriter().append(jb.toString()).flush();
+                res.getWriter().append(json).flush();
             } finally {
                 for (File tmp: upload) {
                     try { tmp.delete(); } catch (Exception x) {}
@@ -375,10 +389,13 @@ public class HttpServiceDispatcher extends HttpServlet {
     }
 
     private static InputStream getJarEntryAsStream(JarInputStream jis) throws IOException {
+/*
         int length;
         byte[] buffer = new byte[1024*1024];
         ByteArrayOutputStream bas = new ByteArrayOutputStream();
         while ((length = jis.read(buffer, 0, buffer.length)) > -1) bas.write(buffer, 0, length);
         return new ByteArrayInputStream(bas.toByteArray());
+*/
+        return new ByteArrayInputStream(Arrays.read(jis));
     }
 }

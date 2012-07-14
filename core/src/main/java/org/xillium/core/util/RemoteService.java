@@ -1,9 +1,12 @@
 package org.xillium.core.util;
 
 import java.io.*;
+import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
+import org.xillium.base.etc.Arrays;
+import org.xillium.data.DataObject;
 import org.xillium.data.CachedResultSet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -17,6 +20,24 @@ public class RemoteService {
     public static class Response {
         public Map<String, Object> params;
         public Map<String, CachedResultSet> tables;
+        public transient byte[] body;
+
+        Response setResponseBody(byte[] body) {
+            this.body = body;
+            return this;
+        }
+    }
+
+	public static Response call(String server, String service, DataObject data) {
+        List<String> params = new ArrayList<String>();
+        for (Field field: data.getClass().getFields()) {
+            field.setAccessible(true);
+            if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) continue;
+            try {
+                params.add(field.getName() + '=' + field.get(data).toString());
+            } catch (IllegalAccessException x) {}
+        }
+        return call(server, service, params.toArray(new String[params.size()]));
     }
 
 	public static Response call(String server, String service, String... params) {
@@ -33,7 +54,9 @@ public class RemoteService {
 			pw.close();
             InputStream in = connection.getInputStream();
             try {
-                return _mapper.readValue(in, Response.class);
+                //return _mapper.readValue(in, Response.class);
+                byte[] bytes = Arrays.read(in);
+                return _mapper.readValue(bytes, Response.class).setResponseBody(bytes);
             } finally {
                 in.close();
             }

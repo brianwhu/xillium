@@ -14,11 +14,13 @@ public interface Service {
     public static final String REQUEST_SERVER_PORT = "#server_port#";
     public static final String REQUEST_HTTP_METHOD = "#http_method#";
     public static final String SERVICE_POST_ACTION = "#post_action#";
+    public static final String SERVICE_JSON_TUNNEL = "_json_tunnel_";
 
     /**
      * A failure message is a string suitable for display to an end user. This value is only present when the service fails.
      */
     public static final String FAILURE_MESSAGE = "_message_";
+    public static final String FAILURE_STACK   = "_stack_";
 
 	/**
 	 * Processes a service request. This method runs in a thread parallel to other service calls, and must return as quickly as possible.
