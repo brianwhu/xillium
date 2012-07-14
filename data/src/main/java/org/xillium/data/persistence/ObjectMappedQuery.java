@@ -9,7 +9,9 @@ import java.lang.reflect.Field;
 
 
 /**
- * A prepared SQL statement with named parameters.
+ * Retrieving Java objects from result sets.
+ *
+ * Enums could be stored as String values. In such case this class converts String values into Java enums.
  */
 public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
     private static class Column2Field {
@@ -59,11 +61,11 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                         try {
                             c2f.field.set(object, value);
                         } catch (IllegalArgumentException x) {
-                            // size of "value" bigger than that of "field"?
+                            Class ftype = c2f.field.getType();
                             if (value instanceof Number) {
+                                // size of "value" bigger than that of "field"?
                                 try {
 									Number number = (Number)value;
-                                    Class ftype = c2f.field.getType();
                                     if (Double.TYPE == ftype || Double.class.isAssignableFrom(ftype)) {
                                         c2f.field.set(object, number.doubleValue());
                                     } else if (Float.TYPE == ftype || Float.class.isAssignableFrom(ftype)) {
@@ -83,6 +85,12 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                             } else if (value instanceof java.sql.Timestamp) {
                                 try {
                                     c2f.field.set(object, new java.sql.Date(((java.sql.Timestamp)value).getTime()));
+                                } catch (Throwable t) {
+                                    throw x;
+                                }
+                            } else if ((value instanceof String) && Enum.class.isAssignableFrom(ftype)) {
+                                try {
+                                    c2f.field.set(object, Enum.valueOf(ftype, (String)value));
                                 } catch (Throwable t) {
                                     throw x;
                                 }

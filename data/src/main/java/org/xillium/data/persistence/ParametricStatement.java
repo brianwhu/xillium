@@ -39,7 +39,7 @@ public class ParametricStatement {
 
     public ParametricStatement(String parameters) throws IllegalArgumentException {
         if (parameters != null && parameters.length() > 0) {
-            String[] params = parameters.split(",");
+            String[] params = parameters.trim().split("\\s*,\\s*");
             _params = new Param[params.length];
             for (int i = 0; i < params.length; ++i) {
                 int colon = params[i].indexOf(':');
