@@ -27,6 +27,7 @@ import org.xillium.data.persistence.*;
 import org.xillium.core.conf.*;
 import org.xillium.core.management.*;
 import org.xillium.core.intrinsic.*;
+import org.xillium.core.util.ModuleSorter;
 
 
 /**
@@ -49,8 +50,10 @@ import org.xillium.core.intrinsic.*;
  * </ul>
  */
 public class HttpServiceDispatcher extends HttpServlet {
+    private static final String DOMAIN_NAME = "Xillium-Domain-Name";
     private static final String MODULE_NAME = "Xillium-Module-Name";
-    private static final String MODULE_TYPE = "Xillium-Module-Type";
+    private static final String MODULE_BASE = "Xillium-Module-Base";
+    //private static final String MODULE_TYPE = "Xillium-Module-Type";
     private static final String REQUEST_VOCABULARY = "request-vocabulary.xml";
     private static final String SERVICE_CONFIG = "service-configuration.xml";
     private static final String STORAGE_CONFIG = "storage-configuration.xml";
@@ -78,8 +81,10 @@ public class HttpServiceDispatcher extends HttpServlet {
         _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
         _persistence = (Persistence)wac.getBean("persistence");
 
+        ModuleSorter.Sorted sorted = sortServiceModules();
+
         List<PlatformLifeCycleAware> plcas = new ArrayList<PlatformLifeCycleAware>();
-        wac = scanServiceModules(wac, plcas, true);
+        wac = scanServiceModules(sorted.specials(), wac, plcas, true);
 
         _logger.info("SUPER modules loaded, now let all super PlatformLifeCycleAware objects configure themselves");
         for (PlatformLifeCycleAware plca: plcas) {
@@ -92,7 +97,7 @@ public class HttpServiceDispatcher extends HttpServlet {
         }
 
         plcas.clear();
-        scanServiceModules(wac, plcas, false);
+        scanServiceModules(sorted.regulars(), wac, plcas, false);
 
         _logger.info("NORMAL modules loaded, now let all normal PlatformLifeCycleAware objects configure themselves");
         for (PlatformLifeCycleAware plca: plcas) {
@@ -279,7 +284,39 @@ public class HttpServiceDispatcher extends HttpServlet {
         }
     }
 
-    private ApplicationContext scanServiceModules(ApplicationContext wac, List<PlatformLifeCycleAware> plcas, boolean isSuper) throws ServletException {
+    private ModuleSorter.Sorted sortServiceModules() throws ServletException {
+        ModuleSorter sorter = new ModuleSorter();
+        ServletContext context = getServletContext();
+
+        try {
+            Set<String> jars = context.getResourcePaths("/WEB-INF/lib/");
+            _logger.info("There are " + jars.size() + " resource paths");
+            for (String jar : jars) {
+                try {
+                    _logger.info("... " + jar);
+                    JarInputStream jis = new JarInputStream(context.getResourceAsStream(jar));
+                    try {
+                        String name = jis.getManifest().getMainAttributes().getValue(MODULE_NAME);
+                        if (name != null) {
+                            String base = jis.getManifest().getMainAttributes().getValue(MODULE_BASE);
+                            sorter.add(new ModuleSorter.Entry(name, base, jar));
+                        }
+                    } finally {
+                        jis.close();
+                    }
+                } catch (IOException x) {
+                    // ignore this jar
+                    _logger.log(Level.WARNING, "Error during jar inspection, ignored", x);
+                }
+            }
+        } catch (Exception x) {
+            throw new ServletException("Failed to sort service modules", x);
+        }
+
+        return sorter.sort();
+    }
+
+    private ApplicationContext scanServiceModules(Iterator<ModuleSorter.Entry> iterator, ApplicationContext wac, List<PlatformLifeCycleAware> plcas, boolean isSpecial) throws ServletException {
         ServletContext context = getServletContext();
 
         // if intrinsic services are wanted
@@ -288,38 +325,42 @@ public class HttpServiceDispatcher extends HttpServlet {
         try {
             BurnedInArgumentsObjectFactory factory = new BurnedInArgumentsObjectFactory(ValidationConfiguration.class, _dict);
             XMLBeanAssembler assembler = new XMLBeanAssembler(factory);
-            Set<String> jars = context.getResourcePaths("/WEB-INF/lib/");
-            _logger.info("There are " + jars.size() + " resource paths");
-            for (String jar : jars) {
+            //Set<String> jars = context.getResourcePaths("/WEB-INF/lib/");
+            //_logger.info("There are " + jars.size() + " resource paths");
+            //for (String jar : jars) {
+            while (iterator.hasNext()) {
+                ModuleSorter.Entry module = iterator.next();
                 try {
-                    JarInputStream jis = new JarInputStream(context.getResourceAsStream(jar));
+                    _logger.info("... " + module.path);
+                    JarInputStream jis = new JarInputStream(context.getResourceAsStream(module.path));
                     try {
 						// only look into Xillium modules of the right type (super or normal)
-                        String name = jis.getManifest().getMainAttributes().getValue(MODULE_NAME);
-                        if (name != null) {
-							String type = jis.getManifest().getMainAttributes().getValue(MODULE_TYPE);
-							if (isSuper && "super".equals(type) || !isSuper && !"super".equals(type)) {
-								_logger.fine("Scanning module " + name + ", super=" + isSuper);
-								factory.setBurnedIn(StorageConfiguration.class, _persistence.getStatementMap(), name);
-								JarEntry entry;
-								while ((entry = jis.getNextJarEntry()) != null) {
-									if (SERVICE_CONFIG.equals(entry.getName())) {
-										_logger.info("Services:" + jar + ":" + entry.getName());
-										if (isSuper) {
-											wac = loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plcas);
-										} else {
-											loadServiceModule(wac, name, getJarEntryAsStream(jis), descriptions, plcas);
-										}
-									} else if (STORAGE_CONFIG.equals(entry.getName())) {
-										_logger.info("Storages:" + jar + ":" + entry.getName());
-										assembler.build(getJarEntryAsStream(jis));
-									} else if (REQUEST_VOCABULARY.equals(entry.getName())) {
-										_logger.info("RequestVocabulary:" + jar + ":" + entry.getName());
-										assembler.build(getJarEntryAsStream(jis));
-									}
-								}
-							}
+                        //String name = jis.getManifest().getMainAttributes().getValue(MODULE_NAME);
+                    //if (name != null) {
+                        //String type = jis.getManifest().getMainAttributes().getValue(MODULE_TYPE);
+                    //if (isSuper && "super".equals(type) || !isSuper && !"super".equals(type)) {
+                        String domain = jis.getManifest().getMainAttributes().getValue(DOMAIN_NAME);
+                        _logger.fine("Scanning module " + module.name + ", super=" + isSpecial);
+                        factory.setBurnedIn(StorageConfiguration.class, _persistence.getStatementMap(), module.name);
+                        JarEntry entry;
+                        while ((entry = jis.getNextJarEntry()) != null) {
+                            if (SERVICE_CONFIG.equals(entry.getName())) {
+                                _logger.info("Services:" + module.path + ":" + entry.getName());
+                                if (isSpecial) {
+                                    wac = loadServiceModule(wac, domain, module.name, getJarEntryAsStream(jis), descriptions, plcas);
+                                } else {
+                                    loadServiceModule(wac, domain, module.name, getJarEntryAsStream(jis), descriptions, plcas);
+                                }
+                            } else if (STORAGE_CONFIG.equals(entry.getName())) {
+                                _logger.info("Storages:" + module.path + ":" + entry.getName());
+                                assembler.build(getJarEntryAsStream(jis));
+                            } else if (REQUEST_VOCABULARY.equals(entry.getName())) {
+                                _logger.info("RequestVocabulary:" + module.path + ":" + entry.getName());
+                                assembler.build(getJarEntryAsStream(jis));
+                            }
                         }
+                    //}
+                    //}
                     } finally {
                         jis.close();
                     }
@@ -338,7 +379,7 @@ public class HttpServiceDispatcher extends HttpServlet {
         return wac;
     }
 
-    private ApplicationContext loadServiceModule(ApplicationContext wac, String name, InputStream stream, Map<String, String> desc, List<PlatformLifeCycleAware> plcas) {
+    private ApplicationContext loadServiceModule(ApplicationContext wac, String domain, String name, InputStream stream, Map<String, String> desc, List<PlatformLifeCycleAware> plcas) {
         GenericApplicationContext gac = new GenericApplicationContext(wac);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
@@ -379,7 +420,11 @@ public class HttpServiceDispatcher extends HttpServlet {
 		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         for (String id: gac.getBeanNamesForType(Manageable.class)) {
             try {
-				mbs.registerMBean(gac.getBean(id), new ObjectName("org.xillium.core.management:type=" + id));
+                _logger.info("Registering MBean '" + id + "', domain=" + domain);
+                ObjectName on = new ObjectName(domain == null ? "org.xillium.core.management" : domain, "type", id);
+                Manageable manageable = (Manageable)gac.getBean(id);
+                manageable.assignObjectName(on);
+				mbs.registerMBean(manageable, on);
 			} catch (Exception x) {
 				_logger.warning("MBean '" + id + "' failed to register: " + x.getMessage());
 			}
