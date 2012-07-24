@@ -16,6 +16,11 @@ public class NotificationBroadcaster extends NotificationBroadcasterSupport {
 				new String[] { AttributeChangeNotification.ATTRIBUTE_CHANGE },
 				AttributeChangeNotification.class.getName(),
 				"Bean attribute change"
+			),
+			new MBeanNotificationInfo(
+				new String[] { Manageable.Severity.ALERT.toString(), Manageable.Severity.NOTICE.toString() },
+				Notification.class.getName(),
+				"Alert"
 			)
 		};
 	}
