@@ -120,6 +120,39 @@ public class Beans {
     }
 
     /**
+     * Returns a field by name in the given class, looking through all super classes if needed.
+     */
+    public static Field getField(Class<?> type, String name) throws NoSuchFieldException {
+        NoSuchFieldException last = null;
+        while (type != null) {
+            try {
+                Field field = type.getDeclaredField(name);
+                field.setAccessible(true);
+                return field;
+            } catch (NoSuchFieldException x) {
+                last = x;
+                type = type.getSuperclass();
+            }
+        }
+        throw last;
+    }
+
+    /**
+     * Returns all declared fields in the given class and all its super classes.
+     */
+    public static Field[] getAllFields(Class<?> type) throws SecurityException {
+        List<Field> fields = new ArrayList<Field>();
+        while (type != null) {
+            for (Field field: type.getDeclaredFields()) {
+                field.setAccessible(true);
+                fields.add(field);
+            }
+            type = type.getSuperclass();
+        }
+        return fields.toArray(new Field[fields.size()]);
+    }
+
+    /**
      * Creates an instance of a given type by choosing the best constructor that matches the given list of arguments.
      */
     public static Object create(Class<?> type, Object... args) throws
@@ -350,7 +383,8 @@ public class Beans {
 
             // public fields
             for (Field field: type.getDeclaredFields()) {
-                if (Modifier.isPublic(field.getModifiers()) && !Modifier.isStatic(field.getModifiers())) {
+                int modifier = field.getModifiers();
+                if (Modifier.isPublic(modifier) && !Modifier.isStatic(modifier) && !Modifier.isTransient(modifier)) {
                     try {
                         indent(sb, level);
                         printNameValue(sb, field.getName(), field.get(bean), level+1);

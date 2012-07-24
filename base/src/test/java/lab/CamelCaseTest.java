@@ -103,5 +103,7 @@ public class CamelCaseTest {
             end = System.currentTimeMillis();
             System.out.println(output + ": " + (end - start));
         }
+
+        System.out.println(Beans.toCamelCase("This is a simple message", ' '));
     }
 }

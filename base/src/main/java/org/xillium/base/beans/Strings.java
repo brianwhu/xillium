@@ -32,4 +32,15 @@ public class Strings {
 		}
 		return sb;
 	}
+
+    public static String getMessage(Throwable x) {
+        Throwable root = x;
+        for (Throwable cause = root.getCause(); cause != null; cause = root.getCause()) {
+            root = cause;
+        }
+        return x != root ?
+            x.getClass().getName() + ": " + x.getMessage() + " (" + root.getClass().getName() + ": " + root.getMessage() + ')'
+            :
+            x.getClass().getName() + ": " + x.getMessage();
+    }
 }
