@@ -80,22 +80,22 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                                         c2f.field.set(object, number.byteValue());
                                     }
                                 } catch (Throwable t) {
-                                    throw x;
+                                    throw new IllegalArgumentException(t);
                                 }
                             } else if (value instanceof java.sql.Timestamp) {
                                 try {
                                     c2f.field.set(object, new java.sql.Date(((java.sql.Timestamp)value).getTime()));
                                 } catch (Throwable t) {
-                                    throw x;
+                                    throw new IllegalArgumentException(t);
                                 }
                             } else if ((value instanceof String) && Enum.class.isAssignableFrom(ftype)) {
                                 try {
                                     c2f.field.set(object, Enum.valueOf(ftype, (String)value));
                                 } catch (Throwable t) {
-                                    throw x;
+                                    throw new IllegalArgumentException(t);
                                 }
                             } else {
-                                throw x;
+                                throw new IllegalArgumentException(x);
                             }
                         }
 					}
