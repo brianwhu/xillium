@@ -213,7 +213,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             }
             binder.put(Service.FAILURE_MESSAGE, message);
             _logger.warning("Exception caught in dispatcher: " + message);
-            _logger.log(Level.FINE, "Exception stack trace:", x);
+            _logger.log(Level.INFO, "Exception stack trace:", x);
 
             CharArrayWriter sw = new CharArrayWriter();
             x.printStackTrace(new PrintWriter(sw));

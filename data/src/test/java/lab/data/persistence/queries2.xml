@@ -3,5 +3,9 @@
     <persist:parametric-query params="aSalary:NUMERIC"><?assemble name="EmployeesWithSalaryAbove"?>
         SELECT * FROM EMPLOYEES WHERE SALARY >= ? ORDER BY LAST_NAME
     </persist:parametric-query>
+
+    <persist:parametric-query><?assemble name="EmployeesWithSalaryAbove2"?>
+        SELECT * FROM EMPLOYEES WHERE SALARY >= :aSalary:NUMERIC ORDER BY LAST_NAME
+    </persist:parametric-query>
 </lab:storage-configuration>
 

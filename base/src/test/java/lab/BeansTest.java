@@ -49,8 +49,18 @@ public class BeansTest {
         assert output.equals(UPPER_CAMEL_CASE) : "Failed to capitalize text";
     }
 
+    @Test(groups={"ObjectCopy"})
+    public void testObjectCopy() throws Exception {
+        A a = new A("Good", 10), b = new A("Bad", null);
+        System.out.println("Before: A = " + a.name + ", " + a.score);
+        System.out.println("Before: B = " + b.name + ", " + b.score);
+        Beans.override(b, a);
+        System.out.println("After:  B = " + b.name + ", " + b.score);
+        assert b.score.equals(a.score) : "Failed to override object properties";
+    }
+
     public static class A {
-        public A(String name, int score) {
+        public A(String name, Integer score) {
             this.name = name;
             this.score = score;
         }
@@ -64,7 +74,7 @@ public class BeansTest {
             return '{' + name + '|' + score + "} " + say + ": " + message;
         }
 
-        String name;
-        int score;
+        public String name;
+        public Integer score;
     }
 }

@@ -302,6 +302,24 @@ public class Beans {
     }
 
     /**
+     * Copies identically named public fields from one object to another.
+     */
+    public static Object override(Object destination, Object source) {
+        Class<?> stype = source.getClass();
+        //Class<?> dtype = destination.getClass();
+        for (Field field: destination.getClass().getFields()) {
+            try {
+                Object value = field.get(destination);
+                if (value == null) {
+                    field.set(destination, stype.getField(field.getName()).get(source));
+                }
+            } catch (Exception x) {
+            }
+        }
+        return destination;
+    }
+
+    /**
      * Converts a hyphen-separated word sequence into a single camel-case word.
      */
     public static String toCamelCase(String text) {

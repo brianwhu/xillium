@@ -11,6 +11,7 @@ import org.xillium.data.persistence.*;
  * A flattened copy of a result set
  */
 public class CachedResultSet {
+    public static final Builder BUILDER = new Builder();
     public final String[] columns;
     public final List<Object[]> rows;
 

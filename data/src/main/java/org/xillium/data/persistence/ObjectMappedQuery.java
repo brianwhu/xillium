@@ -139,6 +139,14 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
         }
     }
 
+    public ObjectMappedQuery(String classname) throws IllegalArgumentException {
+		try {
+            _type = (Class<T>)Class.forName(classname);
+        } catch (ClassNotFoundException x) {
+            throw new IllegalArgumentException(x);
+        }
+    }
+
 	/**
 	 * Execute the query and returns the results as a list of objects.
 	 */

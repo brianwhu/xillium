@@ -25,6 +25,7 @@ public class Strings {
         return new String(hex, "ASCII");
     }
 
+/*
 	public static StringBuilder appendStackTrace(StringBuilder sb, Throwable t) {
 		sb.append(t.getClass()).append('\n');
 		for (StackTraceElement e: t.getStackTrace()) {
@@ -43,4 +44,5 @@ public class Strings {
             :
             x.getClass().getName() + ": " + x.getMessage();
     }
+*/
 }

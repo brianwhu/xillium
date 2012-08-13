@@ -1,7 +1,7 @@
 package org.xillium.core.management;
 
 import javax.management.*;
-import org.xillium.base.beans.Strings;
+import org.xillium.base.beans.Throwables;
 
 
 public abstract class ManagedComponent implements Manageable, NotificationEmitter {
@@ -67,7 +67,7 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
     }
 
     public <T extends Throwable> T sendAlert(T throwable, long sequence) {
-        sendAlert(Manageable.Severity.ALERT, Strings.getMessage(throwable), sequence);
+        sendAlert(Manageable.Severity.ALERT, Throwables.getFullMessage(throwable), sequence);
         return throwable;
     }
 

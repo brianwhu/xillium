@@ -35,6 +35,7 @@ public class DataAccess {
         }
         ParametricQuery DepartmentsByLocation = (ParametricQuery)StorageConfiguration.getParametricStatement("DepartmentsByLocation");
         ParametricQuery EmployeesWithSalaryAbove = (ParametricQuery)StorageConfiguration.getParametricStatement("EmployeesWithSalaryAbove");
+        ParametricQuery EmployeesWithSalaryAbove2 = (ParametricQuery)StorageConfiguration.getParametricStatement("EmployeesWithSalaryAbove2");
 
         DataBinder binder = new DataBinder();
         DataUtil.loadFromArgs(binder, args, index);
@@ -56,6 +57,15 @@ public class DataAccess {
 
             //rset = EmployeesWithSalaryAbove.intoResultSet(conn, data);
             EmployeesWithSalaryAbove.executeSelect(conn, data, new ParametricQuery.ResultSetWorker<Object>() {
+                public Object process(ResultSet rset) throws Exception {
+                    CachedResultSet crs = new CachedResultSet(rset);
+                    System.out.println(Beans.toString(crs));
+                    System.out.println(new JSONBuilder(1024).serialize(crs));
+                    return null;
+                }
+            });
+
+            EmployeesWithSalaryAbove2.executeSelect(conn, data, new ParametricQuery.ResultSetWorker<Object>() {
                 public Object process(ResultSet rset) throws Exception {
                     CachedResultSet crs = new CachedResultSet(rset);
                     System.out.println(Beans.toString(crs));

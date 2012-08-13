@@ -2,6 +2,7 @@ package org.xillium.core;
 
 import java.sql.*;
 import java.util.*;
+import java.math.BigDecimal;
 import javax.sql.DataSource;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
@@ -11,6 +12,8 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 
 
 public class Persistence {
+    public static final SingleValueRetriever<BigDecimal> NumberRetriever = new SingleValueRetriever<BigDecimal>();
+
     private final DataSource _dataSource;
     private final Map<String, ParametricStatement> _statements;
 

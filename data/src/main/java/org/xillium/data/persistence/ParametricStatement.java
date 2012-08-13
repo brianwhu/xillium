@@ -3,6 +3,7 @@ package org.xillium.data.persistence;
 import org.xillium.data.*;
 import java.sql.*;
 import java.util.*;
+import java.util.regex.*;
 import java.lang.reflect.Field;
 
 
@@ -64,7 +65,12 @@ public class ParametricStatement {
         }
     }
 
+    public ParametricStatement() {
+        _params = null;
+    }
+
     public ParametricStatement set(String sql) throws IllegalArgumentException {
+    if (_params != null) {
         int count = 0;
         int qmark = sql.indexOf('?');
         while (qmark > 0) {
@@ -76,6 +82,20 @@ public class ParametricStatement {
         } else {
             throw new IllegalArgumentException("Wrong number of parameters in '" + sql +'\'');
         }
+    } else {
+        List<Param> params = new ArrayList<Param>();
+        Matcher matcher = PARAM_SYNTAX.matcher(sql);
+        while (matcher.find()) {
+            //System.err.println("[" + matcher.start() + ", " + matcher.end() + "] " + matcher.group());
+            try {
+                params.add(new Param(matcher.group(1), java.sql.Types.class.getField(matcher.group(2)).getInt(null)));
+            } catch (Exception x) {
+                throw new IllegalArgumentException("Parameter specification", x);
+            }
+        }
+        _params = params.toArray(new Param[params.size()]);
+        _sql = matcher.replaceAll("?");
+    }
         return this;
     }
 
@@ -199,7 +219,8 @@ public class ParametricStatement {
     }
 
     private static final Param[] NoParams = new Param[0];
-    private final Param[] _params;
+    private static final Pattern PARAM_SYNTAX = Pattern.compile(":(\\w+\\??):(\\w+)");
+    private /*final*/ Param[] _params;
     protected String _sql;
 
     private static int getAffectedRowCount(int[] results) {

@@ -31,6 +31,12 @@ public class ParametricQuery extends ParametricStatement {
     }
 
     /**
+     * Constructs a ParametricQuery with the named parameters embedded in the SQL.
+     */
+    public ParametricQuery() throws IllegalArgumentException {
+    }
+
+    /**
      * Executes the SELECT statement, passing the result set to the ResultSetWorker for processing.
      *
      * The ResultSetWorker must close the result set before returning.
