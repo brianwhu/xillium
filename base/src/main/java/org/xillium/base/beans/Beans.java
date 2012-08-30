@@ -120,11 +120,12 @@ public class Beans {
     }
 
     /**
-     * Returns a field by name in the given class, looking through all super classes if needed.
+     * Returns a known field by name from the given class disregarding its access control setting, looking through
+     * all super classes if needed.
      */
-    public static Field getField(Class<?> type, String name) throws NoSuchFieldException {
+    public static Field getKnownField(Class<?> type, String name) throws NoSuchFieldException {
         NoSuchFieldException last = null;
-        while (type != null) {
+        do {
             try {
                 Field field = type.getDeclaredField(name);
                 field.setAccessible(true);
@@ -133,14 +134,14 @@ public class Beans {
                 last = x;
                 type = type.getSuperclass();
             }
-        }
+        } while (type != null);
         throw last;
     }
 
     /**
-     * Returns all declared fields in the given class and all its super classes.
+     * Returns all known fields in the given class and all its super classes.
      */
-    public static Field[] getAllFields(Class<?> type) throws SecurityException {
+    public static Field[] getKnownFields(Class<?> type) throws SecurityException {
         List<Field> fields = new ArrayList<Field>();
         while (type != null) {
             for (Field field: type.getDeclaredFields()) {
@@ -306,12 +307,12 @@ public class Beans {
      */
     public static Object override(Object destination, Object source) {
         Class<?> stype = source.getClass();
-        //Class<?> dtype = destination.getClass();
         for (Field field: destination.getClass().getFields()) {
             try {
                 Object value = field.get(destination);
-                if (value == null) {
+                if (value == null || (value instanceof Number && ((Number)value).doubleValue() == 0)) {
                     field.set(destination, stype.getField(field.getName()).get(source));
+                } else if (value instanceof Number && ((Number)value).doubleValue() == 0) {
                 }
             } catch (Exception x) {
             }
@@ -399,10 +400,10 @@ public class Beans {
             sb.append(bean);
         } else {
 
-            // public fields
-            for (Field field: type.getDeclaredFields()) {
+            // public fields including those declared by super classes
+            for (Field field: type.getFields()) {
                 int modifier = field.getModifiers();
-                if (Modifier.isPublic(modifier) && !Modifier.isStatic(modifier) && !Modifier.isTransient(modifier)) {
+                if (!Modifier.isStatic(modifier) && !Modifier.isTransient(modifier)) {
                     try {
                         indent(sb, level);
                         printNameValue(sb, field.getName(), field.get(bean), level+1);

@@ -1,5 +1,6 @@
 package org.xillium.data.persistence;
 
+import org.xillium.base.beans.Beans;
 import org.xillium.data.*;
 import java.sql.*;
 import java.util.*;
@@ -106,13 +107,15 @@ public class ParametricStatement {
 
             for (int i = 0; i < _params.length; ++i) {
                 try {
-                    Field field = type.getField(_params[i].name);
-                    if (field.getType().isEnum()) {
-                        if (Types.VARCHAR == _params[i].type) {
+                    Field field = Beans.getKnownField(type, _params[i].name);
+                    if (field.getType().isEnum()) { // store as string or integer
+                        if (Types.CHAR == _params[i].type || Types.VARCHAR == _params[i].type) {
                             statement.setObject(i+1, field.get(object).toString(), _params[i].type);
                         } else {
                             statement.setObject(i+1, ((Enum)field.get(object)).ordinal(), _params[i].type);
                         }
+                    } else if (Calendar.class.isAssignableFrom(field.getType())) {
+                        statement.setObject(i+1, new java.sql.Date(((Calendar)field.get(object)).getTime().getTime()), _params[i].type);
                     } else {
                         statement.setObject(i+1, field.get(object), _params[i].type);
                     }
@@ -193,8 +196,7 @@ public class ParametricStatement {
     /**
      * Executes a batch INSERT statement.
      *
-     * @returns an array whose length indicates the number of rows inserted. If generatedKeys is true, the array
-     *          contains the keys; otherwise the content of the array is not defined.
+     * @returns the number of rows inserted.
      */
     public int executeInsert(Connection conn, DataObject[] objects) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql);

@@ -43,6 +43,20 @@ public class Persistence {
     }
 
     /**
+     * Executes an UPDATE/DELETE statement with expected number of affected rows.
+     */
+    public void executeUpdate(String name, DataObject object, int expected) throws SQLException {
+        ParametricStatement statement = _statements.get(name);
+        if (statement != null) {
+            if (expected != statement.executeUpdate(DataSourceUtils.getConnection(_dataSource), object)) {
+                throw new RuntimeException("WrongNumberOfAffectedRows");
+            }
+        } else {
+            throw new RuntimeException("ParametricStatement '" + name + "' not found");
+        }
+    }
+
+    /**
      * Executes an INSERT statement.
      */
     public long[] executeInsert(String name, DataObject object, boolean generatedKeys) throws SQLException {

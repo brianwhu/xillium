@@ -51,11 +51,11 @@ public class BeansTest {
 
     @Test(groups={"ObjectCopy"})
     public void testObjectCopy() throws Exception {
-        A a = new A("Good", 10), b = new A("Bad", null);
-        System.out.println("Before: A = " + a.name + ", " + a.score);
-        System.out.println("Before: B = " + b.name + ", " + b.score);
+        B a = new B("Good", 10, "morning"), b = new B(null, null, null);
+        System.out.println("Before: A = " + a.name + ", " + a.score + ", " + a.desc);
+        System.out.println("Before: B = " + b.name + ", " + b.score + ", " + b.desc);
         Beans.override(b, a);
-        System.out.println("After:  B = " + b.name + ", " + b.score);
+        System.out.println("After:  B = " + b.name + ", " + b.score + ", " + b.desc);
         assert b.score.equals(a.score) : "Failed to override object properties";
     }
 
@@ -76,5 +76,14 @@ public class BeansTest {
 
         public String name;
         public Integer score;
+    }
+
+    public static class B extends A {
+        public String desc;
+
+        public B(String name, Integer score, String desc) {
+            super(name, score);
+            this.desc = desc;
+        }
     }
 }
