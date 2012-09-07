@@ -303,18 +303,38 @@ public class Beans {
     }
 
     /**
-     * Copies identically named public fields from one object to another.
+     * Fills empty, identically named public fields with values from another object.
+     */
+    public static Object fill(Object destination, Object source) {
+        if (destination != source) {
+            Class<?> stype = source.getClass();
+            for (Field field: destination.getClass().getFields()) {
+                try {
+                    Object value = field.get(destination);
+                    if (value == null || (value instanceof Number && ((Number)value).doubleValue() == 0)) {
+                        field.set(destination, stype.getField(field.getName()).get(source));
+                    }
+                } catch (Exception x) {
+                }
+            }
+        }
+        return destination;
+    }
+
+    /**
+     * Overrides identically named public fields with non-empty values from another object.
      */
     public static Object override(Object destination, Object source) {
-        Class<?> stype = source.getClass();
-        for (Field field: destination.getClass().getFields()) {
-            try {
-                Object value = field.get(destination);
-                if (value == null || (value instanceof Number && ((Number)value).doubleValue() == 0)) {
-                    field.set(destination, stype.getField(field.getName()).get(source));
-                } else if (value instanceof Number && ((Number)value).doubleValue() == 0) {
+        if (destination != source) {
+            Class<?> dtype = destination.getClass();
+            for (Field field: source.getClass().getFields()) {
+                try {
+                    Object value = field.get(source);
+                    if (value != null && (!(value instanceof Number) || ((Number)value).doubleValue() != 0)) {
+                        dtype.getField(field.getName()).set(destination, value);
+                    }
+                } catch (Exception x) {
                 }
-            } catch (Exception x) {
             }
         }
         return destination;

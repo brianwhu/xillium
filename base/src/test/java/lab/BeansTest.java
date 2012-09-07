@@ -54,9 +54,9 @@ public class BeansTest {
         B a = new B("Good", 10, "morning"), b = new B(null, null, null);
         System.out.println("Before: A = " + a.name + ", " + a.score + ", " + a.desc);
         System.out.println("Before: B = " + b.name + ", " + b.score + ", " + b.desc);
-        Beans.override(b, a);
+        Beans.fill(b, a);
         System.out.println("After:  B = " + b.name + ", " + b.score + ", " + b.desc);
-        assert b.score.equals(a.score) : "Failed to override object properties";
+        assert b.score.equals(a.score) : "Failed to fill object properties";
     }
 
     public static class A {
