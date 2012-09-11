@@ -207,14 +207,15 @@ public class HttpServiceDispatcher extends HttpServlet {
 				_logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
 			}
         } catch (Throwable x) {
-            String message = x.getMessage();
+            Throwable t = Throwables.getRootCause(x);
+            String message = t.getMessage();
             if (message == null || message.length() == 0) {
-            	message = x.getClass().getName();
+            	message = t.getClass().getName();
             }
             binder.put(Service.FAILURE_MESSAGE, message);
             _logger.warning("Exception caught in dispatcher: " + message);
-            _logger.log(Level.INFO, "Exception stack trace:", x);
 
+            _logger.log(Level.INFO, "Exception stack trace:", x);
             CharArrayWriter sw = new CharArrayWriter();
             x.printStackTrace(new PrintWriter(sw));
             binder.put(Service.FAILURE_STACK, sw.toString());
