@@ -176,7 +176,7 @@ public class ParametricStatement {
      *          contains the keys; otherwise the content of the array is not defined.
      */
     public long[] executeInsert(Connection conn, DataObject object, boolean generatedKeys) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(_sql, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement = conn.prepareStatement(_sql, generatedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
         try {
             load(statement, object);
             long[] keys = new long[statement.executeUpdate()];
