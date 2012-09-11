@@ -107,7 +107,7 @@ public class Validator {
     public Object parse(String text) throws DataValidationException {
         try {
             preValidate(text);
-            Object object = _valueOf != null ? _valueOf.invoke(null, text) : text;
+            Object object = _valueOf != null ? valueOf(text) : text;
             postValidate(object);
             return object;
         } catch (DataValidationException x) {
@@ -179,7 +179,7 @@ public class Validator {
      * </li>
      */
     private final Object convert(String text) throws IllegalAccessException, InvocationTargetException {
-        return _valueOf != null ? (text.length() > 0 ? _valueOf.invoke(null, text) : null) : text;
+        return _valueOf != null ? (text.length() > 0 ? valueOf(text) : null) : text;
     }
 
     /*!
@@ -195,11 +195,15 @@ public class Validator {
         if (_valueOf != null) {
             Object[] values = new Object[text.length];
             for (int i = 0; i < values.length; ++i) {
-                values[i] = text[i].length() > 0 ? _valueOf.invoke(null, text[i]) : null;
+                values[i] = text[i].length() > 0 ? valueOf(text[i]) : null;
             }
             return values;
         } else {
             return text;
         }
+    }
+
+    private final Object valueOf(String text) throws IllegalAccessException, InvocationTargetException {
+    return _valueOf.getParameterTypes().length == 1 ? _valueOf.invoke(null, text) : _valueOf.invoke(null, _valueOf.getReturnType(), text);
     }
 }
