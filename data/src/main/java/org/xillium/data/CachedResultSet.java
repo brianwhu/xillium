@@ -1,5 +1,6 @@
 package org.xillium.data;
 
+import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 import org.xillium.base.beans.Beans;
@@ -56,6 +57,30 @@ public class CachedResultSet {
             }
         } finally {
             rset.close();
+        }
+    }
+
+    /**
+     * Retrieves the rows from a collection of DataObjects.
+     */
+    public <T extends DataObject> CachedResultSet(Collection<T> collection) throws Exception {
+        Field[] fields = null;
+
+        this.rows = new ArrayList<Object[]>();
+        for (T object: collection) {
+            if (fields == null) {
+                fields = Beans.getKnownFields(object.getClass());
+            }
+            Object[] row = new Object[fields.length];
+            for (int i = 0; i < fields.length; ++i) {
+                row[i] = fields[i].get(object);
+            }
+            rows.add(row);
+        }
+
+        this.columns = new String[fields.length];
+        for (int i = 0; i < fields.length; ++i) {
+            columns[i] = fields[i].getName();
         }
     }
 
