@@ -17,9 +17,8 @@ public class Throwables {
 	}
 
     public static Throwable getRootCause(Throwable x) {
-        for (Throwable cause = x.getCause(); cause != null; cause = x.getCause()) {
-            x = cause;
-        }
+        Throwable t;
+        while ((t = x.getCause()) != null) x = t;
         return x;
     }
 

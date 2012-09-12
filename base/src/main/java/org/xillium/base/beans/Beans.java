@@ -311,7 +311,7 @@ public class Beans {
             for (Field field: destination.getClass().getFields()) {
                 try {
                     Object value = field.get(destination);
-                    if (value == null || (value instanceof Number && ((Number)value).doubleValue() == 0)) {
+                    if (value == null) {
                         field.set(destination, stype.getField(field.getName()).get(source));
                     }
                 } catch (Exception x) {
@@ -330,7 +330,7 @@ public class Beans {
             for (Field field: source.getClass().getFields()) {
                 try {
                     Object value = field.get(source);
-                    if (value != null && (!(value instanceof Number) || ((Number)value).doubleValue() != 0)) {
+                    if (value != null) {
                         dtype.getField(field.getName()).set(destination, value);
                     }
                 } catch (Exception x) {
