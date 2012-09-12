@@ -197,7 +197,6 @@ public class HttpServiceDispatcher extends HttpServlet {
 
             binder = service.run(binder, _dict, _persistence);
 
-            // TODO: post-service filter
 			try {
 				Runnable task = (Runnable)binder.getNamedObject(Service.SERVICE_POST_ACTION);
 				if (task != null) {
@@ -206,6 +205,13 @@ public class HttpServiceDispatcher extends HttpServlet {
 			} catch (Throwable t) {
 				_logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
 			}
+
+            // TODO: post-service filter
+			if (service instanceof Service.Extended) {
+				_logger.fine("Trying to authorize invocation of a secured service");
+				((Service.Extended)service).complete(binder);
+			}
+
         } catch (Throwable x) {
             Throwable t = Throwables.getRootCause(x);
             String message = t.getMessage();

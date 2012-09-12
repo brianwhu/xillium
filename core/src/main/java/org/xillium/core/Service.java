@@ -34,9 +34,16 @@ public interface Service {
 	public DataBinder run(DataBinder parameters, Dictionary dict, Persistence persist) throws ServiceException;
 
 	/**
-	 * Marker interface to indicate a secured service.
+	 * Interface to indicate a secured service.
 	 */
 	public static interface Secured extends Service {
 		public void authorize(String deployment, DataBinder parameters, Persistence persist) throws AuthorizationException;
+	}
+
+	/**
+	 * Interface to indicate a service that has an extra 'complete' step after the service is committed.
+	 */
+	public static interface Extended extends Service {
+		public void complete(DataBinder parameters);
 	}
 }
