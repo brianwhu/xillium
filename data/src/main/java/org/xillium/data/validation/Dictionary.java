@@ -134,7 +134,7 @@ public class Dictionary {
                     Trace.g.std.note(Dictionary.class, "Array '" + qualified + "' stored");
                 } else if (field.getAnnotation(required.class) != null) {
                     throw new MissingParameterException(
-                        "In " + (prefix != null ? prefix : "<>") + " (" + data.getClass().getName() + ") missing '" + name + '\''
+                        "MissingRequiredParameter{"+name+"}# in " + (prefix != null ? prefix : "<>") + '(' + data.getClass().getName() + ')'
                     );
                 } else {
                     continue;
@@ -158,7 +158,7 @@ public class Dictionary {
                     if (absent != null) {
                         // now report missing required parameters
                         throw new MissingParameterException(
-                        "In " + (prefix != null ? prefix : "<>") + " (" + data.getClass().getName() + ") missing '" + absent + '\''
+                        "MissingRequiredParameter{"+absent+"}# in " + (prefix != null ? prefix : "<>") + '('+data.getClass().getName()+')'
                         );
                     } else {
                         try {
@@ -251,7 +251,7 @@ public class Dictionary {
             } else {
                 Trace.g.std.note(Dictionary.class, "Data object already has " + present + " member values");
                 throw new MissingParameterException(
-                    "In " + (prefix != null ? prefix : "<>") + '(' + data.getClass().getName() + ") missing '" + name + '\''
+                    "MissingRequiredParameter{"+name+"}# in " + (prefix != null ? prefix : "<>") + '(' + data.getClass().getName() + ')'
                 );
             }
         } else {

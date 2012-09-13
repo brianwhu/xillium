@@ -113,7 +113,8 @@ public class Validator {
         } catch (DataValidationException x) {
             throw x;
         } catch (InvocationTargetException x) {
-            throw new DataValidationException(_name, x.getCause());
+            // various format errors from valueOf() - ignore the details
+            throw new DataValidationException("FailureInDataValidation{"+_name+'}');
         } catch (Throwable t) {
             throw new DataValidationException(_name, t);
         }
