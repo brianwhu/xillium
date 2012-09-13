@@ -205,13 +205,6 @@ public class HttpServiceDispatcher extends HttpServlet {
 			} catch (Throwable t) {
 				_logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
 			}
-
-            // TODO: post-service filter
-			if (service instanceof Service.Extended) {
-				_logger.fine("Trying to authorize invocation of a secured service");
-				((Service.Extended)service).complete(binder);
-			}
-
         } catch (Throwable x) {
             Throwable t = Throwables.getRootCause(x);
             String message = t.getMessage();
@@ -225,14 +218,17 @@ public class HttpServiceDispatcher extends HttpServlet {
             CharArrayWriter sw = new CharArrayWriter();
             x.printStackTrace(new PrintWriter(sw));
             binder.put(Service.FAILURE_STACK, sw.toString());
-/*
-            Throwable t;
-            while ((t = x.getCause()) != null) {
-                x = t;
-            }
-            binder.put(Service.FAILURE_STACK, Arrays.toString(x.getStackTrace()).replaceAll(", ", "\n"));
-*/
         } finally {
+            // TODO: post-service filter
+			if (service instanceof Service.Extended) {
+				_logger.fine("Invoking extended operations");
+				try {
+                    ((Service.Extended)service).complete(binder);
+                } catch (Throwable t) {
+                    _logger.log(Level.WARNING, "Extended service: complete() failed", t);
+                }
+			}
+
             res.setHeader("Access-Control-Allow-Headers", "origin,x-prototype-version,x-requested-with,accept");
             res.setHeader("Access-Control-Allow-Origin", "*");
             res.setHeader("Content-Type", "application/json;charset=UTF-8");
