@@ -22,6 +22,12 @@ public class Throwables {
         return x;
     }
 
+    public static String getFirstMessage(Throwable x) {
+        String message;
+        while ((message = x.getMessage()) == null && (x = x.getCause()) != null);
+        return message;
+    }
+
     public static String getFullMessage(Throwable x) {
         StringBuilder sb = new StringBuilder(x.getClass().getName()).append(": ").append(x.getMessage());
         Throwable root = getRootCause(x);

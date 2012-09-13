@@ -206,10 +206,9 @@ public class HttpServiceDispatcher extends HttpServlet {
 				_logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
 			}
         } catch (Throwable x) {
-            Throwable t = Throwables.getRootCause(x);
-            String message = t.getMessage();
+            String message = Throwables.getFirstMessage(x);
             if (message == null || message.length() == 0) {
-            	message = t.getClass().getName();
+            	message = "***"+Throwables.getRootCause(x).getClass().getSimpleName();
             }
             binder.put(Service.FAILURE_MESSAGE, message);
             _logger.warning("Exception caught in dispatcher: " + message);
