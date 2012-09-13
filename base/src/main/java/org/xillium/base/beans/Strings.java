@@ -1,8 +1,7 @@
 package org.xillium.base.beans;
 
-//import java.beans.*;
-//import java.lang.reflect.*;
-//import java.util.*;
+import java.util.*;
+import java.util.regex.*;
 
 
 /**
@@ -25,24 +24,28 @@ public class Strings {
         return new String(hex, "ASCII");
     }
 
-/*
-	public static StringBuilder appendStackTrace(StringBuilder sb, Throwable t) {
-		sb.append(t.getClass()).append('\n');
-		for (StackTraceElement e: t.getStackTrace()) {
-			sb.append(e.toString()).append('\n');
-		}
-		return sb;
-	}
+    private static final Pattern PARAM_SYNTAX = Pattern.compile("\\{([^{}]+)\\}");
 
-    public static String getMessage(Throwable x) {
-        Throwable root = x;
-        for (Throwable cause = root.getCause(); cause != null; cause = root.getCause()) {
-            root = cause;
+    /**
+     * Extracts specially marked arguments from a string, and returns the string with such arguments replaced with "{}".
+     * <ol>
+     * <li> Arguments are enclosed between '{' and '}'</li>
+     * <li> Optional extra text is allowed at the end of line starting with '#', which is removed before returning</li>
+     * </ol>
+     */
+    public static String extractArguments(List<String> params, String original) {
+        int eol = original.indexOf('#');
+        if (eol > -1) {
+            original = original.substring(0, eol);
         }
-        return x != root ?
-            x.getClass().getName() + ": " + x.getMessage() + " (" + root.getClass().getName() + ": " + root.getMessage() + ')'
-            :
-            x.getClass().getName() + ": " + x.getMessage();
+        Matcher matcher = PARAM_SYNTAX.matcher(original);
+        while (matcher.find()) {
+            try {
+                params.add(matcher.group(1));
+            } catch (Exception x) {
+                throw new IllegalArgumentException("Translation format specification", x);
+            }
+        }
+        return  matcher.replaceAll("{}");
     }
-*/
 }
