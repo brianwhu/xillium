@@ -105,13 +105,14 @@ public class TestSchema extends AbstractTransactionalTestNGSpringContextTests {
                     sb.append(String.format("%32s: %4s (%s)", keys.getString(COLUMN_NAME), keys.getString(PKEY_SEQ), keys.getString(PKEY_NAME))).append('\n');
                 }
 
-                sb.append(String.format("%24s:", "Referenced by")).append('\n');
+                sb.append(String.format("%24s:", "Referencing")).append('\n');
                 keys = meta.getImportedKeys(catalog, schema, table);
                 while (keys.next()) {
-                    sb.append(String.format("%32s: %4s (%s)", keys.getString(7), keys.getString(8), keys.getString(9))).append('\n');
+                    sb.append(String.format("%32s: %4s (%s %s [%s])", keys.getString(3), keys.getString(4),
+                        keys.getString(7), keys.getString(8), keys.getString(9))).append('\n');
                 }
 
-                sb.append(String.format("%24s:", "Exported Keys")).append('\n');
+                sb.append(String.format("%24s:", "Referenced Keys")).append('\n');
                 keys = meta.getExportedKeys(catalog, schema, table);
                 while (keys.next()) {
                     sb.append(String.format("%32s: %4s (%s)", keys.getString(7), keys.getString(8), keys.getString(9))).append('\n');

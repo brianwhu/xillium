@@ -60,7 +60,11 @@ public class CrudCommand {
         synchronized (_classes) {
             Class<? extends DataObject> type = _classes.get(cname);
             if (type == null) {
-                type = modelFromTables(connection, cname, action, names);
+                try {
+                    type = modelFromTables(connection, cname, action, names);
+                } catch (Exception x) {
+                    throw new Exception(tables, x);
+                }
                 _classes.put(cname, type);
             }
             _type = type;
@@ -141,13 +145,13 @@ public class CrudCommand {
 				while (keys.next()) {
                     String jointable = null;
                     for (int j = 0; j < i; ++j) {
-                        if (keys.getString(FKEY_TABLE).equals(tablenames[j])) {
+                        if (keys.getString(FKEY_REFERENCED_TABLE).equals(tablenames[j])) {
                             jointable = tablenames[j];
                             break;
                         }
                     }
-                    if (jointable != null) {
-						String column = keys.getString(FKEY_COLUMN);
+                    if (jointable != null && primaryKeys.contains(keys.getString(FKEY_REFERENCING_COLUMN))) {
+						String column = keys.getString(FKEY_REFERENCING_COLUMN);
 						isaKeys.add(column);
                         if (action.op == Operation.RETRIEVE || action.op == Operation.SEARCH) {
     /*SQL*/     		    if (vals.length() > 0) {
@@ -353,9 +357,10 @@ public class CrudCommand {
 	private static final int COLUMN_TYPE = 5;	// java.sql.Types.#
 	private static final int COLUMN_SIZE = 7;
 	private static final int IS_NULLABLE = 11;
-	private static final int FKEY_TABLE  = 3;
-	private static final int FKEY_COLUMN = 8;
 	private static final int PKEY_COLUMN = 4;
+	private static final int FKEY_REFERENCED_TABLE = 3;
+	private static final int FKEY_REFERENCED_COLUMN = 4;
+	private static final int FKEY_REFERENCING_COLUMN = 8;
 
     private static void addAnnotation(AnnotationsAttribute attr, ConstPool cp, String aclass) {
         javassist.bytecode.annotation.Annotation annotation = new javassist.bytecode.annotation.Annotation(aclass, cp);
