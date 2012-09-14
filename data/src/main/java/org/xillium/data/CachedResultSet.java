@@ -61,9 +61,9 @@ public class CachedResultSet {
     }
 
     /**
-     * Retrieves the rows from a collection of DataObjects.
+     * Retrieves the rows from a collection of Objects.
      */
-    public <T extends DataObject> CachedResultSet(Collection<T> collection) throws Exception {
+    public <T> CachedResultSet(Collection<T> collection) throws Exception {
         Field[] fields = null;
 
         this.rows = new ArrayList<Object[]>();
