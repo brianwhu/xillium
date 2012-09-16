@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.logging.*;
 import org.xillium.base.etc.Arrays;
 import org.xillium.data.DataObject;
+import org.xillium.data.DataBinder;
 import org.xillium.data.CachedResultSet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -36,6 +37,16 @@ public class RemoteService {
             try {
                 params.add(field.getName() + '=' + field.get(data).toString());
             } catch (IllegalAccessException x) {}
+        }
+        return call(server, service, params.toArray(new String[params.size()]));
+    }
+
+	public static Response call(String server, String service, DataBinder binder) {
+        List<String> params = new ArrayList<String>();
+        for (Map.Entry<String, String> entry: binder.entrySet()) {
+            String name = entry.getKey();
+            if (name.charAt(0) == '_' || name.charAt(0) == '#') continue;
+            params.add(name + '=' + entry.getValue());
         }
         return call(server, service, params.toArray(new String[params.size()]));
     }
