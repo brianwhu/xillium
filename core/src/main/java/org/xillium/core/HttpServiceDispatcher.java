@@ -62,6 +62,7 @@ public class HttpServiceDispatcher extends HttpServlet {
     private static final File TEMPORARY = null;
     private static final Logger _logger = Logger.getLogger(HttpServiceDispatcher.class.getName());
 
+    private final Stack<List<PlatformLifeCycleAware>> _plca = new Stack<List<PlatformLifeCycleAware>>();
     private final Map<String, Service> _services = new HashMap<String, Service>();
     private final org.xillium.data.validation.Dictionary _dict = new org.xillium.data.validation.Dictionary();
 
@@ -105,8 +106,21 @@ public class HttpServiceDispatcher extends HttpServlet {
             plca.initialize();
         }
 
+        _plca.push(plcas);
+
         _services.put("x!/desc", new DescService(descriptions));
         _services.put("x!/list", new ListService(_services));
+    }
+
+    public void destroy() {
+        _logger.info("Terminating service dispatcher");
+        while (!_plca.empty()) {
+            List<PlatformLifeCycleAware> plcas = _plca.pop();
+            // terminate PlatformLifeCycleAware objects in this level
+            for (PlatformLifeCycleAware plca: plcas) {
+                plca.terminate();
+            }
+        }
     }
 
     /**
@@ -361,7 +375,9 @@ public class HttpServiceDispatcher extends HttpServlet {
                             _logger.info("Initalizing SPECIAL PlatformLifeCycleAware " + plca.getClass().getName());
                             plca.initialize();
                         }
-                        plcas.clear();
+                        //plcas.clear();
+                        _plca.push(plcas);
+                        plcas = new ArrayList<PlatformLifeCycleAware>();
                     }
                 } catch (IOException x) {
                     // ignore this jar

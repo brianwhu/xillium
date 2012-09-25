@@ -16,4 +16,9 @@ public interface PlatformLifeCycleAware {
      * object with the configuration information already in place.
      */
 	public void initialize();
+
+    /**
+     * Invoked immediately before the service environment is shutdown.
+     */
+	public void terminate();
 }
