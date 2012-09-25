@@ -121,8 +121,10 @@ public class CrudCommand {
             vals = new StringBuilder(),	// CREATE: VALUES,  RETRIEVE: COND'S, UPDATE: COND'S,      DELETE: COND'S,     SEARCH: COND'S
             flds = new StringBuilder();
 
+        DatabaseMetaData meta = connection.getMetaData();
+        String schema = meta.getUserName();
+
 		for (int i = 0; i < tablenames.length; ++i) {
-			DatabaseMetaData meta = connection.getMetaData();
 
 			PreparedStatement stmt = connection.prepareStatement("SELECT * FROM " + tablenames[i]);
 			ResultSetMetaData rsmeta = stmt.getMetaData();
@@ -132,7 +134,7 @@ public class CrudCommand {
 			}
 
 			Set<String> primaryKeys = new HashSet<String>();
-			ResultSet keys = meta.getPrimaryKeys(connection.getCatalog(), null, tablenames[i]);
+			ResultSet keys = meta.getPrimaryKeys(connection.getCatalog(), schema, tablenames[i]);
 			while (keys.next()) {
 				primaryKeys.add(keys.getString(PKEY_COLUMN));
 			}
@@ -141,7 +143,7 @@ public class CrudCommand {
             // ISA keys and table join conditions
 			Set<String> isaKeys = new HashSet<String>();
 			if (i > 0) {
-				keys = meta.getImportedKeys(connection.getCatalog(), null, tablenames[i]);
+				keys = meta.getImportedKeys(connection.getCatalog(), schema, tablenames[i]);
 				while (keys.next()) {
                     String jointable = null;
                     for (int j = 0; j < i; ++j) {
@@ -208,7 +210,7 @@ public class CrudCommand {
                 }
             }
 
-			ResultSet columns = meta.getColumns(connection.getCatalog(), null, tablenames[i], "%");
+			ResultSet columns = meta.getColumns(connection.getCatalog(), schema, tablenames[i], "%");
 			while (columns.next()) {
 				String name = columns.getString(COLUMN_NAME), fname = Beans.toLowerCamelCase(name, '_');
 				int idx = colref.get(name).intValue();
