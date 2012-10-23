@@ -398,7 +398,7 @@ public class CrudCommand {
 					return "java.lang.Byte";
 				}
 			} else {
-				if (precision > 38) {
+				if (precision > 7) {
 					return "java.lang.Double";
 				} else {
 					return "java.lang.Float";
