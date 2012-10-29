@@ -405,7 +405,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             try {
                 Class<?> request = Class.forName(def.getBeanClassName()+"$Request");
                 if (DataObject.class.isAssignableFrom(request)) {
-                    _logger.info("Service '" + fullname + "' request description captured");
+                    _logger.info("Service '" + fullname + "' request description captured: " + request.getName());
                     desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
                 } else {
                     _logger.warning("Service '" + fullname + "' defines a Request type that is not a DataObject");
@@ -414,6 +414,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             } catch (ClassNotFoundException x) {
                 try {
                     Class<? extends DataObject> request = ((DynamicService)gac.getBean(id)).getRequestType();
+                    _logger.info("Service '" + fullname + "' request description captured: " + request.getName());
                     desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
                 } catch (Exception t) {
                     _logger.warning("Service '" + fullname + "' does not expose its request structure" + t.getClass());

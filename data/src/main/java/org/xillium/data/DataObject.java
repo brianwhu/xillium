@@ -29,7 +29,7 @@ public interface DataObject {
         }
 
         private static void print(StringBuilder sb, String prefix, Class<? extends DataObject> type) {
-            for (Field field: type.getDeclaredFields()) {
+            for (Field field: type.getFields()) {
                 if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) != 0) continue;
 
                 String name = (prefix != null) ? prefix + '.' + field.getName() : field.getName();
