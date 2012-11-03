@@ -1,12 +1,15 @@
 package org.xillium.data;
 
 import java.util.*;
+import java.sql.*;
+import org.xillium.base.beans.Beans;
+import org.xillium.data.persistence.ParametricQuery;
 
 
 /**
  * A data binder
  */
-public class DataBinder extends HashMap<String, String> {
+public class DataBinder extends HashMap<String, String> implements ParametricQuery.ResultSetWorker<DataBinder>{
     private final Map<String, CachedResultSet> _rsets = new HashMap<String, CachedResultSet>();
     private final Map<String, Object> _named = new HashMap<String, Object>();
 
@@ -43,6 +46,25 @@ public class DataBinder extends HashMap<String, String> {
      */
     public Object getNamedObject(String name) {
         return _named.get(name);
+    }
+
+    /**
+     * Fills the data binder with columns in the current row of a result set.
+     */
+    @Override
+    public DataBinder process(ResultSet rset) throws Exception {
+        try {
+            if (rset.next()) {
+                ResultSetMetaData meta = rset.getMetaData();
+                int width = meta.getColumnCount();
+                for (int i = 1; i <= width; ++i) {
+                    put(Beans.toLowerCamelCase(meta.getColumnName(i), '_'), rset.getObject(i).toString());
+                }
+            }
+            return this;
+        } finally {
+            rset.close();
+        }
     }
 
     /**

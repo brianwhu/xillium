@@ -12,6 +12,13 @@ import org.xillium.data.*;
 import org.xillium.data.persistence.*;
 
 
+/**
+ * A CRUD operation generated from database schema.
+ *
+ * The following features are supported:
+ * - multiple tables associated with ISA relations
+ * - restrictions on values for specific columns
+ */
 public class CrudCommand {
 	private static final String STATEMENT_FIELD_NAME = "_STMT";
     private static final Map<String, Class<? extends DataObject>> _classes = new HashMap<String, Class<? extends DataObject>>();
@@ -29,22 +36,43 @@ public class CrudCommand {
     }
 
 	public static class Action {
-		final String[] args;
 		final Operation op;
+		final String[] args;
+        final Map<String, String> restriction;
 
 		public Action(Operation op) {
 			this.op = op;
 			this.args = null;
+            this.restriction = null;
+		}
+
+		public Action(Operation op, Map<String, String> restriction) {
+			this.op = op;
+			this.args = null;
+            this.restriction = restriction;
 		}
 
 		public Action(Operation op, String[] args) {
 			this.op = op;
 			this.args = args;
+            this.restriction = null;
 		}
 
+		public Action(Operation op, String[] args, Map<String, String> restriction) {
+			this.op = op;
+			this.args = args;
+            this.restriction = restriction;
+		}
+
+/*
 		public boolean isValid() {
 			return (op != Operation.UPDATE) || (args != null && args.length > 0);
 		}
+*/
+
+        public String toString() {
+            return op.toString() + '[' + Arrays.toString(args) + ']' + restriction;
+        }
 	}
 
     /**
@@ -101,9 +129,11 @@ public class CrudCommand {
      */
     public static Class<? extends DataObject>
     modelFromTables(Connection connection, String classname, Action action, String... tablenames) throws Exception {
+/*
 		if (!action.isValid()) {
 			throw new RuntimeException("Invalid CRUD action: update without column list");
 		}
+*/
 
 		ClassPool pool = ClassPool.getDefault();
         // this line is necessary for web applications (web container class loader in play)
@@ -156,9 +186,7 @@ public class CrudCommand {
 						String column = keys.getString(FKEY_REFERENCING_COLUMN);
 						isaKeys.add(column);
                         if (action.op == Operation.RETRIEVE || action.op == Operation.SEARCH) {
-    /*SQL*/     		    if (vals.length() > 0) {
-    /*SQL*/         		    vals.append(" AND ");
-    /*SQL*/     		    }
+    /*SQL*/     		    if (vals.length() > 0) vals.append(" AND ");
     /*SQL*/     		    vals.append(tablenames[i]).append('.').append(column).append('=').append(jointable).append('.').append(column);
                         }
 					}
@@ -173,38 +201,41 @@ public class CrudCommand {
 				vals.setLength(0);
 				flds.setLength(0);
 			} else {
-	/*SQL*/     if (cols.length() > 0) {
-	/*SQL*/         cols.append(',');
-	/*SQL*/     }
+	/*SQL*/     if (cols.length() > 0) cols.append(',');
 	/*SQL*/     cols.append(tablenames[i]);
 			}
 
 			Set<String> requested = new HashSet<String>();
 			if (action.op == Operation.UPDATE) {
-				for (String column: action.args) {
+				for (String column: calcUpdateColumns(action.args, colref, primaryKeys)) {
 					Integer idx = colref.get(column);
 					if (idx != null) {
-	/*SQL*/         	if (cols.length() > 0) {
-	/*SQL*/             	cols.append(',');
-	/*SQL*/             	flds.append(',');
-	/*SQL*/         	}
-	/*SQL*/         	cols.append(column).append("=COALESCE(?,").append(column).append(')');
-						flds.append(Beans.toLowerCamelCase(column, '_')).append(':').append(rsmeta.getColumnType(idx.intValue()));
-						requested.add(column);
+	/*SQL*/         	if (cols.length() > 0) cols.append(',');
+    /*SQL*/             String restriction = action.restriction == null ? null : action.restriction.get(column);
+                        if (restriction == null) {
+	/*SQL*/         	    cols.append(column).append("=COALESCE(?,").append(column).append(')');
+	/*SQL*/                 if (flds.length() > 0) flds.append(',');
+						    flds.append(Beans.toLowerCamelCase(column, '_')).append(':').append(rsmeta.getColumnType(idx.intValue()));
+						    requested.add(column);
+                        } else {
+	/*SQL*/         	    cols.append(column).append('=').append(restriction);
+                        }
 					}
 				}
 			} else if (action.op == Operation.SEARCH && action.args != null) {
                 for (String column: action.args) {
                     Integer idx = colref.get(column);
                     if (idx != null) {
-    /*SQL*/             if (vals.length() > 0) {
-    /*SQL*/                 vals.append(" AND ");
-    /*SQL*/             }
-    /*SQL*/             vals.append(tablenames[i]).append('.').append(column).append("=?");
-    /*SQL*/             if (flds.length() > 0) {
-    /*SQL*/                 flds.append(',');
-    /*SQL*/             }
-                        flds.append(Beans.toLowerCamelCase(column, '_')).append(':').append(rsmeta.getColumnType(idx.intValue()));
+    /*SQL*/             if (vals.length() > 0) vals.append(" AND ");
+    /*SQL*/             vals.append(tablenames[i]).append('.').append(column).append('=');
+    /*SQL*/             String restriction = action.restriction == null ? null : action.restriction.get(column);
+    /*SQL*/             if (restriction == null) {
+    /*SQL*/                 vals.append('?');
+    /*SQL*/                 if (flds.length() > 0) flds.append(',');
+                            flds.append(Beans.toLowerCamelCase(column, '_')).append(':').append(rsmeta.getColumnType(idx.intValue()));
+                        } else {
+                            vals.append(restriction);
+                        }
                         requested.add(column);
                     }
                 }
@@ -223,16 +254,21 @@ public class CrudCommand {
                     continue;
                 }
 
+    /*SQL*/     String restriction = action.restriction == null ? null : action.restriction.get(name);
 				switch (action.op) {
 				case CREATE:
 	/*SQL*/         if (cols.length() > 0) {
 	/*SQL*/             cols.append(',');
 	/*SQL*/             vals.append(',');
-	/*SQL*/             flds.append(',');
 	/*SQL*/         }
 	/*SQL*/         cols.append(name);
-	/*SQL*/         vals.append('?');
-					flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
+    /*SQL*/         if (restriction == null) {
+	/*SQL*/             vals.append('?');
+	/*SQL*/             if (flds.length() > 0) flds.append(',');
+					    flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
+                    } else {
+	/*SQL*/             vals.append(restriction);
+                    }
 					break;
 				case RETRIEVE:
 					if (i > 0) {
@@ -243,30 +279,34 @@ public class CrudCommand {
 					// fall through for the super-table
 				case DELETE:
 					// only primary key columns
-	/*SQL*/         if (vals.length() > 0) {
-	/*SQL*/             vals.append(" AND ");
-	/*SQL*/             flds.append(',');
-	/*SQL*/         }
-	/*SQL*/         vals.append(alias).append(name).append("=?");
-					flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
+	/*SQL*/         if (vals.length() > 0) vals.append(" AND ");
+	/*SQL*/         vals.append(alias).append(name).append('=');
+    /*SQL*/         if (restriction == null) {
+	/*SQL*/             vals.append('?');
+	/*SQL*/             if (flds.length() > 0) flds.append(',');
+					    flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
+                    } else {
+	/*SQL*/             vals.append(restriction);
+                    }
 					break;
 				case UPDATE:
 					// only primary key & updating columns
 					if (primaryKeys.contains(name)) {
-	/*SQL*/         	if (vals.length() > 0) {
-	/*SQL*/             	vals.append(" AND ");
-	/*SQL*/         	}
-	/*SQL*/         	vals.append(name).append("=?");
-	/*SQL*/         	if (flds.length() > 0) {
-	/*SQL*/             	flds.append(',');
-	/*SQL*/         	}
-						flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
+	/*SQL*/         	if (vals.length() > 0) vals.append(" AND ");
+	/*SQL*/         	vals.append(name).append('=');
+    /*SQL*/             if (restriction == null) {
+	/*SQL*/                 vals.append('?');
+	/*SQL*/         	    if (flds.length() > 0) flds.append(',');
+                            flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
+                        } else {
+	/*SQL*/                 vals.append(restriction);
+                        }
 					}
 				case SEARCH:
 					break;
 				}
 
-				if (isaKeys.contains(name)) {
+				if (restriction != null || isaKeys.contains(name)) {
 					continue;
 				} else if (unique.contains(name)) {
 					continue;
@@ -364,6 +404,18 @@ public class CrudCommand {
 	private static final int FKEY_REFERENCED_COLUMN = 4;
 	private static final int FKEY_REFERENCING_COLUMN = 8;
 
+    private static String[] calcUpdateColumns(String[] columns, Map<String, Integer> colref, Set<String> keys) {
+        if (columns != null) {
+            return columns;
+        } else {
+            List<String> col = new ArrayList<String>();
+            for (String candidate: colref.keySet()) {
+                if (!keys.contains(candidate)) col.add(candidate);
+            }
+            return col.toArray(new String[col.size()]);
+        }
+    }
+
     private static void addAnnotation(AnnotationsAttribute attr, ConstPool cp, String aclass) {
         javassist.bytecode.annotation.Annotation annotation = new javassist.bytecode.annotation.Annotation(aclass, cp);
         attr.addAnnotation(annotation);
@@ -379,6 +431,9 @@ public class CrudCommand {
         StringBuilder sb = new StringBuilder(pkg).append('.').append(name).append(Beans.toCamelCase(action.op.toString(), '_'));
         if (action.args != null) for (String arg: action.args) {
             sb.append(Beans.toCamelCase(arg, '_'));
+        }
+        if (action.restriction != null) for (String key: action.restriction.keySet()) {
+            sb.append(Beans.toCamelCase(key, '_'));
         }
         return sb.toString();
     }
