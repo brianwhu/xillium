@@ -2,7 +2,7 @@ package org.xillium.data.persistence;
 
 import org.xillium.base.beans.Beans;
 import org.xillium.data.*;
-//import java.math.BigDecimal;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 import java.lang.reflect.Field;
@@ -57,7 +57,11 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
 					for (Column2Field c2f: _c2fs) {
 						c2f.field.setAccessible(true);
                         Object value = rs.getObject(c2f.index);
-                        if (value == null) continue;
+                        if (value == null) {
+                            if (c2f.field.getType().isAssignableFrom(Number.class)) {
+                                value = BigDecimal.ZERO;
+                            } else continue;
+                        }
                         try {
                             c2f.field.set(object, value);
                         } catch (IllegalArgumentException x) {
