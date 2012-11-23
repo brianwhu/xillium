@@ -6,6 +6,7 @@ import java.util.*;
 import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.JSONBuilder;
 import org.xillium.data.persistence.*;
+import org.xillium.data.presentation.*;
 
 
 /**
@@ -64,23 +65,24 @@ public class CachedResultSet {
      * Retrieves the rows from a collection of Objects.
      */
     public <T> CachedResultSet(Collection<T> collection) throws Exception {
-        Field[] fields = null;
+        //Field[] fields = null;
+        FieldRetriever[] retrievers = null;
 
         this.rows = new ArrayList<Object[]>();
         for (T object: collection) {
-            if (fields == null) {
-                fields = Beans.getKnownFields(object.getClass());
+            if (retrievers == null) {
+                retrievers = FieldFormatter.getFieldRetriever(Beans.getKnownFields(object.getClass()));
             }
-            Object[] row = new Object[fields.length];
-            for (int i = 0; i < fields.length; ++i) {
-                row[i] = fields[i].get(object);
+            Object[] row = new Object[retrievers.length];
+            for (int i = 0; i < retrievers.length; ++i) {
+                row[i] = retrievers[i].get(object);
             }
             rows.add(row);
         }
 
-        this.columns = new String[fields.length];
-        for (int i = 0; i < fields.length; ++i) {
-            columns[i] = fields[i].getName();
+        this.columns = new String[retrievers.length];
+        for (int i = 0; i < retrievers.length; ++i) {
+            columns[i] = retrievers[i].field.getName();
         }
     }
 
