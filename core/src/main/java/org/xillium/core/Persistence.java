@@ -13,6 +13,7 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 
 public class Persistence {
     public static final SingleValueRetriever<BigDecimal> NumberRetriever = new SingleValueRetriever<BigDecimal>();
+    public static final SingleValueRetriever<String> StringRetriever = new SingleValueRetriever<String>();
 
     private final DataSource _dataSource;
     private final Map<String, ParametricStatement> _statements;
