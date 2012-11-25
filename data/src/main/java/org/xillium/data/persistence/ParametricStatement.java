@@ -108,7 +108,8 @@ public class ParametricStatement {
             for (int i = 0; i < _params.length; ++i) {
                 try {
                     Field field = Beans.getKnownField(type, _params[i].name);
-                    if (field.getType().isEnum()) { // store as string or integer
+                    // NOTE: Class.isEnum() fails to return true if the field type is declared with a template parameter
+                    if (Enum.class.isAssignableFrom(field.getType())) { // store as string or integer
                         if (Types.CHAR == _params[i].type || Types.VARCHAR == _params[i].type) {
                             statement.setObject(i+1, field.get(object).toString(), _params[i].type);
                         } else {
