@@ -23,6 +23,8 @@ public interface Manageable {
 
 	public Status getStatus();
 
+	public boolean isActive();
+
     /**
      * Assigns an ObjectName to this manageable.
      *

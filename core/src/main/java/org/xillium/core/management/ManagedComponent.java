@@ -1,5 +1,6 @@
 package org.xillium.core.management;
 
+import java.util.logging.*;
 import javax.management.*;
 import org.xillium.base.beans.Throwables;
 
@@ -8,8 +9,9 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
 	private NotificationBroadcaster _broadcaster;
 	private ObjectName _name;
 	private Status _status = Status.INITIALIZING;
+    private boolean _active = true;
 
-	protected void setStatus(Manageable.Status status) {
+	protected ManagedComponent setStatus(Manageable.Status status) {
 		if (_broadcaster != null) _broadcaster.sendNotification(new AttributeChangeNotification(
 			_name != null ? _name : this,
 			0,
@@ -21,7 +23,13 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
 			status
 		));
 		_status = status;
+        return this;
 	}
+
+	protected ManagedComponent setActive(boolean active) {
+        _active = active;
+        return this;
+    }
 
     /**
      * Creates a ManagedComponent whose NotificationBroadcaster is to be wired via DI.
@@ -57,6 +65,10 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
 		return _status;
 	}
 
+	public boolean isActive() {
+		return _active;
+	}
+
     public void sendAlert(Manageable.Severity severity, String message, long sequence) {
 		if (_broadcaster != null) _broadcaster.sendNotification(new Notification(
             severity.toString(),
@@ -68,6 +80,12 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
 
     public <T extends Throwable> T sendAlert(T throwable, long sequence) {
         sendAlert(Manageable.Severity.ALERT, Throwables.getFullMessage(throwable), sequence);
+        return throwable;
+    }
+
+    public <T extends Throwable> T sendAlert(Logger logger, String message, T throwable) {
+        logger.log(Level.WARNING, message, throwable);
+        sendAlert(Manageable.Severity.ALERT, message + ": " + Throwables.getFullMessage(throwable), 0);
         return throwable;
     }
 
