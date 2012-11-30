@@ -7,7 +7,7 @@ import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.annotation.MemberValue;
 import javassist.bytecode.annotation.IntegerMemberValue;
-import org.xillium.base.beans.Beans;
+import org.xillium.base.beans.Strings;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
 
@@ -83,7 +83,7 @@ public class CrudCommand {
     public CrudCommand(Connection connection, String prefix, String tables, Action action) throws Exception {
         String[] names = tables.split(" *, *");
         _oper = action.op;
-        _name = Beans.toCamelCase(names[names.length-1], '_');
+        _name = Strings.toCamelCase(names[names.length-1], '_');
         String cname = className("org.xillium.data.dynamic." + prefix, _name, action);
         synchronized (_classes) {
             Class<? extends DataObject> type = _classes.get(cname);
@@ -215,7 +215,7 @@ public class CrudCommand {
                         if (restriction == null) {
 	/*SQL*/         	    cols.append(column).append("=COALESCE(?,").append(column).append(')');
 	/*SQL*/                 if (flds.length() > 0) flds.append(',');
-						    flds.append(Beans.toLowerCamelCase(column, '_')).append(':').append(rsmeta.getColumnType(idx.intValue()));
+						    flds.append(Strings.toLowerCamelCase(column, '_')).append(':').append(rsmeta.getColumnType(idx.intValue()));
 						    requested.add(column);
                         } else {
 	/*SQL*/         	    cols.append(column).append('=').append(restriction);
@@ -232,7 +232,7 @@ public class CrudCommand {
     /*SQL*/             if (restriction == null) {
     /*SQL*/                 vals.append('?');
     /*SQL*/                 if (flds.length() > 0) flds.append(',');
-                            flds.append(Beans.toLowerCamelCase(column, '_')).append(':').append(rsmeta.getColumnType(idx.intValue()));
+                            flds.append(Strings.toLowerCamelCase(column, '_')).append(':').append(rsmeta.getColumnType(idx.intValue()));
                         } else {
                             vals.append(restriction);
                         }
@@ -243,7 +243,7 @@ public class CrudCommand {
 
 			ResultSet columns = meta.getColumns(connection.getCatalog(), schema, tablenames[i], "%");
 			while (columns.next()) {
-				String name = columns.getString(COLUMN_NAME), fname = Beans.toLowerCamelCase(name, '_');
+				String name = columns.getString(COLUMN_NAME), fname = Strings.toLowerCamelCase(name, '_');
 				int idx = colref.get(name).intValue();
 
 				if ((action.op == Operation.RETRIEVE || action.op == Operation.DELETE) && !primaryKeys.contains(name)) {
@@ -315,7 +315,7 @@ public class CrudCommand {
 					unique.add(name);
 				}
 
-				CtField field = new CtField(pool.getCtClass(sqlTypeName(rsmeta, idx)), Beans.toLowerCamelCase(name, '_'), cc);
+				CtField field = new CtField(pool.getCtClass(sqlTypeName(rsmeta, idx)), Strings.toLowerCamelCase(name, '_'), cc);
                 field.setModifiers(java.lang.reflect.Modifier.PUBLIC);
 				AnnotationsAttribute attr = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
 
@@ -428,12 +428,12 @@ public class CrudCommand {
     }
 
     private static String className(String pkg, String name, Action action) {
-        StringBuilder sb = new StringBuilder(pkg).append('.').append(name).append(Beans.toCamelCase(action.op.toString(), '_'));
+        StringBuilder sb = new StringBuilder(pkg).append('.').append(name).append(Strings.toCamelCase(action.op.toString(), '_'));
         if (action.args != null) for (String arg: action.args) {
-            sb.append(Beans.toCamelCase(arg, '_'));
+            sb.append(Strings.toCamelCase(arg, '_'));
         }
         if (action.restriction != null) for (String key: action.restriction.keySet()) {
-            sb.append(Beans.toCamelCase(key, '_'));
+            sb.append(Strings.toCamelCase(key, '_'));
         }
         return sb.toString();
     }

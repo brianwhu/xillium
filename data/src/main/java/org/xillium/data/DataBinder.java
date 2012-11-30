@@ -2,7 +2,7 @@ package org.xillium.data;
 
 import java.util.*;
 import java.sql.*;
-import org.xillium.base.beans.Beans;
+import org.xillium.base.beans.Strings;
 import org.xillium.data.persistence.ParametricQuery;
 
 
@@ -58,7 +58,7 @@ public class DataBinder extends HashMap<String, String> implements ParametricQue
                 ResultSetMetaData meta = rset.getMetaData();
                 int width = meta.getColumnCount();
                 for (int i = 1; i <= width; ++i) {
-                    put(Beans.toLowerCamelCase(meta.getColumnName(i), '_'), rset.getObject(i).toString());
+                    put(Strings.toLowerCamelCase(meta.getColumnName(i), '_'), rset.getObject(i).toString());
                 }
             }
             return this;

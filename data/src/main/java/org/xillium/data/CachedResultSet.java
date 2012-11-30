@@ -4,6 +4,7 @@ import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 import org.xillium.base.beans.Beans;
+import org.xillium.base.beans.Strings;
 import org.xillium.base.beans.JSONBuilder;
 import org.xillium.data.persistence.*;
 import org.xillium.data.presentation.*;
@@ -41,7 +42,7 @@ public class CachedResultSet {
 
             this.columns = new String[width];
             for (int i = 0; i < width; ++i) {
-                columns[i] = Beans.toLowerCamelCase(metaData.getColumnName(i+1), '_');
+                columns[i] = Strings.toLowerCamelCase(metaData.getColumnName(i+1), '_');
             }
 
             if (rset.next()) {
