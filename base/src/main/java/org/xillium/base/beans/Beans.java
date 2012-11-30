@@ -190,6 +190,7 @@ public class Beans {
      */
     public static Object invoke(Object bean, String name, Object[] args, int offset, int count) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+System.err.println("INVOKE: " + name);
         if (offset != 0 || count != args.length) {
             // copy the specified subset of arguments into a new array first
             Object[] actual = new Object[count];
@@ -205,6 +206,7 @@ public class Beans {
      */
     public static Object invoke(Object bean, String name, Object... args) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+System.err.println("INVOKE: " + name);
         // get the type of each parameter argument
         Class<?>[] argumentTypes = new Class<?>[args.length];
         for (int i = 0; i < args.length; i++) {
@@ -275,7 +277,7 @@ public class Beans {
 
         // return to the caller indicating that candidate was not found
         if (chosenCandidate == null) {
-            throw(new NoSuchMethodException("Method not found"));
+            throw(new NoSuchMethodException("Method not found: " + name));
         }
 
 //System.err.println("Chosen candidate is " + chosenCandidate);
@@ -338,66 +340,6 @@ public class Beans {
             }
         }
         return destination;
-    }
-
-    /**
-     * Converts a hyphen-separated word sequence into a single camel-case word.
-     */
-    public static String toCamelCase(String text) {
-        return toCamelCase(text, '-');
-    }
-
-    /**
-     * Converts a word sequence into a single camel-case word.
-     */
-    public static String toCamelCase(String text, char separator) {
-        char[] chars = text.toCharArray();
-        int base = 0, top = 0;
-
-        while (top < chars.length) {
-            while (top < chars.length && chars[top] == separator) {
-                ++top;
-            }
-            if (top < chars.length) {
-                chars[base++] = Character.toUpperCase(chars[top++]);
-            }
-            while (top < chars.length && chars[top] != separator) {
-                chars[base++] = Character.toLowerCase(chars[top++]);
-            }
-        }
-
-        return new String(chars, 0, base);
-    }
-
-    /**
-     * Converts a word sequence into a single camel-case word that starts with a lowercase letter.
-     */
-    public static String toLowerCamelCase(String text, char separator) {
-        char[] chars = text.toCharArray();
-        int base = 0, top = 0;
-
-        do {
-            while (top < chars.length && chars[top] != separator) {
-                chars[base++] = Character.toLowerCase(chars[top++]);
-            }
-            while (top < chars.length && chars[top] == separator) {
-                ++top;
-            }
-            if (top < chars.length) {
-                chars[base++] = Character.toUpperCase(chars[top++]);
-            }
-        } while (top < chars.length);
-
-        return new String(chars, 0, base);
-    }
-
-    /**
-     * Capitalizes a word
-     */
-    public static String capitalize(String text) {
-        char[] chars = text.toCharArray();
-        chars[0] = Character.toUpperCase(chars[0]);
-        return new String(chars);
     }
 
     /**

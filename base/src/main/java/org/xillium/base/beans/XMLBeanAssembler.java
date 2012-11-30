@@ -459,7 +459,7 @@ traceArgs(property);
 
         _logger.fine("to create element with package = " + info.jpkg);
         try {
-            info.name = (info.jpkg != null) ? info.jpkg + '.' + Beans.toCamelCase(l) : Beans.toCamelCase(l);
+            info.name = (info.jpkg != null) ? info.jpkg + '.' + Strings.toCamelCase(l) : Strings.toCamelCase(l);
             try {
 	            if (info.name.endsWith("...")) {
 	            	// Array construction
@@ -478,7 +478,7 @@ traceArgs(property);
 	
 	                if (arguments.size() > 0) {
 	                    if (arguments.size() == 1 && info.jpkg.equals("java.lang")) {
-	                        info.inst.put("@as", Beans.toCamelCase(arguments.get(0).name));
+	                        info.inst.put("@as", Strings.toCamelCase(arguments.get(0).name, '-', false)); // respect original spelling
 	                        info.data = arguments.get(0).get(0).data;
 	                        info.type = arguments.get(0).get(0).type;
 	                    } else {

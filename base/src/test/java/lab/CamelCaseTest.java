@@ -90,7 +90,7 @@ public class CamelCaseTest {
             output = "";
             start = System.currentTimeMillis();
             for (int i = 0; i < 10000; ++i) {
-                output = Beans.toCamelCase(sample, '_');
+                output = Strings.toCamelCase(sample, '_');
             }
             end = System.currentTimeMillis();
             System.out.println(output + ": " + (end - start));
@@ -98,12 +98,20 @@ public class CamelCaseTest {
             output = "";
             start = System.currentTimeMillis();
             for (int i = 0; i < 10000; ++i) {
-                output = Beans.toLowerCamelCase(sample, '_');
+                output = Strings.toCamelCase(sample, '_', false);
+            }
+            end = System.currentTimeMillis();
+            System.out.println(output + ": " + (end - start));
+
+            output = "";
+            start = System.currentTimeMillis();
+            for (int i = 0; i < 10000; ++i) {
+                output = Strings.toLowerCamelCase(sample, '_');
             }
             end = System.currentTimeMillis();
             System.out.println(output + ": " + (end - start));
         }
 
-        System.out.println(Beans.toCamelCase("This is a simple message", ' '));
+        System.out.println(Strings.toCamelCase("This is a simple message", ' '));
     }
 }

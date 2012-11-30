@@ -33,19 +33,19 @@ public class BeansTest {
 
     @Test(groups={"CamelCase"})
     public void testCamelCase() throws Exception {
-        String output = Beans.toCamelCase(ORIGINAL_TEXT, '-');
+        String output = Strings.toCamelCase(ORIGINAL_TEXT, '-');
         assert output.equals(UPPER_CAMEL_CASE) : "Failed to convert text to CamelCase";
     }
 
     @Test(groups={"CamelCase"})
     public void testLowerCamelCase() throws Exception {
-        String output = Beans.toLowerCamelCase(ORIGINAL_TEXT, '-');
+        String output = Strings.toLowerCamelCase(ORIGINAL_TEXT, '-');
         assert output.equals(LOWER_CAMEL_CASE) : "Failed to convert text to lower CamelCase";
     }
 
     @Test(groups={"CamelCase"})
     public void testCapitalize() throws Exception {
-        String output = Beans.capitalize(LOWER_CAMEL_CASE);
+        String output = Strings.capitalize(LOWER_CAMEL_CASE);
         assert output.equals(UPPER_CAMEL_CASE) : "Failed to capitalize text";
     }
 

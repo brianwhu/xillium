@@ -24,6 +24,81 @@ public class Strings {
         return new String(hex, "ASCII");
     }
 
+    /**
+     * Converts a hyphen-separated word sequence into a single camel-case word.
+     */
+    public static String toCamelCase(String text) {
+        return toCamelCase(text, '-');
+    }
+
+    /**
+     * Converts a word sequence into a single camel-case word.
+     */
+    public static String toCamelCase(String text, char separator) {
+        return toCamelCase(text, separator, true);
+    }
+
+    /**
+     * Converts a word sequence into a single camel-case sequence.
+     *
+     * @strict - if true, all letters following the first are forced into lower case in each word
+     */
+    public static String toCamelCase(String text, char separator, boolean strict) {
+        char[] chars = text.toCharArray();
+        int base = 0, top = 0;
+
+        while (top < chars.length) {
+            while (top < chars.length && chars[top] == separator) {
+                ++top;
+            }
+            if (top < chars.length) {
+                chars[base++] = Character.toUpperCase(chars[top++]);
+            }
+            if (strict) {
+                while (top < chars.length && chars[top] != separator) {
+                    chars[base++] = Character.toLowerCase(chars[top++]);
+                }
+            } else {
+                while (top < chars.length && chars[top] != separator) {
+                    chars[base++] = chars[top++];
+                }
+            }
+        }
+
+        return new String(chars, 0, base);
+    }
+
+    /**
+     * Converts a word sequence into a single camel-case word that starts with a lowercase letter.
+     */
+    public static String toLowerCamelCase(String text, char separator) {
+        char[] chars = text.toCharArray();
+        int base = 0, top = 0;
+
+        do {
+            while (top < chars.length && chars[top] != separator) {
+                chars[base++] = Character.toLowerCase(chars[top++]);
+            }
+            while (top < chars.length && chars[top] == separator) {
+                ++top;
+            }
+            if (top < chars.length) {
+                chars[base++] = Character.toUpperCase(chars[top++]);
+            }
+        } while (top < chars.length);
+
+        return new String(chars, 0, base);
+    }
+
+    /**
+     * Capitalizes a word
+     */
+    public static String capitalize(String text) {
+        char[] chars = text.toCharArray();
+        chars[0] = Character.toUpperCase(chars[0]);
+        return new String(chars);
+    }
+
     private static final Pattern PARAM_SYNTAX = Pattern.compile("\\{([^{}]+)\\}");
 
     /**
