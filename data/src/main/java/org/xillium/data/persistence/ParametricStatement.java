@@ -102,7 +102,7 @@ public class ParametricStatement {
 
     protected PreparedStatement load(PreparedStatement statement, DataObject object) throws SQLException {
 //System.err.println("PreparedStatement: loading " + _sql);
-        if (_params.length > 0) {
+        if (object != null && _params.length > 0) {
             Class<? extends DataObject> type = object.getClass();
 
             for (int i = 0; i < _params.length; ++i) {
@@ -157,6 +157,25 @@ public class ParametricStatement {
      * @returns the number of rows affected
      */
     public int executeUpdate(Connection conn, DataObject[] objects) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(_sql);
+        try {
+            for (DataObject object: objects) {
+                load(statement, object);
+                statement.addBatch();
+            }
+            int count = getAffectedRowCount(statement.executeBatch());
+            return count;
+        } finally {
+            statement.close();
+        }
+    }
+
+    /**
+     * Executes a batch UPDATE or DELETE statement.
+     *
+     * @returns the number of rows affected
+     */
+    public int executeUpdate(Connection conn, Collection<? extends DataObject> objects) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql);
         try {
             for (DataObject object: objects) {
