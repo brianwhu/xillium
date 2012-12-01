@@ -190,7 +190,6 @@ public class Beans {
      */
     public static Object invoke(Object bean, String name, Object[] args, int offset, int count) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-System.err.println("INVOKE: " + name);
         if (offset != 0 || count != args.length) {
             // copy the specified subset of arguments into a new array first
             Object[] actual = new Object[count];
@@ -206,7 +205,6 @@ System.err.println("INVOKE: " + name);
      */
     public static Object invoke(Object bean, String name, Object... args) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-System.err.println("INVOKE: " + name);
         // get the type of each parameter argument
         Class<?>[] argumentTypes = new Class<?>[args.length];
         for (int i = 0; i < args.length; i++) {
