@@ -94,13 +94,13 @@ public class HttpServiceDispatcher extends HttpServlet {
         List<PlatformLifeCycleAware> plcas = new ArrayList<PlatformLifeCycleAware>();
         scanServiceModules(sorted.regulars(), wac, descriptions, plcas);
 
-        // configure PlatformLifeCycleAware objects in regular modules
+        _logger.info("configure PlatformLifeCycleAware objects in regular modules");
         for (PlatformLifeCycleAware plca: plcas) {
             _logger.info("Configuring REGULAR PlatformLifeCycleAware " + plca.getClass().getName());
             plca.configure();
         }
 
-        // initialize PlatformLifeCycleAware objects in regular modules
+        _logger.info("initialize PlatformLifeCycleAware objects in regular modules");
         for (PlatformLifeCycleAware plca: plcas) {
             _logger.info("Initalizing REGULAR PlatformLifeCycleAware " + plca.getClass().getName());
             plca.initialize();
@@ -388,6 +388,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             throw new ServletException("Failed to construct an XMLBeanAssembler", x);
         }
 
+        _logger.info("Done with service modules scanning (" + (isSpecial ? "SPECIAL" : "REGULAR") + ')');
         return wac;
     }
 
@@ -397,6 +398,8 @@ public class HttpServiceDispatcher extends HttpServlet {
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
         reader.loadBeanDefinitions(new InputStreamResource(stream));
         gac.refresh();
+
+        _logger.info("Loading service modules from ApplicationContext " + gac.getId());
 
         for (String id: gac.getBeanNamesForType(Service.class)) {
             String fullname = name + '/' + id;
@@ -443,6 +446,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 			}
         }
 
+        _logger.info("Done with service modules in ApplicationContext " + gac.getId());
         return gac;
     }
 
