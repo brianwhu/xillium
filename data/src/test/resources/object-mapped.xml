@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lab:storage-configuration xmlns:persist="java://org.xillium.data.persistence" xmlns:lab="java://lab.data.persistence">
+    <persist:object-mapped-query class="lab.data.persistence.TestPersistence$Membership"><?assemble name="SelectAllMemberships"?>
+        SELECT * FROM MEMBERSHIP
+    </persist:object-mapped-query>
+</lab:storage-configuration>
+

@@ -2,6 +2,7 @@ package lab.data.persistence;
 
 import java.util.*;
 import java.util.Date;
+import javax.sql.DataSource;
 import javax.annotation.Resource;
 
 import org.springframework.test.context.ContextConfiguration;
@@ -9,13 +10,18 @@ import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.test.context.testng.AbstractTransactionalTestNGSpringContextTests;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.testng.annotations.*;
+
+import org.xillium.data.*;
+import org.xillium.data.persistence.*;
+import org.xillium.base.beans.*;
 
 
 /**
  * Testing Persistence
  */
-@ContextConfiguration(locations={"/persistence-test.xml"})
+@ContextConfiguration(locations={"/application-context.xml"})
 @TransactionConfiguration(transactionManager="transactionManager", defaultRollback=false)
 @Transactional
 public class TestPersistence extends AbstractTransactionalTestNGSpringContextTests {
@@ -39,24 +45,39 @@ public class TestPersistence extends AbstractTransactionalTestNGSpringContextTes
 	private static final String CUSTOMER_4_LAST  = "Madison";
 
 	// JSR 250 annotation injecting the appointmentsDao bean. Similar to the Spring @Autowired annotation
-	//@Resource
-	//private AppointmentsDao appointmentsDao;
+	@Resource
+	private DataSource dataSource;
+
+    // MEMBERSHIP(EMAIL VARCHAR(64) NOT NULL PRIMARY KEY,FIRST_NAME VARCHAR(32) NOT NULL,LAST_NAME VARCHAR(32) NOT NULL)
+    public static class Membership implements org.xillium.data.DataObject {
+        String email;
+        public String firstName;
+        public String lastName;
+    }
 
 	@BeforeClass
 	public void startup() {
 System.err.println(applicationContext);
+System.err.println(dataSource);
+System.err.println(getClass().getResource("/object-mapped.xml"));
 	}
 
 	@AfterClass
 	public void cleanup() {
 	}
 
-/*
-	@Test
-	public void testInsertAppointmentSuccess() {
-		String w = insertAppointment(date2, 16, CUSTOMER_2_ID);
-        assert appointmentsDao.findAll().size() == 5 : "There should be 5 total appointments";
-        appointmentsDao.deleteAppointment(appointmentsDao.findByWindow(w));
+	@Test(groups={"object"})
+	public void testObjectMappedQuery() throws Exception {
+        XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
+        assembler.build(getClass().getResourceAsStream("/object-mapped.xml"));
+        ObjectMappedQuery selectMemberships = (ObjectMappedQuery)StorageConfiguration.getParametricStatement("SelectAllMemberships");
+        List<Membership> memberships = selectMemberships.getResults(DataSourceUtils.getConnection(dataSource), null);
+        System.err.println("***testObjectMappedQuery: # of results = " + memberships.size());
+        for (Membership membership: memberships) {
+            System.err.println(membership.email);
+            System.err.println(membership.firstName);
+            System.err.println(membership.lastName);
+        }
+        //System.err.println(Beans.toString(memberships));
 	}
-*/
 }

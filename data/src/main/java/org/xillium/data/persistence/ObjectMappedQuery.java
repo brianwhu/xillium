@@ -1,5 +1,6 @@
 package org.xillium.data.persistence;
 
+import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.Strings;
 import org.xillium.data.*;
 import java.math.BigDecimal;
@@ -41,7 +42,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                             for (int i = 1, ii = meta.getColumnCount()+1; i < ii; ++i) {
                                 try {
                                     String name = Strings.toLowerCamelCase(meta.getColumnName(i), '_');
-                                    list.add(new Column2Field(i, _type.getField(name)));
+                                    list.add(new Column2Field(i, Beans.getKnownField(_type, name)));
                                 } catch (NoSuchFieldException x) {
                                     // ignored
                                 }
