@@ -433,11 +433,14 @@ public class HttpServiceDispatcher extends HttpServlet {
             plcas.add((PlatformLifeCycleAware)gac.getBean(id));
         }
 
+        // Manageable object registration: objects are registered under "bean-id/context-path"
+
+        String contextPath = getServletContext().getContextPath();
 		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         for (String id: gac.getBeanNamesForType(Manageable.class)) {
             try {
                 _logger.info("Registering MBean '" + id + "', domain=" + domain);
-                ObjectName on = new ObjectName(domain == null ? "org.xillium.core.management" : domain, "type", id);
+                ObjectName on = new ObjectName(domain == null ? "org.xillium.core.management" : domain, "type", id + contextPath);
                 Manageable manageable = (Manageable)gac.getBean(id);
                 manageable.assignObjectName(on);
 				mbs.registerMBean(manageable, on);
