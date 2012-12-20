@@ -100,7 +100,7 @@ public class ParametricStatement {
         return this;
     }
 
-    protected PreparedStatement load(PreparedStatement statement, DataObject object) throws SQLException {
+    protected <T extends PreparedStatement> T load(T statement, DataObject object) throws SQLException {
 //System.err.println("PreparedStatement: loading " + _sql);
         if (object != null && _params.length > 0) {
             Class<? extends DataObject> type = object.getClass();
@@ -226,6 +226,22 @@ public class ParametricStatement {
                 statement.addBatch();
             }
             return getAffectedRowCount(statement.executeBatch());
+        } finally {
+            statement.close();
+        }
+    }
+
+    /**
+     * Executes a callable statement.
+     *
+     * @returns the number of rows affected
+     */
+    public int executeProcedure(Connection conn, DataObject object) throws SQLException {
+System.err.println("SQL = " + _sql);
+        CallableStatement statement = conn.prepareCall(_sql);
+        try {
+            load(statement, object);
+            return statement.executeUpdate();
         } finally {
             statement.close();
         }
