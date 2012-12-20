@@ -237,7 +237,6 @@ public class ParametricStatement {
      * @returns the number of rows affected
      */
     public int executeProcedure(Connection conn, DataObject object) throws SQLException {
-System.err.println("SQL = " + _sql);
         CallableStatement statement = conn.prepareCall(_sql);
         try {
             load(statement, object);
