@@ -113,7 +113,7 @@ public class ParametricStatement {
                         if (Types.CHAR == _params[i].type || Types.VARCHAR == _params[i].type) {
                             statement.setObject(i+1, field.get(object).toString(), _params[i].type);
                         } else {
-                            statement.setObject(i+1, ((Enum)field.get(object)).ordinal(), _params[i].type);
+                            statement.setObject(i+1, ((Enum<?>)field.get(object)).ordinal(), _params[i].type);
                         }
                     } else if (Calendar.class.isAssignableFrom(field.getType())) {
                         statement.setObject(i+1, new java.sql.Date(((Calendar)field.get(object)).getTime().getTime()), _params[i].type);

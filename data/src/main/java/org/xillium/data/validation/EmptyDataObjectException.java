@@ -4,6 +4,7 @@ package org.xillium.data.validation;
 /**
  * Data validation exception: the whole data object is empty.
  */
+@SuppressWarnings("serial")
 public class EmptyDataObjectException extends MissingParameterException {
     public EmptyDataObjectException() {
     }

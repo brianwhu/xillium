@@ -1,7 +1,6 @@
 package org.xillium.data;
 
 import java.lang.reflect.*;
-import java.util.*;
 import org.xillium.data.validation.*;
 
 
@@ -28,6 +27,7 @@ public interface DataObject {
             return sb.toString();
         }
 
+        @SuppressWarnings("unchecked")
         private static void print(StringBuilder sb, String prefix, Class<? extends DataObject> type) {
             for (Field field: type.getFields()) {
                 if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) != 0) continue;

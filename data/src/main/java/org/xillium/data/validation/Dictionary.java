@@ -11,9 +11,9 @@ import java.util.*;
  * A dictionary of extended types for data validation.
  */
 public class Dictionary {
-    protected static final Map<Class, Map<String, Validator>> _cachedValidators = new HashMap<Class, Map<String, Validator>>();
+    protected static final Map<Class<?>, Map<String, Validator>> _cachedValidators = new HashMap<Class<?>, Map<String, Validator>>();
 
-    public static synchronized Validator cache(Class type, String name, Validator validator) {
+    public static synchronized Validator cache(Class<?> type, String name, Validator validator) {
         Map<String, Validator> validators = _cachedValidators.get(type);
         if (validators == null) {
             validators = new HashMap<String, Validator>();
@@ -23,7 +23,7 @@ public class Dictionary {
         return validator;
     }
 
-    public static synchronized Validator find(Class type, String name) {
+    public static synchronized Validator find(Class<?> type, String name) {
         Map<String, Validator> validators = _cachedValidators.get(type);
         if (validators != null) {
             return validators.get(name);
@@ -45,7 +45,7 @@ public class Dictionary {
      * Adds a set of data type specifications.
      * @param spec - a class that defines data types as member fields
      */
-    public Dictionary addTypeSet(Class spec) {
+    public Dictionary addTypeSet(Class<?> spec) {
         for (Field field: spec.getDeclaredFields()) {
             if (Modifier.isPublic(field.getModifiers())) {
                 String name = field.getName();

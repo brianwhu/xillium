@@ -4,6 +4,7 @@ package org.xillium.data.persistence;
 /**
  * Data persistence exception.
  */
+@SuppressWarnings("serial")
 public class DataPersistenceException extends org.xillium.data.DataException {
     public DataPersistenceException() {
     }

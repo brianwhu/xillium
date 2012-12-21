@@ -9,6 +9,7 @@ import org.xillium.data.persistence.ParametricQuery;
 /**
  * A data binder
  */
+@SuppressWarnings("serial")
 public class DataBinder extends HashMap<String, String> implements ParametricQuery.ResultSetWorker<DataBinder>{
     private final Map<String, CachedResultSet> _rsets = new HashMap<String, CachedResultSet>();
     private final Map<String, Object> _named = new HashMap<String, Object>();

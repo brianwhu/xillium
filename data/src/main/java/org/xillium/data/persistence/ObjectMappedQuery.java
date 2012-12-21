@@ -25,14 +25,15 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
         }
     }
 
-	private class ResultSetMapper implements ParametricQuery.ResultSetWorker<Collector<T>> {
-        private final Collector<T> _collector;
+	private class  ResultSetMapper<C extends Collector<T>> implements ParametricQuery.ResultSetWorker<C> {
+        private final C _collector;
 
-        public ResultSetMapper(Collector<T> c) {
-            _collector = c;
+        public ResultSetMapper(C collector) {
+            _collector = collector;
         }
 
-		public Collector<T> process(ResultSet rs) throws SQLException, InstantiationException, IllegalAccessException {
+		@SuppressWarnings("unchecked")
+		public C process(ResultSet rs) throws SQLException, InstantiationException, IllegalAccessException {
 			try {
                 if (_c2fs == null) {
                     synchronized(ObjectMappedQuery.this) {
@@ -66,6 +67,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                         try {
                             c2f.field.set(object, value);
                         } catch (IllegalArgumentException x) {
+                            @SuppressWarnings("rawtypes")
                             Class ftype = c2f.field.getType();
                             if (value instanceof Number) {
                                 // size of "value" bigger than that of "field"?
@@ -115,6 +117,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
 		}
 	}
 
+    @SuppressWarnings("serial")
     private static class ListCollector<T> extends ArrayList<T> implements Collector<T> {
     }
 
@@ -135,6 +138,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
 		_type = type;
     }
 
+    @SuppressWarnings("unchecked")
     public ObjectMappedQuery(String parameters,  String classname) throws IllegalArgumentException {
         super(parameters);
 		try {
@@ -144,6 +148,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public ObjectMappedQuery(String classname) throws IllegalArgumentException {
 		try {
             _type = (Class<T>)Class.forName(classname);
@@ -153,23 +158,23 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
     }
 
 	/**
-	 * Execute the query and returns the results as a list of objects.
+	 * Executes the query and returns the results as a list of objects.
 	 */
     public List<T> getResults(Connection conn, DataObject object) throws Exception {
-		return (List<T>)super.executeSelect(conn, object, new ResultSetMapper(new ListCollector<T>()));
+		return executeSelect(conn, object, new ResultSetMapper<ListCollector<T>>(new ListCollector<T>()));
     }
 
 	/**
-	 * Execute the query and returns the results as a list of objects.
+	 * Executes the query and returns the results as a list of objects.
 	 */
     public T getObject(Connection conn, DataObject object) throws Exception {
-		return ((SingleObjectCollector<T>)super.executeSelect(conn, object, new ResultSetMapper(new SingleObjectCollector<T>()))).value;
+		return executeSelect(conn, object, new ResultSetMapper<SingleObjectCollector<T>>(new SingleObjectCollector<T>())).value;
     }
 
 	/**
-	 * Execute the query and passes the results to a Collector.
+	 * Executes the query and passes the results to a Collector.
 	 */
     public Collector<T> getResults(Connection conn, DataObject object, Collector<T> collector) throws Exception {
-		return super.executeSelect(conn, object, new ResultSetMapper(collector));
+		return executeSelect(conn, object, new ResultSetMapper<Collector<T>>(collector));
     }
 }

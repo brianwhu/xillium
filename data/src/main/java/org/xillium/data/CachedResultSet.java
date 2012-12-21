@@ -1,6 +1,5 @@
 package org.xillium.data;
 
-import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 import org.xillium.base.beans.Beans;
@@ -25,11 +24,13 @@ public class CachedResultSet {
     }
 
     // for JAXB
+/*
     private CachedResultSet() {
         columns = null;
         rows = null;
     }
-
+*/
+    
     /**
      * Retrieves the rows from a freshly obtained JDBC result set into a CachedResultSet.
      *

@@ -4,6 +4,7 @@ package org.xillium.data;
 /**
  * Common data exception.
  */
+@SuppressWarnings("serial")
 public class DataException extends Exception {
     public DataException() {
     }

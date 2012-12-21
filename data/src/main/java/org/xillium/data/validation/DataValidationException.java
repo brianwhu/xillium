@@ -4,6 +4,7 @@ package org.xillium.data.validation;
 /**
  * Data validation exception.
  */
+@SuppressWarnings("serial")
 public class DataValidationException extends org.xillium.data.DataException {
     public DataValidationException() {
     }

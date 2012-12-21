@@ -3,7 +3,6 @@ package org.xillium.data.validation;
 import org.xillium.base.Trace;
 import org.xillium.base.beans.Beans;
 import java.lang.reflect.*;
-import java.util.*;
 import java.util.regex.*;
 
 
@@ -11,11 +10,10 @@ import java.util.regex.*;
  * A data validator associated with a member (field) of a DataObject.
  */
 public class Validator {
-    private static class Range {
-        Comparable min, max;
+    private static class Range<T extends Comparable<T>> {
+        T min, max;
         boolean inclusive;
-        @SuppressWarnings("unchecked")
-        Range(Comparable min, Comparable max, boolean inclusive) throws IllegalArgumentException {
+        Range(T min, T max, boolean inclusive) throws IllegalArgumentException {
             if ((min == null && max == null) || (min != null && max != null && min.compareTo(max) > 0)) {
                 throw new IllegalArgumentException("Invalid range: min=" + min + ", max=" + max);
             }
@@ -27,7 +25,7 @@ public class Validator {
 
     String _name;
     Method _valueOf;
-    Range[] _ranges;
+    Range<?>[] _ranges;
     Pattern _pattern;
     int _size;
     Object[] _values;
@@ -39,6 +37,7 @@ public class Validator {
      * @param type - the type of the field - if the field is an array, this is the component type
      * @param field - the field
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Validator(String name, Class<?> type, Field field) throws IllegalArgumentException {
         Trace.g.std.note(Validator.class, "Enter Validator.<init>(" + name + ", " + field + ')');
         _name = name;
@@ -103,7 +102,6 @@ public class Validator {
      *
      * @throws DataValidationException
      */
-    @SuppressWarnings("unchecked")
     public Object parse(String text) throws DataValidationException {
         try {
             preValidate(text);
@@ -153,7 +151,8 @@ public class Validator {
                 if (value.equals(object)) return;
             }
 
-            if (_ranges != null) for (Range r: _ranges) {
+            if (_ranges != null) for (@SuppressWarnings("rawtypes") Range r: _ranges) {
+                @SuppressWarnings("rawtypes")
                 Comparable o = (Comparable)object;
                 if (r.inclusive) {
                     if ((r.min == null || r.min.compareTo(o) <= 0) && (r.max == null || o.compareTo(r.max) <= 0)) {

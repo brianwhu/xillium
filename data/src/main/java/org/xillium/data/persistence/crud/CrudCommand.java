@@ -2,7 +2,6 @@ package org.xillium.data.persistence.crud;
 
 import java.util.*;
 import java.sql.*;
-import java.lang.reflect.*;
 import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.annotation.MemberValue;
@@ -127,6 +126,7 @@ public class CrudCommand {
     /**
      * Creates a new Java model class for carrying out the CRUD action on the entity represented by the list of tables.
      */
+    @SuppressWarnings("unchecked")
     public static Class<? extends DataObject>
     modelFromTables(Connection connection, String classname, Action action, String... tablenames) throws Exception {
 /*
@@ -396,12 +396,12 @@ public class CrudCommand {
 	}
 
 	private static final int COLUMN_NAME = 4;
-	private static final int COLUMN_TYPE = 5;	// java.sql.Types.#
+	//private static final int COLUMN_TYPE = 5;	// java.sql.Types.#
 	private static final int COLUMN_SIZE = 7;
 	private static final int IS_NULLABLE = 11;
 	private static final int PKEY_COLUMN = 4;
 	private static final int FKEY_REFERENCED_TABLE = 3;
-	private static final int FKEY_REFERENCED_COLUMN = 4;
+	//private static final int FKEY_REFERENCED_COLUMN = 4;
 	private static final int FKEY_REFERENCING_COLUMN = 8;
 
     private static String[] calcUpdateColumns(String[] columns, Map<String, Integer> colref, Set<String> keys) {

@@ -4,6 +4,7 @@ package org.xillium.data.validation;
 /**
  * Data validation exception: missing a required parameter.
  */
+@SuppressWarnings("serial")
 public class MissingParameterException extends DataValidationException {
     public MissingParameterException() {
     }
