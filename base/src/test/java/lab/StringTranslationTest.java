@@ -1,7 +1,6 @@
 package lab;
 
 import java.util.*;
-import java.util.logging.Level;
 import org.xillium.base.beans.*;
 //import org.xillium.base.etc.*;
 //import org.xillium.base.*;

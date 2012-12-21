@@ -4,7 +4,6 @@ import java.lang.reflect.*;
 import java.beans.*;
 import java.util.*;
 import javax.swing.*;
-import javax.swing.event.*;
 import javax.swing.tree.*;
 
 public class BeanNode implements TreeNode {
@@ -34,7 +33,7 @@ public class BeanNode implements TreeNode {
         return this;
     }
 
-    public Enumeration children() {
+    public Enumeration<BeanNode> children() {
         if (_list == null) {
             _list = childrenList();
         }
@@ -71,7 +70,7 @@ public class BeanNode implements TreeNode {
         if (_bean == null) {
             return true;
         } else {
-            Class type = _bean.getClass();
+            Class<?> type = _bean.getClass();
             return Beans.isPrimitive(type) || Beans.isDisplayable(type);
         }
     }
@@ -90,7 +89,7 @@ public class BeanNode implements TreeNode {
             return list;
         } else {
             if (Iterable.class.isInstance(_bean)) {
-                Iterator iterator = ((Iterable)_bean).iterator();
+                Iterator<?> iterator = ((Iterable<?>)_bean).iterator();
                 int index = 0;
                 while (iterator.hasNext()) {
                     list.add(new BeanNode(iterator.next(), this, index, String.valueOf(index)));

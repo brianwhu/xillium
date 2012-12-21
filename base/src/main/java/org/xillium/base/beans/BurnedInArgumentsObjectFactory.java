@@ -9,22 +9,22 @@ import java.util.HashMap;
  * The default implementation of an object factory that creates objects from class names and arguments.
  */
 public class BurnedInArgumentsObjectFactory extends DefaultObjectFactory {
-    private Map<Class, Object[]> _arguments = new HashMap<Class, Object[]>();
-    private Map<Class, Object> _singleton = new HashMap<Class, Object>();
+    private Map<Class<?>, Object[]> _arguments = new HashMap<Class<?>, Object[]>();
+    private Map<Class<?>, Object> _singleton = new HashMap<Class<?>, Object>();
 
     public BurnedInArgumentsObjectFactory() {
     }
 
-    public BurnedInArgumentsObjectFactory(Class type, Object... burnedin) {
+    public BurnedInArgumentsObjectFactory(Class<?> type, Object... burnedin) {
         _arguments.put(type, burnedin);
     }
 
-    public BurnedInArgumentsObjectFactory setBurnedIn(Class type, Object... burnedin) {
+    public BurnedInArgumentsObjectFactory setBurnedIn(Class<?> type, Object... burnedin) {
         _arguments.put(type, burnedin);
         return this;
     }
 
-    public BurnedInArgumentsObjectFactory setSingleton(Class type, Object singleton) {
+    public BurnedInArgumentsObjectFactory setSingleton(Class<?> type, Object singleton) {
         _singleton.put(type, singleton);
         return this;
     }
@@ -32,7 +32,7 @@ public class BurnedInArgumentsObjectFactory extends DefaultObjectFactory {
     /**
      * Creates a new object of a given class with arguments.
      */
-    public Object create(String name, Object[] args)
+    public Object create(String name, Object... args)
     throws ClassNotFoundException,
            NoSuchMethodException,
            IllegalAccessException,
@@ -42,7 +42,7 @@ public class BurnedInArgumentsObjectFactory extends DefaultObjectFactory {
         try {
             return super.create(name, args);
         } catch (NoSuchMethodException x) {
-            Class type = Class.forName(name);
+            Class<?> type = Class.forName(name);
             Object singleton = _singleton.get(name);
 
             if (singleton != null) {

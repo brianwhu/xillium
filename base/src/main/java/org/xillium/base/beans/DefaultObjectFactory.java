@@ -10,7 +10,7 @@ public class DefaultObjectFactory implements ObjectFactory {
     /**
      * Creates a new object of a given class with arguments.
      */
-    public Object create(String name, Object[] args)
+    public Object create(String name, Object... args)
     throws ClassNotFoundException,
            NoSuchMethodException,
            IllegalAccessException,
@@ -24,7 +24,7 @@ public class DefaultObjectFactory implements ObjectFactory {
 //sb.append(')');
 //System.err.println(sb);
         try {
-            Class type = Class.forName(name);
+            Class<?> type = Class.forName(name);
 /*
             Constructor<?>[] constructors = type.getConstructors();
             for (Constructor<?> constructor: constructors) {

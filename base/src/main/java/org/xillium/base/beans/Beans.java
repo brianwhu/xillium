@@ -167,7 +167,7 @@ public class Beans {
         // get the constructors available for the bean class
         Constructor<?>[] constructors = type.getConstructors();
 
-        return choose(constructors, new ConstructorParameterExtractor(), null, argumentTypes).newInstance(args);
+        return choose(constructors, new ConstructorParameterExtractor<Object>(), null, argumentTypes).newInstance(args);
     }
 
     /**
@@ -296,7 +296,6 @@ public class Beans {
     }
 
     private static class MethodParameterExtractor implements ParameterExtractor {
-        @SuppressWarnings("unchecked")
         public Class<?>[] getParameterTypes(Object object) {
             return ((Method)object).getParameterTypes();
         }
@@ -373,14 +372,14 @@ public class Beans {
 
             // properties
             if (Map.class.isInstance(bean)) {
-                Iterator it = ((Map)bean).keySet().iterator();
+                Iterator<?> it = ((Map<?, ?>)bean).keySet().iterator();
                 while (it.hasNext()) {
                     Object key = it.next();
                     indent(sb, level);
-                    printNameValue(sb, key.toString(), ((Map)bean).get(key), level+1);
+                    printNameValue(sb, key.toString(), ((Map<?, ?>)bean).get(key), level+1);
                 }
             } else if (Iterable.class.isInstance(bean)) {
-                Iterator it = ((Iterable)bean).iterator();
+                Iterator<?> it = ((Iterable<?>)bean).iterator();
                 int index = 0;
                 while (it.hasNext()) {
                     indent(sb, level+1);

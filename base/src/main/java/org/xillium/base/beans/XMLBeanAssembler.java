@@ -84,7 +84,7 @@ public class XMLBeanAssembler extends DefaultHandler {
 
     private void guessClassReference(TypedValues list, String name) {
         try {
-            Class type = Class.forName(fixPotentialArrayName(name));
+            Class<?> type = Class.forName(fixPotentialArrayName(name));
             list.add(new TypedValue(type.getClass(), type));
         } catch (ClassNotFoundException y) {
             _logger.fine(name + " looked like a class reference but is not");
@@ -108,7 +108,7 @@ public class XMLBeanAssembler extends DefaultHandler {
                     // public static refernce? (don't override access control)
                     _logger.fine("public static refernce? " + value);
                     Object object = Class.forName(value.substring(5, dot)).getField(value.substring(dot+1)).get(null);
-                    Class type = object.getClass();
+                    Class<?> type = object.getClass();
                     list.add(new TypedValue(type, object));
                     if ((type = Beans.toPrimitive(type)) != null) {
                         list.add(new TypedValue(type, object));
@@ -175,7 +175,7 @@ private void traceArgs(Object... property) {
     for (int i = 0; i < property.length; ++i) { _logger.fine("       args " + property[i].getClass().getName() + " :: " + property[i]); }
 }
 
-    private void addSetProperty(Object bean, Class[] type, String name, Object... property)
+    private void addSetProperty(Object bean, Class<?>[] type, String name, Object... property)
     throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if (name == null) {
             name = type[0].getName();
@@ -212,14 +212,14 @@ traceArgs(property);
         }
     }
 
-    private void injectProperty(Object bean, Class type, Object property, String alias, TypedValueGroup arguments)
+    private void injectProperty(Object bean, Class<?> type, Object property, String alias, TypedValueGroup arguments)
     throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         NoSuchMethodException nsme = null;
 
         if (arguments != null && arguments.size() > 0) {
             Object[] props = new Object[arguments.size() + 1];
             props[0] = property;
-            Class[] types = new Class[arguments.size() + 1];
+            Class<?>[] types = new Class[arguments.size() + 1];
             types[0] = type;
 
             arguments.reset();
@@ -243,8 +243,8 @@ traceArgs(property);
         }
 
         // now try the super classes
-        Class[] interfaces = type.getInterfaces();
-        for (Class face : interfaces) {
+        Class<?>[] interfaces = type.getInterfaces();
+        for (Class<?> face : interfaces) {
             try {
                 injectProperty(bean, face, property, alias, arguments);
                 return;
@@ -252,7 +252,7 @@ traceArgs(property);
                 continue;
             }
         }
-        Class supertype = type.getSuperclass();
+        Class<?> supertype = type.getSuperclass();
         if (supertype != null) {
             injectProperty(bean, supertype, property, alias, arguments);
         } else {
@@ -261,15 +261,16 @@ traceArgs(property);
     }
 
     static class TypedValue {
-        final Class type; // required for boxed/unboxed primitives
+        final Class<?> type; // required for boxed/unboxed primitives
         final Object data;
 
-        TypedValue(Class t, Object v) {
+        TypedValue(Class<?> t, Object v) {
             type = t;
             data = v;
         }
     }
 
+    @SuppressWarnings("serial")
     static class TypedValues extends ArrayList<TypedValue> {
         final String name;
 
@@ -343,7 +344,7 @@ traceArgs(property);
     }
 
     static class ElementInfo {
-        Class  type;
+        Class<?> type;
         String name;
         Object data;
         Map<String, String> pkgs = new HashMap<String, String>(); // xmlns/packages defined on this element
@@ -569,7 +570,7 @@ _logger.fine("endElement " + element);
         _logger.fine("    @id is " + element.inst.get("@id"));
 
         if (List.class.isAssignableFrom(element.data.getClass()) && element.name.endsWith("...")) {
-        	List list = (List)element.data;
+        	List<?> list = (List<?>)element.data;
         	Object array = Array.newInstance(element.type, list.size());
         	for (int i = 0; i < list.size(); ++i) {
         		Array.set(array, i, list.get(i));

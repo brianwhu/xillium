@@ -1,7 +1,6 @@
 package lab.uim.js;
 
 import java.awt.event.*;
-import java.util.*;
 import javax.swing.*;
 import javax.script.*;
 

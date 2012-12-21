@@ -1,13 +1,6 @@
 package lab;
 
-import java.awt.*;
-import javax.swing.*;
-
-import java.util.logging.Level;
 import org.xillium.base.beans.*;
-//import org.xillium.base.etc.*;
-//import org.xillium.base.*;
-
 import org.testng.annotations.*;
 
 
