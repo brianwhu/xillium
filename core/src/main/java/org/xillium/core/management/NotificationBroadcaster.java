@@ -1,6 +1,5 @@
 package org.xillium.core.management;
 
-import java.util.*;
 import java.util.concurrent.Executor;
 import javax.management.*;
 

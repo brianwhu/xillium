@@ -1,11 +1,10 @@
 package org.xillium.core;
 
 import org.xillium.data.*;
-import org.xillium.data.validation.Dictionary;
 
 
 /**
- * An authorizer determines whenther a service invocation is allowed to continue.
+ * An authorizer determines whether a service invocation is allowed to continue.
  */
 public interface Authorizer {
 	/**

@@ -4,6 +4,7 @@ package org.xillium.core;
 /**
  * Thrown when authorization fails
  */
+@SuppressWarnings("serial")
 public class AuthorizationException extends RuntimeException {
     public AuthorizationException() {
     }

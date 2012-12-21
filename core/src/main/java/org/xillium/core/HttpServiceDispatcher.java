@@ -9,7 +9,6 @@ import java.util.regex.*;
 import javax.management.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
-import javax.sql.DataSource;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
@@ -18,12 +17,10 @@ import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.web.context.*;
 import org.springframework.web.context.support.*;
 import org.xillium.base.etc.Arrays;
 import org.xillium.base.beans.*;
 import org.xillium.data.*;
-import org.xillium.data.persistence.*;
 import org.xillium.core.conf.*;
 import org.xillium.core.management.*;
 import org.xillium.core.intrinsic.*;
@@ -49,6 +46,7 @@ import org.xillium.core.util.ModuleSorter;
  *	</li>
  * </ul>
  */
+@SuppressWarnings("serial")
 public class HttpServiceDispatcher extends HttpServlet {
     private static final String DOMAIN_NAME = "Xillium-Domain-Name";
     private static final String MODULE_NAME = "Xillium-Module-Name";
@@ -136,7 +134,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             id = m.group(1);
             _logger.fine("Request service id = " + id);
 
-            service = (Service)_services.get(id);
+            service = _services.get(id);
             if (service == null) {
                 _logger.warning("Request not recognized");
                 res.sendError(404);
@@ -254,7 +252,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 
                     jb.quote("params").append(":{ ");
                     Iterator<String> it = binder.keySet().iterator();
-                    for (int i = 0; it.hasNext(); ++i) {
+                    while (it.hasNext()) {
                         String key = it.next();
                         String val = binder.get(key);
                         if (val == null) {
@@ -392,6 +390,7 @@ public class HttpServiceDispatcher extends HttpServlet {
         return wac;
     }
 
+    @SuppressWarnings("unchecked")
     private ApplicationContext loadServiceModule(ApplicationContext wac, String domain, String name, InputStream stream, Map<String, String> desc, List<PlatformLifeCycleAware> plcas) {
         GenericApplicationContext gac = new GenericApplicationContext(wac);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
@@ -451,9 +450,5 @@ public class HttpServiceDispatcher extends HttpServlet {
 
         _logger.info("Done with service modules in ApplicationContext " + gac.getId());
         return gac;
-    }
-
-    private static InputStream getJarEntryAsStream(JarInputStream jis) throws IOException {
-        return new ByteArrayInputStream(Arrays.read(jis));
     }
 }

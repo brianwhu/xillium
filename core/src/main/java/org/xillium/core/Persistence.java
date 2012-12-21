@@ -5,9 +5,7 @@ import java.util.*;
 import java.math.BigDecimal;
 import javax.sql.DataSource;
 import org.xillium.data.*;
-import org.xillium.data.validation.*;
 import org.xillium.data.persistence.*;
-import org.xillium.core.*;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 
@@ -95,6 +93,7 @@ public class Persistence {
      * Executes a SELECT statement and returns the result set as a list of objects
      */
     public <T extends DataObject> List<T> getResults(String name, DataObject object) throws Exception {
+        @SuppressWarnings("unchecked")
         ObjectMappedQuery<T> statement = (ObjectMappedQuery<T>)_statements.get(name);
         if (statement != null) {
             return statement.getResults(DataSourceUtils.getConnection(_dataSource), object);
@@ -107,6 +106,7 @@ public class Persistence {
      * Executes a SELECT statement and returns the result set as a list of objects
      */
     public <T extends DataObject> T getObject(String name, DataObject object) throws Exception {
+        @SuppressWarnings("unchecked")
         ObjectMappedQuery<T> statement = (ObjectMappedQuery<T>)_statements.get(name);
         if (statement != null) {
             return statement.getObject(DataSourceUtils.getConnection(_dataSource), object);
@@ -119,6 +119,7 @@ public class Persistence {
      * Executes a SELECT statement and returns the result set as a list of objects
      */
     public <T extends DataObject> Collector<T> getResults(String name, DataObject object, Collector<T> collector) throws Exception {
+        @SuppressWarnings("unchecked")
         ObjectMappedQuery<T> statement = (ObjectMappedQuery<T>)_statements.get(name);
         if (statement != null) {
             return statement.getResults(DataSourceUtils.getConnection(_dataSource), object, collector);

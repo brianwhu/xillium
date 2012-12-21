@@ -1,6 +1,5 @@
 package org.xillium.core.conf;
 
-import org.xillium.core.*;
 import org.xillium.data.validation.Dictionary;
 
 

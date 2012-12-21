@@ -4,6 +4,7 @@ package org.xillium.core;
 /**
  * Use of HTTP status code
  */
+@SuppressWarnings("serial")
 public class ServiceException extends RuntimeException {
     public ServiceException() {
     }
