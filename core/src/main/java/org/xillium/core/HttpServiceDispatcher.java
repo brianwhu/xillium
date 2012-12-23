@@ -52,7 +52,7 @@ public class HttpServiceDispatcher extends HttpServlet {
     private static final String MODULE_NAME = "Xillium-Module-Name";
     private static final String MODULE_BASE = "Xillium-Module-Base";
 
-    private static final String REQUEST_VOCABULARY = "request-vocabulary.xml";
+    private static final String VALIDATION_DIC = "validation-dictionary.xml";
     private static final String SERVICE_CONFIG = "service-configuration.xml";
     private static final String STORAGE_CONFIG = "storage-configuration.xml";
 
@@ -78,7 +78,9 @@ public class HttpServiceDispatcher extends HttpServlet {
     public void init() throws ServletException {
         ApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
         _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
-        _persistence = (Persistence)wac.getBean("persistence");
+        if (wac.containsBean("persistence")) { // persistence may not be there if persistent storage is not required
+            _persistence = (Persistence)wac.getBean("persistence");
+        }
 
         // if intrinsic services are wanted
         Map<String, String> descriptions = new HashMap<String, String>();
@@ -341,7 +343,9 @@ public class HttpServiceDispatcher extends HttpServlet {
                     try {
                         String domain = jis.getManifest().getMainAttributes().getValue(DOMAIN_NAME);
                         _logger.fine("Scanning module " + module.name + ", special=" + isSpecial);
-                        factory.setBurnedIn(StorageConfiguration.class, _persistence.getStatementMap(), module.name);
+                        if (_persistence != null) {
+                            factory.setBurnedIn(StorageConfiguration.class, _persistence.getStatementMap(), module.name);
+                        }
                         JarEntry entry;
                         while ((entry = jis.getNextJarEntry()) != null) {
                             if (SERVICE_CONFIG.equals(entry.getName())) {
@@ -352,10 +356,10 @@ public class HttpServiceDispatcher extends HttpServlet {
                                 } else {
                                     loadServiceModule(wac, domain, module.name, new ByteArrayInputStream(Arrays.read(jis)), descs, plcas);
                                 }
-                            } else if (STORAGE_CONFIG.equals(entry.getName())) {
+                            } else if (STORAGE_CONFIG.equals(entry.getName()) && _persistence != null) {
                                 _logger.info("Storages:" + module.path + ":" + entry.getName());
                                 assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
-                            } else if (REQUEST_VOCABULARY.equals(entry.getName())) {
+                            } else if (VALIDATION_DIC.equals(entry.getName())) {
                                 _logger.info("RequestVocabulary:" + module.path + ":" + entry.getName());
                                 assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
                             }
