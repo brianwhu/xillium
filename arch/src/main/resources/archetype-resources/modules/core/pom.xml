@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>${groupId}</groupId>
+  <artifactId>${artifactId}</artifactId>
+  <version>${version}</version>
+  <name>${project.groupId}:${rootArtifactId} - ${project.parent.artifactId}:${project.artifactId}</name>
+
+  <parent>
+    <groupId>${groupId}</groupId>
+    <artifactId>modules</artifactId>
+    <version>${version}</version>
+  </parent>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Xillium-Domain-Name>${project.groupId}</Xillium-Domain-Name>
+              <Xillium-Module-Name>${project.artifactId}</Xillium-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+  <!--
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>module-depended-by-current-module</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  -->
+  </dependencies>
+
+</project>

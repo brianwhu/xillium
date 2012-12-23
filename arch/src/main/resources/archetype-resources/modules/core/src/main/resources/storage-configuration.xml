@@ -1,0 +1,8 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8"?>
+<conf:storage-configuration xmlns:persist="java://org.xillium.data.persistence" xmlns:conf="java://org.xillium.core.conf">
+
+</conf:storage-configuration>
+

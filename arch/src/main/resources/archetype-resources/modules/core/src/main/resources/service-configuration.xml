@@ -1,0 +1,37 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<beans xmlns="http://www.springframework.org/schema/beans"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:tx="http://www.springframework.org/schema/tx"
+     xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+               http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.0.xsd">
+
+#if ($persistence == "none")
+
+  <!--
+  ** no transaction management
+  -->
+
+#else
+
+  <!--
+  ** Transaction management of beans
+  -->
+  <tx:annotation-driven transaction-manager="transactionManager"/>
+
+#end
+
+  <!--
+  ** Non-service beans
+  -->
+
+
+  <!--
+  ** Service beans
+  -->
+
+  <bean id="hello" class="${package}.${rootArtifactId}.${artifactId}.Hello">
+  </bean>
+
+</beans>
