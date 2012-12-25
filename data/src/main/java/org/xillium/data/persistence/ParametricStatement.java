@@ -32,6 +32,10 @@ public class ParametricStatement {
             }
             type = t;
         }
+
+public String toString() {
+return name+",nullable:"+nullable+",type:"+type;
+}
     };
 
     public ParametricStatement(Param[] parameters, String sql) throws IllegalArgumentException {
@@ -98,6 +102,14 @@ public class ParametricStatement {
         _sql = matcher.replaceAll("?");
     }
         return this;
+    }
+
+    public Param[] getParameters() {
+        return _params;
+    }
+
+    public String getSQL() {
+        return _sql;
     }
 
     protected <T extends PreparedStatement> T load(T statement, DataObject object) throws SQLException {

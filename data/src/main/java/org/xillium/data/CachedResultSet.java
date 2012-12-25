@@ -10,13 +10,24 @@ import org.xillium.data.presentation.*;
 
 
 /**
- * A flattened copy of a result set
+ * A cached result set that is detached from any database connectivity.
  */
 public class CachedResultSet {
     public static final Builder BUILDER = new Builder();
+
+    /**
+     * The name of columns in the result set.
+     */
     public final String[] columns;
+
+    /**
+     * The rows of the result set with fields matching the column definition.
+     */
     public final List<Object[]> rows;
 
+    /**
+     * A ParametricQuery.ResultSetWorker implementation that builds a CachedResultSet.
+     */
     public static class Builder implements ParametricQuery.ResultSetWorker<CachedResultSet> {
         public CachedResultSet process(ResultSet rs) throws SQLException {
             return new CachedResultSet(rs);

@@ -1,7 +1,6 @@
 package lab.data;
 
 import org.xillium.data.*;
-import org.xillium.data.validation.*;
 import java.sql.Date;
 
 public class Coupon implements DataObject {

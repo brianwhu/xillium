@@ -1,6 +1,5 @@
 package lab.data.validation;
 
-import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
 import java.sql.Date;

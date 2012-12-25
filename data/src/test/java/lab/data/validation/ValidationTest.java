@@ -1,15 +1,10 @@
 package lab.data.validation;
 
 import lab.*;
-import java.io.*;
-import java.util.Properties;
-import java.util.Enumeration;
-import java.util.logging.Level;
 import org.xillium.base.*;
 import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
-import lab.data.*;
 
 
 public class ValidationTest {

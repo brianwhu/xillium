@@ -1,7 +1,6 @@
 package lab.data.persistence;
 
 import java.util.*;
-import java.util.Date;
 import java.util.logging.*;
 import java.sql.*;
 import javax.sql.DataSource;
@@ -14,9 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testng.annotations.*;
 
 import org.springframework.test.context.testng.AbstractTransactionalTestNGSpringContextTests;
-
-import org.xillium.base.beans.*;
-//import org.xillium.data.persistence.strategy.*;
 
 
 /**

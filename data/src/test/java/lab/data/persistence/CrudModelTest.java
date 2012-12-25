@@ -5,11 +5,6 @@ import javax.annotation.Resource;
 
 import java.util.*;
 import java.sql.*;
-import java.lang.reflect.*;
-import javassist.*;
-import javassist.bytecode.*;
-import javassist.bytecode.annotation.MemberValue;
-import javassist.bytecode.annotation.IntegerMemberValue;
 
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.transaction.TransactionConfiguration;
@@ -17,7 +12,6 @@ import org.springframework.test.context.testng.AbstractTransactionalTestNGSpring
 import org.springframework.transaction.annotation.Transactional;
 import org.testng.annotations.*;
 
-import org.xillium.base.beans.Beans;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
 import org.xillium.data.persistence.crud.CrudCommand;

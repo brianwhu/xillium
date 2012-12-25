@@ -1,20 +1,11 @@
 package lab.data.persistence;
 
 import java.sql.Connection;
-import java.sql.Date;
-import java.sql.ResultSet;
 import java.sql.Timestamp;
-import java.util.logging.*;
 import javax.sql.DataSource;
 
-import org.xillium.base.*;
 import org.xillium.base.beans.*;
-import org.xillium.data.CachedResultSet;
-import org.xillium.data.DataBinder;
 import org.xillium.data.DataObject;
-import org.xillium.data.persistence.*;
-import org.xillium.data.validation.Dictionary;
-import lab.DataUtil;
 
 public class Model {
     public static void main(String[] args) throws Exception {

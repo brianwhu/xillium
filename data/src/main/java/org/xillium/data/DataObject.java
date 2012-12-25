@@ -16,15 +16,15 @@ public interface DataObject {
          * @return a string that contains the JSON representation of the structure of the DataObject
          */
         public static String describe(Class<? extends DataObject> type) {
-            return describe(new StringBuilder(), type);
+            return describe(new StringBuilder(), type).toString();
         }
 
-        public static String describe(StringBuilder sb, Class<? extends DataObject> type) {
+        public static StringBuilder describe(StringBuilder sb, Class<? extends DataObject> type) {
             sb.append("[");
             print(sb, null, type);
             if (sb.length() > 1) sb.deleteCharAt(sb.length()-1);
             sb.append("]");
-            return sb.toString();
+            return sb;
         }
 
         @SuppressWarnings("unchecked")

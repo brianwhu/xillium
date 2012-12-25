@@ -384,7 +384,7 @@ public class CrudCommand {
 			pool.getCtClass(CrudCommand.class.getName()), "buildStatements", fragments.toArray(new String[fragments.size()])
 		));
 
-		return cc.toClass(CrudCommand.class.getClassLoader(), CrudCommand.class.getProtectionDomain());
+		return (Class<? extends DataObject>)cc.toClass(CrudCommand.class.getClassLoader(), CrudCommand.class.getProtectionDomain());
     }
 
 	public static ParametricStatement[] buildStatements(String[] args) throws Exception {

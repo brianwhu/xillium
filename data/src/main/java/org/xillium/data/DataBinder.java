@@ -1,5 +1,6 @@
 package org.xillium.data;
 
+import java.io.*;
 import java.util.*;
 import java.sql.*;
 import org.xillium.base.beans.Strings;
@@ -86,6 +87,47 @@ public class DataBinder extends HashMap<String, String> implements ParametricQue
         return count;
     }
 
+    /**
+     * Loads parameters from command line arguments in the form of name=value.
+     */
+    public DataBinder load(String[] args, int offset) {
+        for (int i = offset; i < args.length; ++i) {
+            int equal = args[i].indexOf('=');
+            if (equal > 0) {
+                put(args[i].substring(0, equal), args[i].substring(equal + 1));
+            } else {
+                throw new RuntimeException("***InvalidParameter{" + args[i] + '}');
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Loads parameters from a property file.
+     */
+    public DataBinder load(String filename) throws IOException {
+        Properties props = new Properties();
+        Reader reader = new FileReader(filename);
+        props.load(reader);
+        reader.close();
+        return load(props);
+    }
+
+    /**
+     * Loads parameters from a Properties object.
+     */
+    public DataBinder load(Properties props) {
+        Enumeration<?> enumeration = props.propertyNames();
+        while (enumeration.hasMoreElements()) {
+            String key = (String)enumeration.nextElement();
+            put(key, props.getProperty(key));
+        }
+        return this;
+    }
+
+    /**
+     * Provides a very rough estimate of how big a JSON representative of this binder might be.
+     */
     public int estimateMaximumBytes() {
         int count = this.size();
         for (String key: _rsets.keySet()) {

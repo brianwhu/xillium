@@ -1,12 +1,9 @@
 package lab.data.persistence;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.ResultSet;
-import java.util.logging.*;
 import javax.sql.DataSource;
 
-import org.xillium.base.*;
 import org.xillium.base.beans.*;
 import org.xillium.data.CachedResultSet;
 import org.xillium.data.DataBinder;
