@@ -13,19 +13,12 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <repositories>
-    <repository>
-      <id>local-tomcat</id>
-      <name>My Local Repo</name>
-      <url>http://localhost:8080/maven2</url>
-    </repository>
-  </repositories>
-
   <distributionManagement>
-    <repository>
-      <id>local-file</id>
-      <url>file:c:/repository/m2</url>
-    </repository>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <name>snapshots-local</name>
+      <url>http://58.215.219.166:8081/artifactory/libs-snapshot-local</url>
+    </snapshotRepository>
   </distributionManagement>
 
   <build>

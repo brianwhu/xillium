@@ -1,0 +1,23 @@
+Install a library to the location repository
+--------------------------------------------
+
+mvn install:install-file -Dfile=ojdbc6.jar -DgroupId=com.oracle -DartifactId=ojdbc6 -Dversion=11.2.0.3 -Dpackaging=jar -DgeneratePom=true
+
+
+Check plugin versions & updates
+-------------------------------
+
+mvn versions:display-dependency-updates
+
+
+Build local module only
+-----------------------
+
+mvn --non-recursive install
+
+
+Test locally with Jetty
+-----------------------
+
+mvn jetty:run-war
+
