@@ -39,3 +39,10 @@ Thumbs.db
 # Maven output directory
 ########################
 target/
+
+# Eclipse #
+###########
+.classpath
+.project
+.settings/
+
