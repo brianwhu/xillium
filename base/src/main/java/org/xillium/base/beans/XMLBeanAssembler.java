@@ -219,7 +219,7 @@ traceArgs(property);
         if (arguments != null && arguments.size() > 0) {
             Object[] props = new Object[arguments.size() + 1];
             props[0] = property;
-            Class<?>[] types = new Class[arguments.size() + 1];
+            Class<?>[] types = new Class<?>[arguments.size() + 1];
             types[0] = type;
 
             arguments.reset();
@@ -234,7 +234,7 @@ traceArgs(property);
             }
         } else {
             try {
-                addSetProperty(bean, new Class[] { type }, alias, property);
+                addSetProperty(bean, new Class<?>[] { type }, alias, property);
                 return;
             } catch (NoSuchMethodException x) {
                 // not a problem
