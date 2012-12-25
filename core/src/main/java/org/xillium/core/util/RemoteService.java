@@ -12,12 +12,15 @@ import org.xillium.data.CachedResultSet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- *
+ * An interface to a remote Xillium service.
  */
 public class RemoteService {
     private static final Logger _logger = Logger.getLogger(RemoteService.class.getName());
     private static final ObjectMapper _mapper = new ObjectMapper();
 
+    /**
+     * This class represents a response from a remote Xillium service.
+     */
     public static class Response {
         public Map<String, Object> params;
         public Map<String, CachedResultSet> tables;
@@ -29,6 +32,9 @@ public class RemoteService {
         }
     }
 
+    /**
+     * Calls a remote service with values in the given DataObject as arguments.
+     */
 	public static Response call(String server, String service, DataObject data) {
         List<String> params = new ArrayList<String>();
         for (Field field: data.getClass().getFields()) {
@@ -41,6 +47,9 @@ public class RemoteService {
         return call(server, service, params.toArray(new String[params.size()]));
     }
 
+    /**
+     * Calls a remote service with parameters in the given DataBinder as arguments.
+     */
 	public static Response call(String server, String service, DataBinder binder) {
         List<String> params = new ArrayList<String>();
         for (Map.Entry<String, String> entry: binder.entrySet()) {
@@ -51,6 +60,9 @@ public class RemoteService {
         return call(server, service, params.toArray(new String[params.size()]));
     }
 
+    /**
+     * Calls a remote service with a list of "name=value" string values as arguments.
+     */
 	public static Response call(String server, String service, String... params) {
 		try {
             URL url = new URL(server + '/' + service);

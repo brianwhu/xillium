@@ -181,7 +181,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                     throw new RuntimeException("Failed to parse multipart content", x);
                 }
             } else {
-                java.util.Enumeration<String> en = req.getParameterNames();
+                Enumeration<String> en = req.getParameterNames();
                 while (en.hasMoreElements()) {
                     String name = en.nextElement();
                     String[] values = req.getParameterValues(name);
