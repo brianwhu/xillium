@@ -9,6 +9,7 @@ import org.xillium.base.etc.Arrays;
 import org.xillium.data.DataObject;
 import org.xillium.data.DataBinder;
 import org.xillium.data.CachedResultSet;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -16,7 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class RemoteService {
     private static final Logger _logger = Logger.getLogger(RemoteService.class.getName());
-    private static final ObjectMapper _mapper = new ObjectMapper();
+    private static final ObjectMapper _mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
     /**
      * This class represents a response from a remote Xillium service.
@@ -41,7 +42,9 @@ public class RemoteService {
             field.setAccessible(true);
             if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) continue;
             try {
-                params.add(field.getName() + '=' + field.get(data).toString());
+                Object value = field.get(data);
+                if (value == null) value = "";
+                params.add(field.getName() + '=' + value);
             } catch (IllegalAccessException x) {}
         }
         return call(server, service, params.toArray(new String[params.size()]));

@@ -30,7 +30,7 @@ public class Persistence {
     }
 
     /**
-     * Executes an UPDATE/DELETE statement.
+     * Executes an UPDATE/DELETE statement or an anonymous block.
      */
     public int executeUpdate(String name, DataObject object) throws SQLException {
         ParametricStatement statement = _statements.get(name);
@@ -48,6 +48,18 @@ public class Persistence {
         ParametricStatement statement = _statements.get(name);
         if (statement != null) {
             return statement.executeUpdate(DataSourceUtils.getConnection(_dataSource), objects);
+        } else {
+            throw new RuntimeException("ParametricStatement '" + name + "' not found");
+        }
+    }
+
+    /**
+     * Executes an stored procedure or function
+     */
+    public int executeProcedure(String name, DataObject object) throws SQLException {
+        ParametricStatement statement = _statements.get(name);
+        if (statement != null) {
+            return statement.executeProcedure(DataSourceUtils.getConnection(_dataSource), object);
         } else {
             throw new RuntimeException("ParametricStatement '" + name + "' not found");
         }
