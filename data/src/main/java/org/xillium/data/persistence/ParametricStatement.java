@@ -6,6 +6,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.*;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 
 
 /**
@@ -13,16 +14,35 @@ import java.lang.reflect.Field;
  */
 public class ParametricStatement {
     public static class Param {
+        public static final int IN = 0x0001;
+        public static final int OUT = 0x0002;
+
         public final boolean nullable;
         public final String name;
         public final int type;
+        public final int direction;
 
         /**
          * Constructs a named formal parameter with name <code>n</code> and type <code>t</code>.
-         *
-         * If the name ends with '?' the parameter accepts null values.
+         * <p/>
+         * A single-character prefix of either '-' or '+' before the name marks the parameter as either an OUT
+         * or IN/OUT parameter, respectively.  Without any prefix, a parameter is regarded as an IN parameter.
+         * <p/>
+         * A single-character suffix of '?' after the name marks the parameter as accepting null values. Without
+         * the suffix the parameter is non-null.
+         * <p/>
+         * Neither prefix or suffix is part of the actual parameter name.
          */
         public Param(String n, int t) {
+            if (n.charAt(0) == '-') {
+                n = n.substring(1);
+                direction = OUT;
+            } else if (n.charAt(0) == '+') {
+                n = n.substring(1);
+                direction = IN | OUT;
+            } else {
+                direction = IN;
+            }
             if (n.endsWith("?")) {
                 nullable = true;
                 name = n.substring(0, n.length()-1);
@@ -33,9 +53,9 @@ public class ParametricStatement {
             type = t;
         }
 
-public String toString() {
-return name+",nullable:"+nullable+",type:"+type;
-}
+        public String toString() {
+            return name+",nullable:"+nullable+",type:"+type+",dir:"+direction;
+        }
     };
 
     public ParametricStatement(Param[] parameters, String sql) throws IllegalArgumentException {
@@ -71,7 +91,6 @@ return name+",nullable:"+nullable+",type:"+type;
     }
 
     public ParametricStatement() {
-        _params = null;
     }
 
     public ParametricStatement set(String sql) throws IllegalArgumentException {
@@ -118,6 +137,7 @@ return name+",nullable:"+nullable+",type:"+type;
             Class<? extends DataObject> type = object.getClass();
 
             for (int i = 0; i < _params.length; ++i) {
+                if ((_params[i].direction & Param.IN) == 0) continue;
                 try {
                     Field field = Beans.getKnownField(type, _params[i].name);
                     // NOTE: Class.isEnum() fails to return true if the field type is declared with a template parameter
@@ -251,8 +271,25 @@ return name+",nullable:"+nullable+",type:"+type;
     public int executeProcedure(Connection conn, DataObject object) throws SQLException {
         CallableStatement statement = conn.prepareCall(_sql);
         try {
+            for (int i = 0; i < _params.length; ++i) {
+                if ((_params[i].direction & Param.OUT) == 0) continue;
+                statement.registerOutParameter(i+1, _params[i].type);
+            }
             load(statement, object);
-            return statement.executeUpdate();
+            int code = statement.executeUpdate();
+
+            Class<? extends DataObject> type = object.getClass();
+            for (int i = 0; i < _params.length; ++i) {
+                if ((_params[i].direction & Param.OUT) == 0) continue;
+                try {
+                    setValue(object, Beans.getKnownField(type, _params[i].name), statement.getObject(i+1));
+                } catch (NoSuchFieldException x) {
+                    // ignore
+                } catch (Exception x) {
+                    throw new SQLException("Exception in storage of '" + _params[i].name + "' into DataObject (" + type.getName() + ')', x);
+                }
+            }
+            return code;
         } finally {
             statement.close();
         }
@@ -268,7 +305,7 @@ return name+",nullable:"+nullable+",type:"+type;
     }
 
     private static final Param[] NoParams = new Param[0];
-    private static final Pattern PARAM_SYNTAX = Pattern.compile(":(\\w+\\??):(\\w+)");
+    private static final Pattern PARAM_SYNTAX = Pattern.compile(":([-+]?\\w+\\??):(\\w+)");
     private /*final*/ Param[] _params;
     protected String _sql;
 
@@ -287,5 +324,58 @@ return name+",nullable:"+nullable+",type:"+type;
             }
         }
         return count;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void setValue(Object object, Field field, Object value) throws IllegalArgumentException, IllegalAccessException {
+        if (value == null) {
+            if (field.getType().isAssignableFrom(Number.class)) {
+                value = BigDecimal.ZERO;
+            } else return;
+        }
+
+        try {
+            field.setAccessible(true);
+            field.set(object, value);
+        } catch (IllegalArgumentException x) {
+            @SuppressWarnings("rawtypes")
+            Class ftype = field.getType();
+            if (value instanceof Number) {
+                // size of "value" bigger than that of "field"?
+                try {
+                    Number number = (Number)value;
+                    if (Double.TYPE == ftype || Double.class.isAssignableFrom(ftype)) {
+                        field.set(object, number.doubleValue());
+                    } else if (Float.TYPE == ftype || Float.class.isAssignableFrom(ftype)) {
+                        field.set(object, number.floatValue());
+                    } else if (Long.TYPE == ftype || Long.class.isAssignableFrom(ftype)) {
+                        field.set(object, number.longValue());
+                    } else if (Integer.TYPE == ftype || Integer.class.isAssignableFrom(ftype)) {
+                        field.set(object, number.intValue());
+                    } else if (Short.TYPE == ftype || Short.class.isAssignableFrom(ftype)) {
+                        field.set(object, number.shortValue());
+                    } else {
+                        field.set(object, number.byteValue());
+                    }
+                } catch (Throwable t) {
+                    throw new IllegalArgumentException(t);
+                }
+            } else if (value instanceof java.sql.Timestamp) {
+                try {
+                    field.set(object, new java.sql.Date(((java.sql.Timestamp)value).getTime()));
+                } catch (Throwable t) {
+                    throw new IllegalArgumentException(t);
+                }
+            } else if ((value instanceof String) && Enum.class.isAssignableFrom(ftype)) {
+                try {
+                    field.set(object, Enum.valueOf(ftype, (String)value));
+                } catch (Throwable t) {
+                    throw new IllegalArgumentException(t);
+                }
+            } else {
+                throw new IllegalArgumentException(x);
+            }
+        }
+
     }
 }

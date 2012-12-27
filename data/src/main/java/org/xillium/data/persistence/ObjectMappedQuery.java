@@ -25,16 +25,16 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
         }
     }
 
-	private class  ResultSetMapper<C extends Collector<T>> implements ParametricQuery.ResultSetWorker<C> {
+    private class  ResultSetMapper<C extends Collector<T>> implements ParametricQuery.ResultSetWorker<C> {
         private final C _collector;
 
         public ResultSetMapper(C collector) {
             _collector = collector;
         }
 
-		@SuppressWarnings("unchecked")
-		public C process(ResultSet rs) throws SQLException, InstantiationException, IllegalAccessException {
-			try {
+        @SuppressWarnings("unchecked")
+        public C process(ResultSet rs) throws SQLException, InstantiationException, IllegalAccessException {
+            try {
                 if (_c2fs == null) {
                     synchronized(ObjectMappedQuery.this) {
                         if (_c2fs == null) {
@@ -51,13 +51,15 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                             _c2fs = list;
                         }
                     }
-				}
+                }
 
-				//List<T> rows = new ArrayList<T>();
-				while (rs.next()) {
-					T object = _type.newInstance();
-					for (Column2Field c2f: _c2fs) {
-						c2f.field.setAccessible(true);
+                //List<T> rows = new ArrayList<T>();
+                while (rs.next()) {
+                    T object = _type.newInstance();
+                    for (Column2Field c2f: _c2fs) {
+                        setValue(object, c2f.field, rs.getObject(c2f.index));
+/*
+                        c2f.field.setAccessible(true);
                         Object value = rs.getObject(c2f.index);
                         if (value == null) {
                             if (c2f.field.getType().isAssignableFrom(Number.class)) {
@@ -72,7 +74,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                             if (value instanceof Number) {
                                 // size of "value" bigger than that of "field"?
                                 try {
-									Number number = (Number)value;
+                                    Number number = (Number)value;
                                     if (Double.TYPE == ftype || Double.class.isAssignableFrom(ftype)) {
                                         c2f.field.set(object, number.doubleValue());
                                     } else if (Float.TYPE == ftype || Float.class.isAssignableFrom(ftype)) {
@@ -105,17 +107,18 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                                 throw new IllegalArgumentException(x);
                             }
                         }
-					}
-					//rows.add(object);
+*/
+                    }
+                    //rows.add(object);
                     _collector.add(object);
-				}
-				//return rows;
+                }
+                //return rows;
                 return _collector;
-			} finally {
-				rs.close();
-			}
-		}
-	}
+            } finally {
+                rs.close();
+            }
+        }
+    }
 
     @SuppressWarnings("serial")
     private static class ListCollector<T> extends ArrayList<T> implements Collector<T> {
@@ -129,19 +132,19 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
         }
     }
 
-	private final Class<T> _type;
-	//private final ResultSetMapper _lister = new ResultSetMapper(new ListCollector<T>());
+    private final Class<T> _type;
+    //private final ResultSetMapper _lister = new ResultSetMapper(new ListCollector<T>());
     private volatile List<Column2Field> _c2fs; // lazily initialized with double checked locking
 
     public ObjectMappedQuery(Param[] parameters, String sql, Class<T> type) throws IllegalArgumentException {
-		super(parameters, sql);
-		_type = type;
+        super(parameters, sql);
+        _type = type;
     }
 
     @SuppressWarnings("unchecked")
     public ObjectMappedQuery(String parameters,  String classname) throws IllegalArgumentException {
         super(parameters);
-		try {
+        try {
             _type = (Class<T>)Class.forName(classname);
         } catch (ClassNotFoundException x) {
             throw new IllegalArgumentException(x);
@@ -150,31 +153,31 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
 
     @SuppressWarnings("unchecked")
     public ObjectMappedQuery(String classname) throws IllegalArgumentException {
-		try {
+        try {
             _type = (Class<T>)Class.forName(classname);
         } catch (ClassNotFoundException x) {
             throw new IllegalArgumentException(x);
         }
     }
 
-	/**
-	 * Executes the query and returns the results as a list of objects.
-	 */
+    /**
+     * Executes the query and returns the results as a list of objects.
+     */
     public List<T> getResults(Connection conn, DataObject object) throws Exception {
-		return executeSelect(conn, object, new ResultSetMapper<ListCollector<T>>(new ListCollector<T>()));
+        return executeSelect(conn, object, new ResultSetMapper<ListCollector<T>>(new ListCollector<T>()));
     }
 
-	/**
-	 * Executes the query and returns the results as a list of objects.
-	 */
+    /**
+     * Executes the query and returns the results as a list of objects.
+     */
     public T getObject(Connection conn, DataObject object) throws Exception {
-		return executeSelect(conn, object, new ResultSetMapper<SingleObjectCollector<T>>(new SingleObjectCollector<T>())).value;
+        return executeSelect(conn, object, new ResultSetMapper<SingleObjectCollector<T>>(new SingleObjectCollector<T>())).value;
     }
 
-	/**
-	 * Executes the query and passes the results to a Collector.
-	 */
+    /**
+     * Executes the query and passes the results to a Collector.
+     */
     public Collector<T> getResults(Connection conn, DataObject object, Collector<T> collector) throws Exception {
-		return executeSelect(conn, object, new ResultSetMapper<Collector<T>>(collector));
+        return executeSelect(conn, object, new ResultSetMapper<Collector<T>>(collector));
     }
 }
