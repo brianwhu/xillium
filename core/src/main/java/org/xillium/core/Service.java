@@ -20,14 +20,22 @@ public interface Service {
      * A failure message is a string suitable for display to an end user. This value is only present when the service fails.
      */
     public static final String FAILURE_MESSAGE = "_message_";
+
+    /**
+     * A failure stack trace is only present when the FAILURE_MESSAGE is.
+     */
     public static final String FAILURE_STACK   = "_stack_";
 
 	/**
 	 * Processes a service request. This method runs in a thread parallel to other service calls, and must return as quickly as possible.
+     *
+     * If the service is wrapped inside a transaction, a runtime exception (including ServiceException) by this method rolls back the
+     * transaction, while a checked exception does not.
 	 *
 	 * @param parameters - request parameters in a DataBinder
-	 * @param env - an ExecutionEnvironment
-	 * @return response data in a DataBinder
+	 * @param dict - a Dictionary for data validation/parsing
+	 * @param persist - a Persistence for data persistence
+	 * @return response data in a DataBinder; This can be the same data binder passed in as the first argument
 	 * @throws ServiceException if the service fails for any reason. If the service is wrapped inside a transaction, the transaction
 	 *         is rolled back.
 	 */
