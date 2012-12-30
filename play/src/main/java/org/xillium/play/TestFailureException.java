@@ -1,9 +1,7 @@
 package org.xillium.play;
 
+@SuppressWarnings("serial")
 public class TestFailureException extends Exception {
-    @SuppressWarnings("compatibility:-4493609153254097016")
-    private static final long serialVersionUID = 1L;
-    
     private final int code;
 
     public TestFailureException(int code, Throwable throwable) {

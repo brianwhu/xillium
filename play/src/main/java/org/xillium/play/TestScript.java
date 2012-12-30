@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.*;
 
 public class TestScript {
-    private static final int MAX_ROWS = 12000;
+//    private static final int MAX_ROWS = 12000;
     protected final TestTarget target;
 
     public TestScript(TestTarget target) {

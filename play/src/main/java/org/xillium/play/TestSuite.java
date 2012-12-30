@@ -17,7 +17,8 @@ public class TestSuite {
      * @param prop
      * @throws IOException
      */
-    public TestSuite(String prop) throws IOException {
+    @SuppressWarnings("unchecked")
+	public TestSuite(String prop) throws IOException {
         _summary = new TestSummary(this);
 
         Properties properties = new Properties();
