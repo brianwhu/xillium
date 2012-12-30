@@ -49,6 +49,14 @@
         </plugins>
     </build>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>snapshots-local</name>
+            <url>${env.M2R_SNAPSHOT_LOCAL}</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.hsqldb</groupId>
