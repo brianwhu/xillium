@@ -121,6 +121,18 @@ public class HttpServiceDispatcher extends HttpServlet {
                 plca.terminate();
             }
         }
+
+        // finally, manually deregisters JDBC driver, which prevents Tomcat 7 from complaining about memory leaks
+        Enumeration<java.sql.Driver> drivers = java.sql.DriverManager.getDrivers();
+        while (drivers.hasMoreElements()) {
+            java.sql.Driver driver = drivers.nextElement();
+            try {
+                java.sql.DriverManager.deregisterDriver(driver);
+                _logger.info("Deregistering jdbc driver: " + driver);
+            } catch (java.sql.SQLException x) {
+                _logger.log(Level.WARNING, "Error deregistering driver " + driver, x);
+            }
+        }
     }
 
     /**
