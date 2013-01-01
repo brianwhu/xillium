@@ -34,13 +34,11 @@ public class CachedResultSet {
         }
     }
 
-    // for JAXB
-/*
+    // for JAXB, Jackson, and possibly other libraries that use reflection to instantiate objects
     private CachedResultSet() {
         columns = null;
         rows = null;
     }
-*/
     
     /**
      * Retrieves the rows from a freshly obtained JDBC result set into a CachedResultSet.
