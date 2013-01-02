@@ -9,8 +9,11 @@ import org.xillium.base.etc.Arrays;
 import org.xillium.data.DataObject;
 import org.xillium.data.DataBinder;
 import org.xillium.data.CachedResultSet;
+import org.xillium.core.Service;
+import org.xillium.core.ServiceException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 /**
  * An interface to a remote Xillium service.
@@ -36,7 +39,7 @@ public class RemoteService {
     /**
      * Calls a remote service with values in the given DataObject as arguments.
      */
-	public static Response call(String server, String service, DataObject data) {
+    public static Response call(String server, String service, DataObject data) {
         List<String> params = new ArrayList<String>();
         for (Field field: data.getClass().getFields()) {
             field.setAccessible(true);
@@ -53,7 +56,7 @@ public class RemoteService {
     /**
      * Calls a remote service with parameters in the given DataBinder as arguments.
      */
-	public static Response call(String server, String service, DataBinder binder) {
+    public static Response call(String server, String service, DataBinder binder) {
         List<String> params = new ArrayList<String>();
         for (Map.Entry<String, String> entry: binder.entrySet()) {
             String name = entry.getKey();
@@ -66,29 +69,37 @@ public class RemoteService {
     /**
      * Calls a remote service with a list of "name=value" string values as arguments.
      */
-	public static Response call(String server, String service, String... params) {
-		try {
+    public static Response call(String server, String service, String... params) {
+        try {
             URL url = new URL(server + '/' + service);
-			//System.err.println("Calling " + url);
-			URLConnection connection = url.openConnection();
-			connection.setDoOutput(true);
-			PrintWriter pw = new PrintWriter(connection.getOutputStream());
-			for (String param: params) {
+            URLConnection connection = url.openConnection();
+            connection.setDoOutput(true);
+            PrintWriter pw = new PrintWriter(connection.getOutputStream());
+            for (String param: params) {
                 _logger.fine(param);
-				pw.print(param); pw.print('&');
-			}
-			pw.close();
+                pw.print(param); pw.print('&');
+            }
+            pw.close();
             InputStream in = connection.getInputStream();
             try {
-                //return _mapper.readValue(in, Response.class);
                 byte[] bytes = Arrays.read(in);
-                return _mapper.readValue(bytes, Response.class).setResponseBody(bytes);
+                Response response = _mapper.readValue(bytes, Response.class).setResponseBody(bytes);
+                if (response.params != null) {
+                    String message = (String)response.params.get(Service.FAILURE_MESSAGE);
+                    if (message != null) {
+                        throw new ServiceException(message);
+                    }
+                } else {
+                    throw new ServiceException("***ProtocolErrorMissingParams");
+                }
+                return response;
             } finally {
                 in.close();
             }
-		} catch (Exception x) {
-			//x.printStackTrace();
-            throw new RuntimeException("RemoteServiceCallFailure", x);
-		}
-	}
+        } catch (RuntimeException x) {
+            throw x;
+        } catch (Exception x) {
+            throw new ServiceException("***RemoteServiceCallFailure", x);
+        }
+    }
 }
