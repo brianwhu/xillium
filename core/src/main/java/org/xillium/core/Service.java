@@ -13,7 +13,9 @@ public interface Service {
     public static final String REQUEST_CLIENT_PORT = "#client_port#";
     public static final String REQUEST_SERVER_PORT = "#server_port#";
     public static final String REQUEST_HTTP_METHOD = "#http_method#";
+    public static final String SERVICE_DATA_BINDER = "#data_binder#";
     public static final String SERVICE_POST_ACTION = "#post_action#";
+    public static final String SERVICE_PAGE_TARGET = "#page_target#";
     public static final String SERVICE_JSON_TUNNEL = "_json_tunnel_";
 
     /**

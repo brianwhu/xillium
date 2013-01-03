@@ -38,12 +38,12 @@ import org.xillium.core.util.ModuleSorter;
  * <p/>
  * The fabric of operation, administration, and maintenance (foam)
  * <ul>
- *	<li><code>/[context]/x!/[service]</code><p/>
- *		<ul>
- *			<li>list</li>
- *			<li>desc - parameter description</li>
- *		</ul>
- *	</li>
+ *    <li><code>/[context]/x!/[service]</code><p/>
+ *        <ul>
+ *            <li>list</li>
+ *            <li>desc - parameter description</li>
+ *        </ul>
+ *    </li>
  * </ul>
  */
 @SuppressWarnings("serial")
@@ -60,6 +60,7 @@ public class HttpServiceDispatcher extends HttpServlet {
     private static final File TEMPORARY = null;
     private static final Logger _logger = Logger.getLogger(HttpServiceDispatcher.class.getName());
 
+    private final Stack<ObjectName> _manageables = new Stack<ObjectName>();
     private final Stack<List<PlatformLifeCycleAware>> _plca = new Stack<List<PlatformLifeCycleAware>>();
     private final Map<String, Service> _services = new HashMap<String, Service>();
     private final org.xillium.data.validation.Dictionary _dict = new org.xillium.data.validation.Dictionary();
@@ -114,6 +115,16 @@ public class HttpServiceDispatcher extends HttpServlet {
 
     public void destroy() {
         _logger.info("Terminating service dispatcher");
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        while (!_manageables.empty()) {
+            ObjectName on = _manageables.pop();
+            _logger.info("unregistering MBean " + on);
+            try {
+                mbs.unregisterMBean(on);
+            } catch (Exception x) {
+                _logger.log(Level.WARNING, on.toString());
+            }
+        }
         while (!_plca.empty()) {
             List<PlatformLifeCycleAware> plcas = _plca.pop();
             // terminate PlatformLifeCycleAware objects in this level
@@ -138,7 +149,7 @@ public class HttpServiceDispatcher extends HttpServlet {
     /**
      * Dispatcher entry point
      */
-    protected void service(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    protected void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         Service service;
         String id;
 
@@ -215,26 +226,30 @@ public class HttpServiceDispatcher extends HttpServlet {
             binder.put(Service.REQUEST_SERVER_PORT, String.valueOf(req.getServerPort()));
             binder.put(Service.REQUEST_HTTP_METHOD, req.getMethod());
 
+            if (id.endsWith(".html")) {
+                // TODO provide a default, error reporting page template
+            }
+
             // TODO: pre-service filter
-			if (service instanceof Service.Secured) {
-				_logger.fine("Trying to authorize invocation of a secured service");
-				((Service.Secured)service).authorize(id, binder, _persistence);
-			}
+            if (service instanceof Service.Secured) {
+                _logger.fine("Trying to authorize invocation of a secured service");
+                ((Service.Secured)service).authorize(id, binder, _persistence);
+            }
 
             binder = service.run(binder, _dict, _persistence);
 
-			try {
-				Runnable task = (Runnable)binder.getNamedObject(Service.SERVICE_POST_ACTION);
-				if (task != null) {
-					task.run();
-				}
-			} catch (Throwable t) {
-				_logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
-			}
+            try {
+                Runnable task = (Runnable)binder.getNamedObject(Service.SERVICE_POST_ACTION);
+                if (task != null) {
+                    task.run();
+                }
+            } catch (Throwable t) {
+                _logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
+            }
         } catch (Throwable x) {
             String message = Throwables.getFirstMessage(x);
             if (message == null || message.length() == 0) {
-            	message = "***"+Throwables.getRootCause(x).getClass().getSimpleName();
+                message = "***"+Throwables.getRootCause(x).getClass().getSimpleName();
             }
             binder.put(Service.FAILURE_MESSAGE, message);
             _logger.warning("Exception caught in dispatcher: " + message);
@@ -245,58 +260,66 @@ public class HttpServiceDispatcher extends HttpServlet {
             binder.put(Service.FAILURE_STACK, sw.toString());
         } finally {
             // TODO: post-service filter
-			if (service instanceof Service.Extended) {
-				_logger.fine("Invoking extended operations");
-				try {
+            if (service instanceof Service.Extended) {
+                _logger.fine("Invoking extended operations");
+                try {
                     ((Service.Extended)service).complete(binder);
                 } catch (Throwable t) {
                     _logger.log(Level.WARNING, "Extended service: complete() failed", t);
                 }
-			}
+            }
 
             res.setHeader("Access-Control-Allow-Headers", "origin,x-prototype-version,x-requested-with,accept");
             res.setHeader("Access-Control-Allow-Origin", "*");
-            res.setHeader("Content-Type", "application/json;charset=UTF-8");
             try {
+                String page = binder.get(Service.SERVICE_PAGE_TARGET);
                 binder.clearAutoValues();
-                String json = binder.get(Service.SERVICE_JSON_TUNNEL);
 
-                if (json == null) {
-                    JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
+                if (page == null) {
+                    res.setHeader("Content-Type", "application/json;charset=UTF-8");
+                    String json = binder.get(Service.SERVICE_JSON_TUNNEL);
 
-                    jb.quote("params").append(":{ ");
-                    Iterator<String> it = binder.keySet().iterator();
-                    while (it.hasNext()) {
-                        String key = it.next();
-                        String val = binder.get(key);
-                        if (val == null) {
-                            jb.quote(key).append(":null");
-                        } else if (val.startsWith("json:")) {
-                            jb.quote(key).append(':').append(val.substring(5));
-                        } else {
-                            jb.serialize(key, val);
+                    if (json == null) {
+                        JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
+
+                        jb.quote("params").append(":{ ");
+                        Iterator<String> it = binder.keySet().iterator();
+                        while (it.hasNext()) {
+                            String key = it.next();
+                            String val = binder.get(key);
+                            if (val == null) {
+                                jb.quote(key).append(":null");
+                            } else if (val.startsWith("json:")) {
+                                jb.quote(key).append(':').append(val.substring(5));
+                            } else {
+                                jb.serialize(key, val);
+                            }
+                            jb.append(',');
                         }
-                        jb.append(',');
+                        jb.replaceLast('}').append(',');
+
+                        jb.quote("tables").append(":{ ");
+                        Set<String> rsets = binder.getResultSetNames();
+                        it = rsets.iterator();
+                        while (it.hasNext()) {
+                            String name = it.next();
+                            jb.quote(name).append(":");
+                            binder.getResultSet(name).toJSON(jb);
+                            jb.append(',');
+                        }
+                        jb.replaceLast('}');
+
+                        jb.append('}');
+
+                        json = jb.toString();
                     }
-                    jb.replaceLast('}').append(',');
 
-                    jb.quote("tables").append(":{ ");
-                    Set<String> rsets = binder.getResultSetNames();
-                    it = rsets.iterator();
-                    while (it.hasNext()) {
-                        String name = it.next();
-                        jb.quote(name).append(":");
-                        binder.getResultSet(name).toJSON(jb);
-                        jb.append(',');
-                    }
-                    jb.replaceLast('}');
-
-                    jb.append('}');
-
-                    json = jb.toString();
+                    res.getWriter().append(json).flush();
+                } else {
+                    _logger.info("\t=> " + getServletContext().getResource(page));
+                    req.setAttribute(Service.SERVICE_DATA_BINDER, binder);
+                    getServletContext().getRequestDispatcher(page).include(req, res);
                 }
-
-                res.getWriter().append(json).flush();
             } finally {
                 for (File tmp: upload) {
                     try { tmp.delete(); } catch (Exception x) {}
@@ -451,17 +474,18 @@ public class HttpServiceDispatcher extends HttpServlet {
         // Manageable object registration: objects are registered under "bean-id/context-path"
 
         String contextPath = getServletContext().getContextPath();
-		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         for (String id: gac.getBeanNamesForType(Manageable.class)) {
             try {
                 _logger.info("Registering MBean '" + id + "', domain=" + domain);
                 ObjectName on = new ObjectName(domain == null ? "org.xillium.core.management" : domain, "type", id + contextPath);
                 Manageable manageable = (Manageable)gac.getBean(id);
                 manageable.assignObjectName(on);
-				mbs.registerMBean(manageable, on);
-			} catch (Exception x) {
-				_logger.log(Level.WARNING, "MBean '" + id + "' failed to register", x);
-			}
+                mbs.registerMBean(manageable, on);
+                _manageables.push(on);
+            } catch (Exception x) {
+                _logger.log(Level.WARNING, "MBean '" + id + "' failed to register", x);
+            }
         }
 
         _logger.info("Done with service modules in ApplicationContext " + gac.getId());
