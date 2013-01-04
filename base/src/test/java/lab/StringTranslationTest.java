@@ -25,4 +25,20 @@ public class StringTranslationTest {
         System.err.println(actual);
         assert output.equals(actual);
     }
+
+    @Test(groups={"function"})
+    public void testFormat() {
+        Object a = new Object() {
+            int age = 12;
+            String tradingDay = "20130104";
+        };
+        String pattern  = "Proper file name is 'daily-financial-report-{tradingDay}-{age}.html'";
+        String expected = "Proper file name is 'daily-financial-report-20130104-12.html'";
+        String actual   = Strings.format(pattern, a);
+
+        System.err.println(pattern);
+        System.err.println(actual);
+        System.err.println(expected);
+        assert expected.equals(actual);
+    }
 }

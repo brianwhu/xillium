@@ -121,6 +121,37 @@ public class Strings {
                 throw new IllegalArgumentException("Translation format specification", x);
             }
         }
-        return  matcher.replaceAll("{}");
+        return matcher.replaceAll("{}");
+    }
+
+    /**
+     * Formats a string that contains named parameters.
+     * <ol>
+     * <li> Parameters are enclosed between '{' and '}'</li>
+     * <li> Optional extra text is allowed at the end of line starting with '#', which is removed before returning</li>
+     * </ol>
+     */
+    public static String format(String pattern, Object args) {
+        int eol = pattern.indexOf('#');
+        if (eol > -1) {
+            pattern = pattern.substring(0, eol);
+        }
+        Class<?> type = args.getClass();
+        StringBuilder sb = new StringBuilder();
+        int top = 0;
+
+        Matcher matcher = PARAM_SYNTAX.matcher(pattern);
+        while (matcher.find()) {
+            try {
+                sb.append(pattern.substring(top, matcher.start()));
+                java.lang.reflect.Field field = Beans.getKnownField(type, matcher.group(1));
+                sb.append(field.get(args));
+                top = matcher.end();
+            } catch (Exception x) {
+                throw new IllegalArgumentException("Translation format specification", x);
+            }
+        }
+        sb.append(pattern.substring(top));
+        return sb.toString();
     }
 }
