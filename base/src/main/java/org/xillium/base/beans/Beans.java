@@ -342,16 +342,20 @@ public class Beans {
     /**
      * A convenience utility method to convert a bean to a formatted string.
      */
-    public static String toString(Object bean) throws IntrospectionException {
-        StringBuilder sb = new StringBuilder();
-        print(sb, bean, 0);
-        return sb.toString();
+    public static String toString(Object bean) {
+        try {
+            return print(new StringBuilder(), bean, 0).toString();
+        } catch (IntrospectionException x) {
+            return bean.toString() + "(***" + x.getMessage() + ')';
+        }
     }
 
     /**
      * Prints a bean to the StringBuilder.
+     *
+     * @return the original StringBuilder
      */
-    public static void print(StringBuilder sb, Object bean, int level) throws IntrospectionException {
+    public static StringBuilder print(StringBuilder sb, Object bean, int level) throws IntrospectionException {
         Class<?> type = bean.getClass();
 
         if (isPrimitive(type) || isDisplayable(type)) {
@@ -406,6 +410,8 @@ public class Beans {
                 }
             }
         }
+
+        return sb;
     }
 
     private static void printNameValue(StringBuilder sb, String name, Object value, int level) {
