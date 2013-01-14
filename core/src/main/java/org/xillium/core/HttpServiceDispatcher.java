@@ -55,6 +55,7 @@ public class HttpServiceDispatcher extends HttpServlet {
     private static final String VALIDATION_DIC = "validation-dictionary.xml";
     private static final String SERVICE_CONFIG = "service-configuration.xml";
     private static final String STORAGE_CONFIG = "storage-configuration.xml";
+    private static final String XILLIUM_PREFIX = "xillium-";
 
     private static final Pattern URI_REGEX = Pattern.compile("/[^/?]+/([^/?]+/[^/?]+)"); // '/context/module/service'
     private static final File TEMPORARY = null;
@@ -161,12 +162,12 @@ public class HttpServiceDispatcher extends HttpServlet {
 
             service = _services.get(id);
             if (service == null) {
-                _logger.warning("Request not recognized");
+                _logger.warning("Request not recognized: " + req.getRequestURI());
                 res.sendError(404);
                 return;
             }
         } else {
-            _logger.warning("Request not recognized");
+            _logger.warning("Request not recognized: " + req.getRequestURI());
             res.sendError(404);
             return;
         }
@@ -383,19 +384,25 @@ public class HttpServiceDispatcher extends HttpServlet {
                         }
                         JarEntry entry;
                         while ((entry = jis.getNextJarEntry()) != null) {
-                            if (SERVICE_CONFIG.equals(entry.getName())) {
-                                _logger.info("Services:" + module.path + ":" + entry.getName());
+                            String name = entry.getName();
+                            if (name == null) continue;
+
+                            if (SERVICE_CONFIG.equals(name)) {
+                                _logger.info("ServiceConfiguration:" + module.path + ":" + name);
                                 if (isSpecial) {
                                     wac =
                                     loadServiceModule(wac, domain, module.name, new ByteArrayInputStream(Arrays.read(jis)), descs, plcas);
                                 } else {
                                     loadServiceModule(wac, domain, module.name, new ByteArrayInputStream(Arrays.read(jis)), descs, plcas);
                                 }
-                            } else if (STORAGE_CONFIG.equals(entry.getName()) && _persistence != null) {
-                                _logger.info("Storages:" + module.path + ":" + entry.getName());
+                            } else if (STORAGE_CONFIG.equals(name) && _persistence != null) {
+                                _logger.info("StorageConfiguration:" + module.path + ":" + name);
                                 assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
-                            } else if (VALIDATION_DIC.equals(entry.getName())) {
-                                _logger.info("RequestVocabulary:" + module.path + ":" + entry.getName());
+                            } else if (VALIDATION_DIC.equals(name)) {
+                                _logger.info("ValidationDictionary:" + module.path + ":" + name);
+                                assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
+                            } else if (name.startsWith(XILLIUM_PREFIX) && name.endsWith(".xml")) {
+                                _logger.info("ApplicationResources:" + module.path + ":" + name);
                                 assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
                             }
                         }
