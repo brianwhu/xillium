@@ -99,6 +99,28 @@ public class Strings {
         return new String(chars);
     }
 
+    /**
+     * Extends a string to have at least the given length.
+     */
+    public static String extend(String text, char fill, int length) {
+        if (text.length() < length) {
+            char[] buffer = new char[length];
+            java.util.Arrays.fill(buffer, 0, length, fill);
+            System.arraycopy(text.toCharArray(), 0, buffer, 0, text.length());
+            return new String(buffer);
+        } else {
+            return text;
+        }
+    }
+
+    /**
+     * Returns the substring following a given character, or the original if the character is not found.
+     */
+    public static String substringAfter(String text, char match) {
+        return text.substring(text.indexOf(match)+1);
+    }
+
+
     private static final Pattern PARAM_SYNTAX = Pattern.compile("\\{([^{}]+)\\}");
 
     /**
@@ -125,33 +147,45 @@ public class Strings {
     }
 
     /**
-     * Formats a string that contains named parameters.
+     * Returns a formatted string using the specified format string and object fields.
+     *
      * <ol>
-     * <li> Parameters are enclosed between '{' and '}'</li>
-     * <li> Optional extra text is allowed at the end of line starting with '#', which is removed before returning</li>
+     * <li> Parameter names in the format string are enclosed between '{' and '}'</li>
+     * <li> After formatting, each value is added between a parameter name and the closing brace
      * </ol>
      */
     public static String format(String pattern, Object args) {
-        int eol = pattern.indexOf('#');
-        if (eol > -1) {
-            pattern = pattern.substring(0, eol);
-        }
-        Class<?> type = args.getClass();
-        StringBuilder sb = new StringBuilder();
-        int top = 0;
+        return format(pattern, args, false);
+    }
 
+    /**
+     * @param preserve - preserves original parameter marks
+     */
+    public static String format(String pattern, Object args, boolean preserve) {
+        StringBuilder sb = null;
+        int top = 0;
         Matcher matcher = PARAM_SYNTAX.matcher(pattern);
-        while (matcher.find()) {
-            try {
-                sb.append(pattern.substring(top, matcher.start()));
-                java.lang.reflect.Field field = Beans.getKnownField(type, matcher.group(1));
-                sb.append(field.get(args));
-                top = matcher.end();
-            } catch (Exception x) {
-                throw new IllegalArgumentException("Translation format specification", x);
-            }
+
+        if (matcher.find()) {
+            sb = new StringBuilder();
+            Class<?> type = args.getClass();
+            do {
+                try {
+                    Object value = Beans.getKnownField(type, substringAfter(matcher.group(1), '.')).get(args);
+                    if (preserve) {
+                        sb.append(pattern.substring(top, matcher.end() - 1)).append(':').append(value);
+                        top = matcher.end() - 1;
+                    } else {
+                        sb.append(pattern.substring(top, matcher.start())).append(value);
+                        top = matcher.end();
+                    }
+                } catch (Exception x) {
+                    //throw new IllegalArgumentException("Translation format specification", x);
+                    // no value in args that matches the parameter
+                }
+            } while (matcher.find());
         }
-        sb.append(pattern.substring(top));
-        return sb.toString();
+
+        return (sb == null) ? pattern : sb.append(pattern.substring(top)).toString();
     }
 }

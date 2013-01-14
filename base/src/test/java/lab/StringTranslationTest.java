@@ -32,13 +32,18 @@ public class StringTranslationTest {
             int age = 12;
             String tradingDay = "20130104";
         };
-        String pattern  = "Proper file name is 'daily-financial-report-{tradingDay}-{age}.html'";
-        String expected = "Proper file name is 'daily-financial-report-20130104-12.html'";
-        String actual   = Strings.format(pattern, a);
+        String blueprint = "Proper file name is 'daily-financial-report-{tradingDay}-{ETF.age}-{nonexistant}.html'";
+        String expected1 = "Proper file name is 'daily-financial-report-20130104-12-{nonexistant}.html'";
+        String expected2 = "Proper file name is 'daily-financial-report-{tradingDay:20130104}-{ETF.age:12}-{nonexistant}.html'";
+        String t1 = Strings.format(blueprint, a);
+        String t2 = Strings.format(blueprint, a, true);
 
-        System.err.println(pattern);
-        System.err.println(actual);
-        System.err.println(expected);
-        assert expected.equals(actual);
+        System.err.println(blueprint);
+        System.err.println(expected1);
+        System.err.println(t1);
+        System.err.println(expected2);
+        System.err.println(t2);
+        assert expected1.equals(t1);
+        assert expected2.equals(t2);
     }
 }
