@@ -9,5 +9,7 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface pattern {
+    public static final String COMMON_CURRENCY = "^[+-]?[0-9]{1,3}(?:,?[0-9]{3})*(?:\\.[0-9]{2})?$";
+
     String value();
 }
