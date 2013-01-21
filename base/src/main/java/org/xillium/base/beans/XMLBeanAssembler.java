@@ -12,6 +12,7 @@ import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
+import org.xillium.base.etc.S;
 
 
 /**
@@ -19,6 +20,7 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class XMLBeanAssembler extends DefaultHandler {
     private static final Logger _logger = Logger.getLogger(XMLBeanAssembler.class.getName());
+    private static final String SAX_NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes";
     SAXParser _parser;
     ObjectFactory _factory;
     boolean _lenient;
@@ -30,16 +32,6 @@ public class XMLBeanAssembler extends DefaultHandler {
         pfactory.setNamespaceAware(true);
         //pfactory.setValidating(true);
         _parser = pfactory.newSAXParser();
-/*
-        try {
-            //_parser.setProperty(JAXP_SCHEMA_LANG, W3C_XML_SCHEMA);
-            //_parser.setProperty(SAX_NAMESPACES, true);
-            //_parser.setProperty(SAX_NAMESPACE_PREFIXES, "true");
-            //_parser.setProperty(SAX_NAMESPACE_URIS, true);
-        } catch (SAXNotRecognizedException x) {
-            _logger.severe("While setting properties to XML parser", x);
-        }
-*/
     }
 
     /**
@@ -68,11 +60,6 @@ public class XMLBeanAssembler extends DefaultHandler {
         _lenient = lenient;
     }
 
-    private static final String SAX_NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes";
-    //private static final String JAXP_SCHEMA_LANG = "http://java.sun.com/xml/jaxp/properties/schemaLanguage";
-    //private static final String W3C_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
-    //private static final String SAX_NAMESPACES = "http://xml.org/sax/features/namespaces";
-    //private static final String SAX_NAMESPACE_URIS = "http://xml.org/sax/features/xmlns-uris";
 
     private String fixPotentialArrayName(String name) {
         if (name.endsWith("[]")) {
@@ -112,6 +99,21 @@ public class XMLBeanAssembler extends DefaultHandler {
                     list.add(new TypedValue(type, object));
                     if ((type = Beans.toPrimitive(type)) != null) {
                         list.add(new TypedValue(type, object));
+                        // automatic casting to larger types
+                        if (type == Byte.class || type == Byte.TYPE) {
+                            list.add(new TypedValue(Short.class, object));
+                            list.add(new TypedValue(Short.TYPE, object));
+                            type = Short.class;
+                        }
+                        if (type == Short.class || type == Short.TYPE) {
+                            list.add(new TypedValue(Integer.class, object));
+                            list.add(new TypedValue(Integer.TYPE, object));
+                            type = Integer.class;
+                        }
+                        if (type == Integer.class || type == Integer.TYPE) {
+                            list.add(new TypedValue(Long.class, object));
+                            list.add(new TypedValue(Long.TYPE, object));
+                        }
                     }
                 } catch (Exception x) {
                     _logger.fine(value + " looked like a static reference but is not");
@@ -171,40 +173,44 @@ _logger.fine("guessUntypedValue: number of possibilities " + list.size());
                name.equals("class")   || name.equals("class...");
     }
 
-private void traceArgs(Object... property) {
-    for (int i = 0; i < property.length; ++i) { _logger.fine("       args " + property[i].getClass().getName() + " :: " + property[i]); }
-}
+    private String args(Object... property) {
+        StringBuilder sb = new StringBuilder("(");
+        for (int i = 0; i < property.length; ++i) sb.append(property[i].getClass().getName()).append(':').append(property[i]);
+        return sb.append(')').toString();
+    }
 
     private void addSetProperty(Object bean, Class<?>[] type, String name, Object... property)
     throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if (name == null) {
-            name = type[0].getName();
-            int dot = name.lastIndexOf('.');
-            if (dot > 0) {
-                name = name.substring(dot + 1);
-            }
+            name = type[0].getSimpleName();
         }
 
+        int dot;
+        if ((dot = name.indexOf('.')) > -1) {
+            _logger.fine("looking at a composite property " + name);
+            do {
+                bean = Beans.invoke(bean, "get" + name.substring(0, dot));
+                name = Strings.capitalize(name.substring(dot + 1)); // lower case letters may be found after '.'
+            } while ((dot = name.indexOf('.')) > -1);
+        }
+
+        // attempt property injection using setXXX(), addXXX(), set(), or add(), in that order
         try {
-            _logger.fine("trying set" + name + "() on " + bean.getClass() + ": " + property.length);
-traceArgs(property);
+            _logger.fine(S.fine(_logger) ? "trying set" + name + "() on " + bean.getClass() + ": " + property.length + args(property) : null);
             Beans.invoke(bean, "set" + name, property);
             _logger.fine("... successful");
         } catch (NoSuchMethodException x) {
             try {
-                _logger.fine("trying set() on " + bean.getClass() + ": " + property.length);
-traceArgs(property);
-                Beans.invoke(bean, "set", property);
+                _logger.fine(S.fine(_logger) ? "trying add" + name + "() on " + bean.getClass() + ": " + property.length + args(property) : null);
+                Beans.invoke(bean, "add" + name, property);
                 _logger.fine("... successful");
             } catch (NoSuchMethodException x1) {
                 try {
-                    _logger.fine("trying add" + name + "() on " + bean.getClass() + ": " + property.length);
-traceArgs(property);
-                    Beans.invoke(bean, "add" + name, property);
+                    _logger.fine(S.fine(_logger) ? "trying set() on " + bean.getClass() + ": " + property.length + args(property) : null);
+                    Beans.invoke(bean, "set", property);
                     _logger.fine("... successful");
                 } catch (NoSuchMethodException x2) {
-                    _logger.fine("trying add() on " + bean.getClass() + ": " + property.length);
-traceArgs(property);
+                    _logger.fine(S.fine(_logger) ? "trying add() on " + bean.getClass() + ": " + property.length + args(property) : null);
                     Beans.invoke(bean, "add", property);
                     _logger.fine("... successful");
                 }
@@ -423,15 +429,17 @@ traceArgs(property);
          * 2. If no class found, assume the element maps to a String.
          * 3. Otherwise, construct a new object of the class with element attributes.
          */
-        _logger.fine("Consider element " + l);
-        _logger.fine("             uri " + uri);
-        _logger.fine("               q " + q);
+        _logger.fine(S.fine(_logger) ?
+                    "Consider element " + l +
+                  "\n             uri " + uri +
+                  "\n               q " + q : null);
         ElementInfo info = new ElementInfo();
 
         // Record java packages defined on this element as xmlns
         for (int i = 0; i < a.getLength(); ++i) {
-        _logger.fine("            attr " + a.getQName(i) + "=" + a.getValue(i));
-        _logger.fine("                 " + a.getQName(i) + ":" + a.getURI(i));
+            _logger.fine(S.fine(_logger) ?
+                    "            attr " + a.getQName(i) + "=" + a.getValue(i) +
+                  "\n                 " + a.getQName(i) + ":" + a.getURI(i) : null);
             if (a.getQName(i).startsWith("xmlns:") && a.getValue(i).startsWith("java://")) {
                 info.pkgs.put(a.getQName(i).substring(6), a.getValue(i).substring(7));
             }
@@ -495,7 +503,7 @@ traceArgs(property);
 	                                throw x;
 	                            } catch (Exception x) {
 	                                last = x;
-	                                _logger.fine("failure in creating object: " + x.getClass());
+                                    _logger.fine("failure in creating " + info.name + ": probing for other constructors");
 	                            }
 	                        }
 	
@@ -565,9 +573,9 @@ _logger.fine("endElement " + element);
             }
         }
         _chars.setLength(0);
-        _logger.fine("<<ElementInfo: " + element.type.getName() + " in " + element);
-        _logger.fine("    @as is " + element.inst.get("@as"));
-        _logger.fine("    @id is " + element.inst.get("@id"));
+        _logger.fine("<<ElementInfo: " + element.type.getName() + " in " + element +
+                   "\n    @as is " + element.inst.get("@as") +
+                   "\n    @id is " + element.inst.get("@id"));
 
         if (List.class.isAssignableFrom(element.data.getClass()) && element.name.endsWith("...")) {
         	List<?> list = (List<?>)element.data;
@@ -587,7 +595,12 @@ _logger.fine("endElement " + element);
             ElementInfo parent = _stack.get(_stack.size()-1);
             _logger.fine("Parent is " + parent.data.getClass().getName());
             try {
-                injectProperty(parent.data, element.type, element.data, element.inst.get("@as"), element.args.complete());
+                String as = element.inst.get("@as");
+                if (as != null) {
+                    injectProperty(parent.data, element.type, element.data, Strings.toCamelCase(as, '-', false), element.args.complete());
+                } else {
+                    injectProperty(parent.data, element.type, element.data, null, element.args.complete());
+                }
             } catch (Exception x) {
 				if (!_lenient) {
 					throw new BeanAssemblyException("Failed to set value " + element.data + " to parent " + parent.data, x);
@@ -645,9 +658,9 @@ _logger.fine("endElement " + element);
                         } else {
                             element.args.add(guessUntypedValue(name, matcher.group(2)));
                         }
-                        _logger.fine("Processing Instruction for " + element.data.getClass());
-                        _logger.fine("\ttarget = " + target);
-                        _logger.fine("\t" + name + "=" + matcher.group(2));
+                        _logger.fine("Processing Instruction for " + element.data.getClass() +
+                                   "\n\ttarget = " + target +
+                                   "\n\t" + name + "=" + matcher.group(2));
                     }
                 }
             }
