@@ -54,7 +54,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 
     private static final String VALIDATION_DIC = "validation-dictionary.xml";
     private static final String SERVICE_CONFIG = "service-configuration.xml";
-    private static final String STORAGE_CONFIG = "storage-configuration.xml";
+    private static final String STORAGE_PREFIX = "storage-"; // still a special case as it depends on the Persistence bean
     private static final String XILLIUM_PREFIX = "xillium-";
 
     private static final Pattern URI_REGEX = Pattern.compile("/[^/?]+/([^/?]+/[^/?]+)"); // '/context/module/service'
@@ -395,7 +395,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                                 } else {
                                     loadServiceModule(wac, domain, module.name, new ByteArrayInputStream(Arrays.read(jis)), descs, plcas);
                                 }
-                            } else if (STORAGE_CONFIG.equals(name) && _persistence != null) {
+                            } else if (_persistence != null && name.startsWith(STORAGE_PREFIX) && name.endsWith(".xml")) {
                                 _logger.info("StorageConfiguration:" + module.path + ":" + name);
                                 assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
                             } else if (VALIDATION_DIC.equals(name)) {
