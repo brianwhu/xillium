@@ -37,13 +37,13 @@ public class RemoteService {
     }
 
     /**
-     * Calls a remote service with values in the given DataObject as arguments.
+     * Calls a remote service with non-static member values in the given DataObject as arguments.
      */
     public static Response call(String server, String service, DataObject data) {
         List<String> params = new ArrayList<String>();
         for (Field field: data.getClass().getFields()) {
+            if (Modifier.isStatic(field.getModifiers())) continue;
             field.setAccessible(true);
-            if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) continue;
             try {
                 Object value = field.get(data);
                 if (value == null) value = "";
