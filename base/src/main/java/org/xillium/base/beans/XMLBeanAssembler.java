@@ -97,26 +97,33 @@ public class XMLBeanAssembler extends DefaultHandler {
                     Object object = Class.forName(value.substring(5, dot)).getField(value.substring(dot+1)).get(null);
                     Class<?> type = object.getClass();
                     list.add(new TypedValue(type, object));
-                    if ((type = Beans.toPrimitive(type)) != null) {
-                        list.add(new TypedValue(type, object));
-                        // automatic casting to larger types
-                        if (type == Byte.class || type == Byte.TYPE) {
-                            list.add(new TypedValue(Short.class, object));
-                            list.add(new TypedValue(Short.TYPE, object));
-                            type = Short.class;
-                        }
-                        if (type == Short.class || type == Short.TYPE) {
-                            list.add(new TypedValue(Integer.class, object));
-                            list.add(new TypedValue(Integer.TYPE, object));
-                            type = Integer.class;
-                        }
-                        if (type == Integer.class || type == Integer.TYPE) {
-                            list.add(new TypedValue(Long.class, object));
-                            list.add(new TypedValue(Long.TYPE, object));
-                        }
+                    // automatic upscaling to larger types
+                    if (type == Byte.class) {
+                        object = new Short(((Byte)object).byteValue());
+                        list.add(new TypedValue(Short.class, object));
+                        type = Short.class;
+                    }
+                    if (type == Short.class) {
+                        object = new Integer(((Short)object).shortValue());
+                        list.add(new TypedValue(Integer.class, object));
+                        type = Integer.class;
+                    }
+                    if (type == Integer.class) {
+                        object = new Long(((Integer)object).intValue());
+                        list.add(new TypedValue(Long.class, object));
+                        type = Long.class;
+                    }
+                    if (type == Long.class) {
+                        object = new Float(((Long)object).longValue());
+                        list.add(new TypedValue(Float.class, object));
+                        type = Float.class;
+                    }
+                    if (type == Float.class) {
+                        object = new Double(((Float)object).floatValue());
+                        list.add(new TypedValue(Double.class, object));
                     }
                 } catch (Exception x) {
-                    _logger.fine(value + " looked like a static reference but is not");
+                    _logger.fine(value + " looked like a static reference but is not: " + x.getMessage());
                     // class reference?
                     guessClassReference(list, value.substring(5));
                 }
@@ -126,38 +133,27 @@ public class XMLBeanAssembler extends DefaultHandler {
             }
         } else if (value.equals("true")) {
             list.add(new TypedValue(Boolean.class, Boolean.TRUE));
-            list.add(new TypedValue(Boolean.TYPE, Boolean.TRUE));
         } else if (value.equals("false")) {
             list.add(new TypedValue(Boolean.class, Boolean.FALSE));
-            list.add(new TypedValue(Boolean.TYPE, Boolean.FALSE));
         } else {
             // numbers? multiple possibilities
             try {
-                Integer i = Integer.valueOf(value);
-                list.add(new TypedValue(Integer.class, i));
-                list.add(new TypedValue(Integer.TYPE, i));
+                list.add(new TypedValue(Integer.class, Integer.valueOf(value)));
             } catch (Exception x) {}
             try {
-                Long l = Long.valueOf(value);
-                list.add(new TypedValue(Long.class, l));
-                list.add(new TypedValue(Long.TYPE, l));
+                list.add(new TypedValue(Long.class, Long.valueOf(value)));
             } catch (Exception x) {}
             try {
-                Float f = Float.valueOf(value);
-                list.add(new TypedValue(Float.class, f));
-                list.add(new TypedValue(Float.TYPE, f));
+                list.add(new TypedValue(Float.class, Float.valueOf(value)));
             } catch (Exception x) {}
             try {
-                Double d = Double.valueOf(value);
-                list.add(new TypedValue(Double.class, d));
-                list.add(new TypedValue(Double.TYPE, d));
+                list.add(new TypedValue(Double.class, Double.valueOf(value)));
             } catch (Exception x) {}
         }
 
         // always try String as the last resort
         list.add(new TypedValue(String.class, value));
 
-_logger.fine("guessUntypedValue: number of possibilities " + list.size());
         return list;
     }
 
@@ -175,7 +171,7 @@ _logger.fine("guessUntypedValue: number of possibilities " + list.size());
 
     private String args(Object... property) {
         StringBuilder sb = new StringBuilder("(");
-        for (int i = 0; i < property.length; ++i) sb.append(property[i].getClass().getName()).append(':').append(property[i]);
+        for (int i = 0; i < property.length; ++i) sb.append(property[i].getClass().getName()).append(':').append(property[i]).append(' ');
         return sb.append(')').toString();
     }
 
@@ -274,6 +270,10 @@ _logger.fine("guessUntypedValue: number of possibilities " + list.size());
             type = t;
             data = v;
         }
+
+        public String toString() {
+            return "type="+type.getSimpleName()+",data="+data.getClass().getSimpleName()+':'+data;
+        }
     }
 
     @SuppressWarnings("serial")
@@ -335,17 +335,25 @@ _logger.fine("guessUntypedValue: number of possibilities " + list.size());
                     return false;
                 }
 
-//System.err.print("\t TypedValueGroup.load[");
+//System.err.print("\t TypedValueGroup.load{");
                 for (int i = 0; i < _values.size(); ++i) {
                     props[i+offset] = _values.get(i).get(_index[i]).data;
-//System.err.print(" .." + _index[i]);
+//System.err.print("[" + _index[i] + "](" + props[i+offset].getClass().getSimpleName() + ')');
                 }
-//System.err.println("]");
+//System.err.println("}");
                 ++_index[_values.size() - 1];
                 return true;
             } else {
                 return false;
             }
+        }
+
+        public String toString() {
+            StringBuilder sb = new StringBuilder(this.getClass().getSimpleName()).append('{');
+            for (TypedValues typed: _values) {
+                sb.append(typed);
+            }
+            return sb.append('}').toString();
         }
     }
 
@@ -484,6 +492,7 @@ _logger.fine("guessUntypedValue: number of possibilities " + list.size());
 	                    }
 	                }
 	                arguments.complete();
+                    _logger.fine(S.fine(_logger) ? "arguments=" + arguments : null);
 	
 	                if (arguments.size() > 0) {
 	                    if (arguments.size() == 1 && info.jpkg.equals("java.lang")) {
@@ -495,7 +504,7 @@ _logger.fine("guessUntypedValue: number of possibilities " + list.size());
 	                        Object[] args = new Object[arguments.size()];
 	                        while (arguments.load(args, 0)) {
 	                            try {
-	                                _logger.fine("to create " + info.name + " with args: " + args.length);
+	                                _logger.fine(S.fine(_logger) ? "to create " + info.name + " with args: " + args.length + args(args) : null);
 	                                info.data = _factory.create(info.name, args);
 	                                info.type = info.data.getClass();
 	                                break;
