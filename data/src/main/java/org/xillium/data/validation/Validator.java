@@ -44,7 +44,7 @@ public class Validator {
         type = Beans.boxPrimitive(type);
 
         try {
-            _valueOf = type == String.class ? null : type.getMethod("valueOf", String.class);
+            _valueOf = type == String.class ? null : getValueOf(type);
             if (_valueOf == null || (Modifier.isStatic(_valueOf.getModifiers()) && _valueOf.getReturnType() == type)) {
                 try {
                     ranges s = field.getAnnotation(ranges.class);
@@ -200,6 +200,14 @@ public class Validator {
             return values;
         } else {
             return text;
+        }
+    }
+
+    private final Method getValueOf(Class<?> type) throws NoSuchMethodException {
+        try {
+            return type.getMethod("valueOf", String.class);
+        } catch (NoSuchMethodException x) {
+            return type.getMethod("valueOf", type, String.class);
         }
     }
 
