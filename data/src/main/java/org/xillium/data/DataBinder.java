@@ -60,8 +60,13 @@ public class DataBinder extends HashMap<String, String> implements ParametricQue
                 ResultSetMetaData meta = rset.getMetaData();
                 int width = meta.getColumnCount();
                 for (int i = 1; i <= width; ++i) {
-                    put(Strings.toLowerCamelCase(meta.getColumnName(i), '_'), rset.getObject(i).toString());
+                    Object value = rset.getObject(i);
+                    if (value != null) {
+                        put(Strings.toLowerCamelCase(meta.getColumnName(i), '_'), value.toString());
+                    }
                 }
+            } else {
+                throw new NoSuchElementException("NoSuchRow");
             }
             return this;
         } finally {
