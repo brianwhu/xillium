@@ -13,7 +13,8 @@ public class Beans {
      * Tests whether a non-primitive type is directly displayable.
      */
     public static boolean isDisplayable(Class<?> type) {
-        return type == java.net.URL.class || type == java.io.File.class
+        return Enum.class.isAssignableFrom(type)
+            || type == java.net.URL.class || type == java.io.File.class
             || java.math.BigInteger.class.isAssignableFrom(type)
             || java.math.BigDecimal.class.isAssignableFrom(type)
             || java.util.Date.class.isAssignableFrom(type)

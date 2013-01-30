@@ -17,13 +17,14 @@ public class DataUtil {
         }
     }
 
-    public static void loadFromProperties(DataBinder binder, String filename) throws Exception {
+    public static void loadFromProperties(DataBinder binder, InputStream stream) throws Exception {
         Properties props = new Properties();
-        props.load(new FileReader(filename));
+        props.load(stream);
         Enumeration<?> enumeration = props.propertyNames();
         while (enumeration.hasMoreElements()) {
             String key = (String)enumeration.nextElement();
             binder.put(key, props.getProperty(key));
         }
+        stream.close();
     }
 }

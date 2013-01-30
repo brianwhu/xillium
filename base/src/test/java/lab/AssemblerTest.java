@@ -28,4 +28,9 @@ public class AssemblerTest {
             frame.setVisible(true);
         }
     }
+
+    @Test(groups={"upscale"})
+    public void testUpScale() throws Exception {
+        System.out.println("Dimension = " + new XMLBeanAssembler(new DefaultObjectFactory()).build("src/test/java/lab/upscale.xml"));
+    }
 }

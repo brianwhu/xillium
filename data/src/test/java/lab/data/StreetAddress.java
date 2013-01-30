@@ -4,6 +4,12 @@ import org.xillium.data.*;
 import org.xillium.data.validation.*;
 
 public class StreetAddress implements DataObject {
+    public static enum State {
+        CA,
+        AL,
+        FL
+    }
+
     @required
     public String streetAddress1;
 
@@ -13,7 +19,7 @@ public class StreetAddress implements DataObject {
     public String city;
 
     @required
-    public String state;
+    public State state;
 
     @required
     @pattern("[\\d]{5}")
