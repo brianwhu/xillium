@@ -24,6 +24,7 @@ public class ValidationTest {
         //Dictionary dictionary = (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory(), Trace.g.std).build("lab/validation/dictionary.xml");
         Dictionary dictionary = (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory()).build(getClass().getResourceAsStream("/validation/dictionary.xml"));
         System.err.println("Dictionary = " + Beans.toString(dictionary));
+        System.err.println("SubmitPurchaseOrderData = " + DataObject.Util.describe(lab.data.validation.SubmitPurchaseOrderData.class));
 
         DataBinder binder = new DataBinder();
         DataUtil.loadFromProperties(binder, getClass().getResourceAsStream("/validation/SubmitPurchaseOrderData.properties"));

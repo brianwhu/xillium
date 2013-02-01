@@ -42,7 +42,8 @@ public interface DataObject {
                 if (DataObject.class.isAssignableFrom(ftype)) {
                     print(sb, name, (Class<? extends DataObject>)ftype);
                 } else {
-                    sb.append("{\"name\":\"").append(name).append("\",\"type\":\"").append(ftype.getName()).append('"');
+                    String typename = Enum.class.isAssignableFrom(ftype) ? "java.lang.String" : ftype.getName();
+                    sb.append("{\"name\":\"").append(name).append("\",\"type\":\"").append(typename).append('"');
                     subtype t = field.getAnnotation(subtype.class);
                     if (t != null) {
                         sb.append(",\"specialization\":\"").append(t.value()).append('"');
@@ -76,6 +77,11 @@ public interface DataObject {
                     if (v != null) {
                         sb.append(",\"values\":\"(");
                         for (String value: v.value()) sb.append(value).append(',');
+                        sb.deleteCharAt(sb.length()-1);
+                        sb.append(")\"");
+                    } else if (Enum.class.isAssignableFrom(ftype)) {
+                        sb.append(",\"values\":\"(");
+                        for (Enum<?> value: ((Class<Enum<?>>)ftype).getEnumConstants()) sb.append(value).append(',');
                         sb.deleteCharAt(sb.length()-1);
                         sb.append(")\"");
                     }
