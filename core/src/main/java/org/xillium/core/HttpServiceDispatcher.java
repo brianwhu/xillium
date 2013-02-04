@@ -12,7 +12,7 @@ import javax.servlet.http.*;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
-import org.springframework.beans.factory.config.BeanDefinition;
+//import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.context.ApplicationContext;
@@ -449,21 +449,20 @@ public class HttpServiceDispatcher extends HttpServlet {
         for (String id: gac.getBeanNamesForType(Service.class)) {
             String fullname = name + '/' + id;
 
-            BeanDefinition def = gac.getBeanDefinition(id);
             try {
-                Class<?> request = Class.forName(def.getBeanClassName()+"$Request");
-                if (DataObject.class.isAssignableFrom(request)) {
-                    _logger.info("Service '" + fullname + "' request description captured: " + request.getName());
-                    desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
-                } else {
-                    _logger.warning("Service '" + fullname + "' defines a Request type that is not a DataObject");
-                    desc.put(fullname, "json:{}");
-                }
-            } catch (ClassNotFoundException x) {
+                Class<? extends DataObject> request = ((DynamicService)gac.getBean(id)).getRequestType();
+                _logger.info("Service '" + fullname + "' request description captured: " + request.getName());
+                desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
+            } catch (ClassCastException x) {
                 try {
-                    Class<? extends DataObject> request = ((DynamicService)gac.getBean(id)).getRequestType();
-                    _logger.info("Service '" + fullname + "' request description captured: " + request.getName());
-                    desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
+                    Class<?> request = Class.forName(gac.getBeanDefinition(id).getBeanClassName()+"$Request");
+                    if (DataObject.class.isAssignableFrom(request)) {
+                        _logger.info("Service '" + fullname + "' request description captured: " + request.getName());
+                        desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
+                    } else {
+                        _logger.warning("Service '" + fullname + "' defines a Request type that is not a DataObject");
+                        desc.put(fullname, "json:{}");
+                    }
                 } catch (Exception t) {
                     _logger.warning("Service '" + fullname + "' does not expose its request structure" + t.getClass());
                     desc.put(fullname, "json:{}");
