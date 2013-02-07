@@ -253,7 +253,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                 message = "***"+Throwables.getRootCause(x).getClass().getSimpleName();
             }
             binder.put(Service.FAILURE_MESSAGE, message);
-            _logger.warning("Exception caught in dispatcher: " + message);
+            _logger.warning("Exception caught in dispatcher (" + id + "): " + message);
 
             _logger.log(Level.INFO, "Exception stack trace:", x);
             CharArrayWriter sw = new CharArrayWriter();
