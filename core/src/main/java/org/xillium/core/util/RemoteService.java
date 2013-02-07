@@ -74,6 +74,7 @@ public class RemoteService {
             URL url = new URL(server + '/' + service);
             URLConnection connection = url.openConnection();
             connection.setDoOutput(true);
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
             PrintWriter pw = new PrintWriter(connection.getOutputStream());
             for (String param: params) {
                 _logger.fine(param);
