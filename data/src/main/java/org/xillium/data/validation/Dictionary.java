@@ -78,8 +78,7 @@ public class Dictionary {
         return collect(data, binder, null);
     }
 
-    private final <T extends DataObject> T collect(T data, DataBinder binder, String prefix)
-    throws SecurityException, DataValidationException {
+    private final <T extends DataObject> T collect(T data, DataBinder binder, String prefix) throws SecurityException, DataValidationException {
         int present = 0;
         String absent = null;
 
@@ -180,7 +179,6 @@ public class Dictionary {
         }
 
         // EmptyDataObjectException should never be thrown for the top-level object (where prefix == null)
-System.err.println("prefix:"+prefix+",present:"+present+",absent:"+absent);
         if (present == 0 && prefix != null) {
             throw new EmptyDataObjectException(prefix);
         } else if (prefix == null && absent != null) {

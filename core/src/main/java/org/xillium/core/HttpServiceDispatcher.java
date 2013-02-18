@@ -61,10 +61,23 @@ public class HttpServiceDispatcher extends HttpServlet {
     private static final File TEMPORARY = null;
     private static final Logger _logger = Logger.getLogger(HttpServiceDispatcher.class.getName());
 
+    private static class PlatformLifeCycleAwareDef {
+        PlatformLifeCycleAware bean;
+        String module;
+
+        PlatformLifeCycleAwareDef(PlatformLifeCycleAware b, String m) {
+            bean = b;
+            module = m;
+        }
+    }
+
     private final Stack<ObjectName> _manageables = new Stack<ObjectName>();
-    private final Stack<List<PlatformLifeCycleAware>> _plca = new Stack<List<PlatformLifeCycleAware>>();
+    private final Stack<List<PlatformLifeCycleAwareDef>> _plca = new Stack<List<PlatformLifeCycleAwareDef>>();
     private final Map<String, Service> _services = new HashMap<String, Service>();
     private final org.xillium.data.validation.Dictionary _dict = new org.xillium.data.validation.Dictionary();
+
+    // Servlet context path without the leading '/'
+    private String _application;
 
     // Wired in spring application context
     private Persistence _persistence;
@@ -78,6 +91,10 @@ public class HttpServiceDispatcher extends HttpServlet {
      * Initializes the servlet, loading and initializing xillium modules.
      */
     public void init() throws ServletException {
+        ServletContext context = getServletContext();
+        _application = context.getContextPath();
+        if (_application.charAt(0) == '/') _application = _application.substring(1);
+
         ApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
         _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
         if (wac.containsBean("persistence")) { // persistence may not be there if persistent storage is not required
@@ -93,19 +110,19 @@ public class HttpServiceDispatcher extends HttpServlet {
         wac = scanServiceModules(sorted.specials(), wac, descriptions, null);
 
         // scan regular modules, collecting all PlatformLifeCycleAware objects
-        List<PlatformLifeCycleAware> plcas = new ArrayList<PlatformLifeCycleAware>();
+        List<PlatformLifeCycleAwareDef> plcas = new ArrayList<PlatformLifeCycleAwareDef>();
         scanServiceModules(sorted.regulars(), wac, descriptions, plcas);
 
         _logger.info("configure PlatformLifeCycleAware objects in regular modules");
-        for (PlatformLifeCycleAware plca: plcas) {
-            _logger.info("Configuring REGULAR PlatformLifeCycleAware " + plca.getClass().getName());
-            plca.configure();
+        for (PlatformLifeCycleAwareDef plca: plcas) {
+            _logger.info("Configuring REGULAR PlatformLifeCycleAware " + plca.bean.getClass().getName());
+            plca.bean.configure(_application, plca.module);
         }
 
         _logger.info("initialize PlatformLifeCycleAware objects in regular modules");
-        for (PlatformLifeCycleAware plca: plcas) {
-            _logger.info("Initalizing REGULAR PlatformLifeCycleAware " + plca.getClass().getName());
-            plca.initialize();
+        for (PlatformLifeCycleAwareDef plca: plcas) {
+            _logger.info("Initalizing REGULAR PlatformLifeCycleAware " + plca.bean.getClass().getName());
+            plca.bean.initialize(_application, plca.module);
         }
 
         _plca.push(plcas);
@@ -127,10 +144,10 @@ public class HttpServiceDispatcher extends HttpServlet {
             }
         }
         while (!_plca.empty()) {
-            List<PlatformLifeCycleAware> plcas = _plca.pop();
+            List<PlatformLifeCycleAwareDef> plcas = _plca.pop();
             // terminate PlatformLifeCycleAware objects in this level
-            for (PlatformLifeCycleAware plca: plcas) {
-                plca.terminate();
+            for (PlatformLifeCycleAwareDef plca: plcas) {
+                plca.bean.terminate(_application, plca.module);
             }
         }
 
@@ -360,12 +377,12 @@ public class HttpServiceDispatcher extends HttpServlet {
         return sorter.sort();
     }
 
-    private ApplicationContext scanServiceModules(Iterator<ModuleSorter.Entry> it, ApplicationContext wac, Map<String, String> descs, List<PlatformLifeCycleAware> plcas) throws ServletException {
+    private ApplicationContext scanServiceModules(Iterator<ModuleSorter.Entry> it, ApplicationContext wac, Map<String, String> descs, List<PlatformLifeCycleAwareDef> plcas) throws ServletException {
         ServletContext context = getServletContext();
 
         boolean isSpecial = plcas == null;
         if (isSpecial) {
-            plcas = new ArrayList<PlatformLifeCycleAware>();
+            plcas = new ArrayList<PlatformLifeCycleAwareDef>();
         }
 
         try {
@@ -384,25 +401,25 @@ public class HttpServiceDispatcher extends HttpServlet {
                         }
                         JarEntry entry;
                         while ((entry = jis.getNextJarEntry()) != null) {
-                            String name = entry.getName();
-                            if (name == null) continue;
+                            String jarname = entry.getName();
+                            if (jarname == null) continue;
 
-                            if (SERVICE_CONFIG.equals(name)) {
-                                _logger.info("ServiceConfiguration:" + module.path + ":" + name);
+                            if (SERVICE_CONFIG.equals(jarname)) {
+                                _logger.info("ServiceConfiguration:" + module.path + ":" + jarname);
                                 if (isSpecial) {
                                     wac =
                                     loadServiceModule(wac, domain, module.name, new ByteArrayInputStream(Arrays.read(jis)), descs, plcas);
                                 } else {
                                     loadServiceModule(wac, domain, module.name, new ByteArrayInputStream(Arrays.read(jis)), descs, plcas);
                                 }
-                            } else if (_persistence != null && name.startsWith(STORAGE_PREFIX) && name.endsWith(".xml")) {
-                                _logger.info("StorageConfiguration:" + module.path + ":" + name);
+                            } else if (_persistence != null && jarname.startsWith(STORAGE_PREFIX) && jarname.endsWith(".xml")) {
+                                _logger.info("StorageConfiguration:" + module.path + ":" + jarname);
                                 assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
-                            } else if (VALIDATION_DIC.equals(name)) {
-                                _logger.info("ValidationDictionary:" + module.path + ":" + name);
+                            } else if (VALIDATION_DIC.equals(jarname)) {
+                                _logger.info("ValidationDictionary:" + module.path + ":" + jarname);
                                 assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
-                            } else if (name.startsWith(XILLIUM_PREFIX) && name.endsWith(".xml")) {
-                                _logger.info("ApplicationResources:" + module.path + ":" + name);
+                            } else if (jarname.startsWith(XILLIUM_PREFIX) && jarname.endsWith(".xml")) {
+                                _logger.info("ApplicationResources:" + module.path + ":" + jarname);
                                 assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
                             }
                         }
@@ -410,18 +427,18 @@ public class HttpServiceDispatcher extends HttpServlet {
                         jis.close();
                     }
                     if (isSpecial) {
-                        for (PlatformLifeCycleAware plca: plcas) {
-                            _logger.info("Configuring SPECIAL PlatformLifeCycleAware " + plca.getClass().getName());
-                            plca.configure();
+                        for (PlatformLifeCycleAwareDef plca: plcas) {
+                            _logger.info("Configuring SPECIAL PlatformLifeCycleAware " + plca.bean.getClass().getName());
+                            plca.bean.configure(_application, module.name);
                         }
 
-                        for (PlatformLifeCycleAware plca: plcas) {
-                            _logger.info("Initalizing SPECIAL PlatformLifeCycleAware " + plca.getClass().getName());
-                            plca.initialize();
+                        for (PlatformLifeCycleAwareDef plca: plcas) {
+                            _logger.info("Initalizing SPECIAL PlatformLifeCycleAware " + plca.bean.getClass().getName());
+                            plca.bean.initialize(_application, module.name);
                         }
                         //plcas.clear();
                         _plca.push(plcas);
-                        plcas = new ArrayList<PlatformLifeCycleAware>();
+                        plcas = new ArrayList<PlatformLifeCycleAwareDef>();
                     }
                 } catch (IOException x) {
                     // ignore this jar
@@ -437,7 +454,7 @@ public class HttpServiceDispatcher extends HttpServlet {
     }
 
     @SuppressWarnings("unchecked")
-    private ApplicationContext loadServiceModule(ApplicationContext wac, String domain, String name, InputStream stream, Map<String, String> desc, List<PlatformLifeCycleAware> plcas) {
+    private ApplicationContext loadServiceModule(ApplicationContext wac, String domain, String name, InputStream stream, Map<String, String> desc, List<PlatformLifeCycleAwareDef> plcas) {
         GenericApplicationContext gac = new GenericApplicationContext(wac);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
@@ -474,7 +491,7 @@ public class HttpServiceDispatcher extends HttpServlet {
         }
 
         for (String id: gac.getBeanNamesForType(PlatformLifeCycleAware.class)) {
-            plcas.add((PlatformLifeCycleAware)gac.getBean(id));
+            plcas.add(new PlatformLifeCycleAwareDef((PlatformLifeCycleAware)gac.getBean(id), name));
         }
 
         // Manageable object registration: objects are registered under "bean-id/context-path"
