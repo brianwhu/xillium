@@ -11,6 +11,7 @@ import org.xillium.data.DataBinder;
 import org.xillium.data.CachedResultSet;
 import org.xillium.core.Service;
 import org.xillium.core.ServiceException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -84,16 +85,21 @@ public class RemoteService {
             InputStream in = connection.getInputStream();
             try {
                 byte[] bytes = Arrays.read(in);
-                Response response = _mapper.readValue(bytes, Response.class).setResponseBody(bytes);
-                if (response.params != null) {
-                    String message = (String)response.params.get(Service.FAILURE_MESSAGE);
-                    if (message != null) {
-                        throw new ServiceException(message);
+                try {
+                    Response response = _mapper.readValue(bytes, Response.class).setResponseBody(bytes);
+                    if (response.params != null) {
+                        String message = (String)response.params.get(Service.FAILURE_MESSAGE);
+                        if (message != null) {
+                            throw new ServiceException(message);
+                        }
+                    } else {
+                        throw new ServiceException("***ProtocolErrorMissingParams");
                     }
-                } else {
-                    throw new ServiceException("***ProtocolErrorMissingParams");
+                    return response;
+                } catch (JsonProcessingException x) {
+                    _logger.log(Level.WARNING, new String(bytes, "UTF-8"));
+                    throw x;
                 }
-                return response;
             } finally {
                 in.close();
             }
