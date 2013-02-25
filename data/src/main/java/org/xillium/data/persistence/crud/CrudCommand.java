@@ -230,7 +230,8 @@ public class CrudCommand {
     /*SQL*/             vals.append(tablenames[i]).append('.').append(column).append('=');
     /*SQL*/             String restriction = action.restriction == null ? null : action.restriction.get(column);
     /*SQL*/             if (restriction == null) {
-    /*SQL*/                 vals.append('?');
+    /*SQL*/                 //vals.append('?');
+    /*SQL*/                 vals.append("COALESCE(?,").append(tablenames[i]).append('.').append(column).append(')');
     /*SQL*/                 if (flds.length() > 0) flds.append(',');
                             flds.append(Strings.toLowerCamelCase(column, '_')).append(':').append(rsmeta.getColumnType(idx.intValue()));
                         } else {
@@ -320,7 +321,7 @@ public class CrudCommand {
 				AnnotationsAttribute attr = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
 
 				if (columns.getInt(IS_NULLABLE) == DatabaseMetaData.attributeNoNulls) {
-					if (action.op != Operation.UPDATE || primaryKeys.contains(name)) {
+					if ((action.op != Operation.UPDATE && action.op != Operation.SEARCH) || primaryKeys.contains(name)) {
 						addAnnotation(attr, cp, "org.xillium.data.validation.required");
 					}
 				}
