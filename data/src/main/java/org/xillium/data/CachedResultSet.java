@@ -76,13 +76,23 @@ public class CachedResultSet {
      * Retrieves the rows from a collection of Objects.
      */
     public <T> CachedResultSet(Collection<T> collection) throws Exception {
-        //Field[] fields = null;
+        this(collection, false);
+    }
+
+    /**
+     * Retrieves the rows from a collection of Objects, performing presentation transformations if any is defined on the objects.
+     */
+    public <T> CachedResultSet(Collection<T> collection, boolean forPresentation) throws Exception {
         FieldRetriever[] retrievers = null;
 
         this.rows = new ArrayList<Object[]>();
         for (T object: collection) {
             if (retrievers == null) {
-                retrievers = FieldFormatter.getFieldRetriever(Beans.getKnownFields(object.getClass()));
+                if (forPresentation) {
+                    retrievers = FieldFormatter.getFieldRetriever(Beans.getKnownFields(object.getClass()));
+                } else {
+                    retrievers = FieldRetriever.getFieldRetriever(Beans.getKnownFields(object.getClass()));
+                }
             }
             Object[] row = new Object[retrievers.length];
             for (int i = 0; i < retrievers.length; ++i) {
