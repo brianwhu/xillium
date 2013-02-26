@@ -89,9 +89,9 @@ public class CachedResultSet {
         for (T object: collection) {
             if (retrievers == null) {
                 if (forPresentation) {
-                    retrievers = FieldFormatter.getFieldRetriever(Beans.getKnownFields(object.getClass()));
+                    retrievers = FieldFormatter.getFieldRetriever(Beans.getKnownInstanceFields(object.getClass()));
                 } else {
-                    retrievers = FieldRetriever.getFieldRetriever(Beans.getKnownFields(object.getClass()));
+                    retrievers = FieldRetriever.getFieldRetriever(Beans.getKnownInstanceFields(object.getClass()));
                 }
             }
             Object[] row = new Object[retrievers.length];

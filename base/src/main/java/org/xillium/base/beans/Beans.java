@@ -155,6 +155,22 @@ public class Beans {
     }
 
     /**
+     * Returns all known fields in the given class and all its super classes.
+     */
+    public static Field[] getKnownInstanceFields(Class<?> type) throws SecurityException {
+        List<Field> fields = new ArrayList<Field>();
+        while (type != null) {
+            for (Field field: type.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers())) continue;
+                field.setAccessible(true);
+                fields.add(field);
+            }
+            type = type.getSuperclass();
+        }
+        return fields.toArray(new Field[fields.size()]);
+    }
+
+    /**
      * Creates an instance of a given type by choosing the best constructor that matches the given list of arguments.
      */
     public static Object create(Class<?> type, Object... args) throws
