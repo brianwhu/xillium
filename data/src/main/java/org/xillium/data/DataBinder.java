@@ -1,8 +1,10 @@
 package org.xillium.data;
 
+import java.lang.reflect.Field;
 import java.io.*;
 import java.util.*;
 import java.sql.*;
+import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.Strings;
 import org.xillium.data.persistence.ParametricQuery;
 
@@ -72,6 +74,19 @@ public class DataBinder extends HashMap<String, String> implements ParametricQue
         } finally {
             rset.close();
         }
+    }
+
+    /**
+     * Fills the data binder with non-static, non-transient fields of an Object.
+     */
+    public DataBinder put(Object object) throws Exception {
+        for (Field field: Beans.getKnownInstanceFields(object.getClass())) {
+            Object value = field.get(object);
+            if (value != null) {
+                put(field.getName(), value.toString());
+            }
+        }
+        return this;
     }
 
     /**
