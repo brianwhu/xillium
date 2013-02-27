@@ -115,6 +115,19 @@ public class Persistence {
     }
 
     /**
+     * Executes a SELECT statement and returns the result set as a list of objects, with explicit type specification
+     */
+    public <T extends DataObject> List<T> getResults(String name, DataObject object, Class<T> type) throws Exception {
+        @SuppressWarnings("unchecked")
+        ObjectMappedQuery<T> statement = (ObjectMappedQuery<T>)_statements.get(name);
+        if (statement != null) {
+            return statement.getResults(DataSourceUtils.getConnection(_dataSource), object);
+        } else {
+            throw new RuntimeException("ObjectMappedQuery '" + name + "' not found");
+        }
+    }
+
+    /**
      * Executes a SELECT statement and returns the result set as a list of objects
      */
     public <T extends DataObject> T getObject(String name, DataObject object) throws Exception {
