@@ -326,14 +326,9 @@ public class CrudCommand {
 					}
 				}
 
-				switch (rsmeta.getColumnType(idx)) {
-				case Types.CHAR:
-				case Types.VARCHAR:
-					addAnnotation(attr, cp, "org.xillium.data.validation.size", "value", new IntegerMemberValue(cp, columns.getInt(COLUMN_SIZE)));
-					break;
-				default:
-					break;
-				}
+                if (rsmeta.getPrecision(idx) != 0) {
+                    addAnnotation(attr, cp, "org.xillium.data.validation.size", "value", new IntegerMemberValue(cp, rsmeta.getPrecision(idx)));
+                }
 
 				field.getFieldInfo().addAttribute(attr);
 				cc.addField(field);
