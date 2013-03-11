@@ -9,5 +9,8 @@ package org.xillium.data;
  * An object collector.
  */
 public interface Collector<T> {
+    /**
+     * returns false to stop data collection.
+     */
     public boolean add(T object);
 }

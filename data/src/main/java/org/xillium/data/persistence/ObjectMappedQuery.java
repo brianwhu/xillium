@@ -53,66 +53,13 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                     }
                 }
 
-                //List<T> rows = new ArrayList<T>();
                 while (rs.next()) {
                     T object = _type.newInstance();
                     for (Column2Field c2f: _c2fs) {
                         setValue(object, c2f.field, rs.getObject(c2f.index));
-/*
-                        c2f.field.setAccessible(true);
-                        Object value = rs.getObject(c2f.index);
-                        if (value == null) {
-                            if (c2f.field.getType().isAssignableFrom(Number.class)) {
-                                value = BigDecimal.ZERO;
-                            } else continue;
-                        }
-                        try {
-                            c2f.field.set(object, value);
-                        } catch (IllegalArgumentException x) {
-                            @SuppressWarnings("rawtypes")
-                            Class ftype = c2f.field.getType();
-                            if (value instanceof Number) {
-                                // size of "value" bigger than that of "field"?
-                                try {
-                                    Number number = (Number)value;
-                                    if (Double.TYPE == ftype || Double.class.isAssignableFrom(ftype)) {
-                                        c2f.field.set(object, number.doubleValue());
-                                    } else if (Float.TYPE == ftype || Float.class.isAssignableFrom(ftype)) {
-                                        c2f.field.set(object, number.floatValue());
-                                    } else if (Long.TYPE == ftype || Long.class.isAssignableFrom(ftype)) {
-                                        c2f.field.set(object, number.longValue());
-                                    } else if (Integer.TYPE == ftype || Integer.class.isAssignableFrom(ftype)) {
-                                        c2f.field.set(object, number.intValue());
-                                    } else if (Short.TYPE == ftype || Short.class.isAssignableFrom(ftype)) {
-                                        c2f.field.set(object, number.shortValue());
-                                    } else {
-                                        c2f.field.set(object, number.byteValue());
-                                    }
-                                } catch (Throwable t) {
-                                    throw new IllegalArgumentException(t);
-                                }
-                            } else if (value instanceof java.sql.Timestamp) {
-                                try {
-                                    c2f.field.set(object, new java.sql.Date(((java.sql.Timestamp)value).getTime()));
-                                } catch (Throwable t) {
-                                    throw new IllegalArgumentException(t);
-                                }
-                            } else if ((value instanceof String) && Enum.class.isAssignableFrom(ftype)) {
-                                try {
-                                    c2f.field.set(object, Enum.valueOf(ftype, (String)value));
-                                } catch (Throwable t) {
-                                    throw new IllegalArgumentException(t);
-                                }
-                            } else {
-                                throw new IllegalArgumentException(x);
-                            }
-                        }
-*/
                     }
-                    //rows.add(object);
-                    _collector.add(object);
+                    if (!_collector.add(object)) break;
                 }
-                //return rows;
                 return _collector;
             } finally {
                 rs.close();
@@ -133,7 +80,6 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
     }
 
     private final Class<T> _type;
-    //private final ResultSetMapper _lister = new ResultSetMapper(new ListCollector<T>());
     private volatile List<Column2Field> _c2fs; // lazily initialized with double checked locking
 
     public ObjectMappedQuery(Param[] parameters, String sql, Class<T> type) throws IllegalArgumentException {
