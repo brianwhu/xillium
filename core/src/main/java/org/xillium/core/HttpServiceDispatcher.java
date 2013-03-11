@@ -248,7 +248,15 @@ public class HttpServiceDispatcher extends HttpServlet {
                 // TODO provide a default, error reporting page template
             }
 
-            // TODO: pre-service filter
+            // pre-service filter
+
+            if (service instanceof Service.Extended) {
+                _logger.fine("Invoking extended operations");
+                ((Service.Extended)service).filtrate(binder);
+            }
+
+            // authorization
+
             if (service instanceof Service.Secured) {
                 _logger.fine("Trying to authorize invocation of a secured service");
                 ((Service.Secured)service).authorize(id, binder, _persistence);

@@ -51,9 +51,17 @@ public interface Service {
 	}
 
 	/**
-	 * Interface to indicate a service that has an extra 'complete' step after the service is committed.
+	 * Interface to indicate a service that has 2 extra steps, one before and one after the main service method.
 	 */
 	public static interface Extended extends Service {
+        /**
+         * An extra 'filtrate' step that runs before the service starts.
+         */
+        public void filtrate(DataBinder parameters);
+
+        /**
+         * An extra 'complete' step that runs after the service is committed.
+         */
 		public void complete(DataBinder parameters);
 	}
 }
