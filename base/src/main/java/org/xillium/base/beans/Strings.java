@@ -147,6 +147,22 @@ public class Strings {
     }
 
     /**
+     * Collects object member values into an array of Strings, each prefixed by the field name.
+     */
+    public static String[] collect(Object object, String[] names) {
+        String[] values = new String[names.length];
+        Class<?> type = object.getClass();
+        for (int i = 0; i < values.length; ++i) {
+            try {
+                values[i] = names[i] + ':' + Beans.getKnownField(type, names[i]).get(object);
+            } catch (Exception x) {
+                values[i] = names[i] + ':';
+            }
+        }
+        return values;
+    }
+
+    /**
      * Returns a formatted string using the specified format string and object fields.
      *
      * <ol>
