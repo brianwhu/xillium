@@ -215,7 +215,7 @@ public class CrudCommand {
                         if (restriction == null) {
 	/*SQL*/         	    cols.append(column).append("=COALESCE(?,").append(column).append(')');
 	/*SQL*/                 if (flds.length() > 0) flds.append(',');
-						    flds.append(Strings.toLowerCamelCase(column, '_')).append(':').append(rsmeta.getColumnType(idx.intValue()));
+						    flds.append(fieldName(tablenames[i], column)).append(':').append(rsmeta.getColumnType(idx.intValue()));
 						    requested.add(column);
                         } else {
 	/*SQL*/         	    cols.append(column).append('=').append(restriction);
@@ -233,7 +233,7 @@ public class CrudCommand {
     /*SQL*/                 //vals.append('?');
     /*SQL*/                 vals.append("COALESCE(?,").append(tablenames[i]).append('.').append(column).append(')');
     /*SQL*/                 if (flds.length() > 0) flds.append(',');
-                            flds.append(Strings.toLowerCamelCase(column, '_')).append(':').append(rsmeta.getColumnType(idx.intValue()));
+                            flds.append(fieldName(tablenames[i], column)).append(':').append(rsmeta.getColumnType(idx.intValue()));
                         } else {
                             vals.append(restriction);
                         }
@@ -244,7 +244,7 @@ public class CrudCommand {
 
 			ResultSet columns = meta.getColumns(connection.getCatalog(), schema, tablenames[i], "%");
 			while (columns.next()) {
-				String name = columns.getString(COLUMN_NAME), fname = Strings.toLowerCamelCase(name, '_');
+				String name = columns.getString(COLUMN_NAME), fname = fieldName(tablenames[i], name);
 				int idx = colref.get(name).intValue();
 
 				if ((action.op == Operation.RETRIEVE || action.op == Operation.DELETE) && !primaryKeys.contains(name)) {
@@ -316,7 +316,7 @@ public class CrudCommand {
 					unique.add(name);
 				}
 
-				CtField field = new CtField(pool.getCtClass(sqlTypeName(rsmeta, idx)), Strings.toLowerCamelCase(name, '_'), cc);
+				CtField field = new CtField(pool.getCtClass(sqlTypeName(rsmeta, idx)), fieldName(tablenames[i], name), cc);
                 field.setModifiers(java.lang.reflect.Modifier.PUBLIC);
 				AnnotationsAttribute attr = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
 
@@ -341,18 +341,21 @@ public class CrudCommand {
 				fragments.add("org.xillium.data.persistence.ParametricStatement");
 				fragments.add(flds.toString());
 				fragments.add("INSERT INTO " + tablenames[i] + '(' + cols.toString() + ") VALUES(" + vals.toString() + ')');
+				fragments.add(Strings.toCamelCase(tablenames[i], '_'));
 				break;
 			case UPDATE:
                 if (cols.length() > 0) {
                     fragments.add("org.xillium.data.persistence.ParametricStatement");
                     fragments.add(flds.toString());
                     fragments.add("UPDATE " + tablenames[i] + " SET " + cols.toString() + " WHERE " + vals.toString());
+                    fragments.add(Strings.toCamelCase(tablenames[i], '_'));
                 }
 				break;
 			case DELETE:
 				fragments.add("org.xillium.data.persistence.ParametricStatement");
 				fragments.add(flds.toString());
 				fragments.add("DELETE FROM " + tablenames[i] + " WHERE " + vals.toString());
+				fragments.add(Strings.toCamelCase(tablenames[i], '_'));
 				break;
 			case RETRIEVE:
             case SEARCH:
@@ -364,6 +367,7 @@ public class CrudCommand {
 			fragments.add("org.xillium.data.persistence.ParametricQuery");
 			fragments.add(flds.toString());
 			fragments.add("SELECT * FROM " + cols + " WHERE " + vals);
+            fragments.add("");
 		} else if (action.op == Operation.SEARCH) {
 			fragments.add("org.xillium.data.persistence.ParametricQuery");
 			fragments.add(flds.toString());
@@ -372,6 +376,7 @@ public class CrudCommand {
             } else {
                 fragments.add("SELECT * FROM " + cols);
             }
+            fragments.add("");
         }
 
 		CtField field = new CtField(pool.getCtClass("org.xillium.data.persistence.ParametricStatement[]"), STATEMENT_FIELD_NAME, cc);
@@ -384,9 +389,10 @@ public class CrudCommand {
     }
 
 	public static ParametricStatement[] buildStatements(String[] args) throws Exception {
-		ParametricStatement[] stmts = new ParametricStatement[args.length/3];
+		ParametricStatement[] stmts = new ParametricStatement[args.length/4];
 		for (int i = 0; i < stmts.length; ++i) {
-			stmts[i] = ((ParametricStatement)Class.forName(args[i*3+0]).getConstructor(String.class).newInstance(args[i*3+1])).set(args[i*3+2]);
+			stmts[i] = ((ParametricStatement)Class.forName(args[i*4+0]).getConstructor(String.class).newInstance(args[i*4+1])).set(args[i*4+2]);
+            stmts[i].setTag(args[i*4+3]);
 		}
 		return stmts;
 	}
@@ -455,9 +461,25 @@ public class CrudCommand {
 					return "java.lang.Float";
 				}
 			}
+        case Types.TIMESTAMP:
+            if (rsmeta.getScale(index) == 0) {
+                return "java.sql.Date";
+            } else {
+                return "java.sql.Timestamp";
+            }
 		default:
 			return rsmeta.getColumnClassName(index);
 		}
 	}
+
+    private static String fieldName(String table, String column) {
+        Map<String, String> alias = CrudConfiguration.aliases.get(table);
+        if (alias != null) {
+            String name = alias.get(column);
+            return (name != null) ? name : Strings.toLowerCamelCase(column, '_');
+        } else {
+            return Strings.toLowerCamelCase(column, '_');
+        }
+    }
 }
 

@@ -1,13 +1,15 @@
 package org.xillium.core.intrinsic;
 
 import java.sql.Connection;
+import java.sql.SQLIntegrityConstraintViolationException;
 import javax.sql.DataSource;
 import java.util.Map;
 import java.util.logging.*;
+import java.util.regex.*;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
 import org.xillium.data.persistence.*;
-import org.xillium.data.persistence.crud.CrudCommand;
+import org.xillium.data.persistence.crud.*;
 import org.xillium.core.*;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
  */
 public class CrudService extends SecuredService implements DynamicService {
     private static final Logger _logger = Logger.getLogger(CrudService.class.getName());
+    private static final Pattern CONSTRAINT = Pattern.compile("\\([A-Z_]+\\.([A-Z_]+)\\)");
 
     private final CrudCommand _command;
     private boolean _isUnique;
+    private String _missing;
 
 	/**
 	 * Creates a non-retrieval CRUD service. A CRUD service object is typically configured in service-configuration.xml.
@@ -109,6 +113,13 @@ public class CrudService extends SecuredService implements DynamicService {
         _isUnique = unique;
     }
 
+    /**
+     * Sets a message to throw when an expected row is missing.
+     */
+    public void setMissing(String missing) {
+        _missing = missing;
+    }
+
     @Transactional
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
         int count = 0;
@@ -127,7 +138,11 @@ _logger.fine("CrudService.run: request = " + DataObject.Util.describe(request.ge
             case UPDATE:
             case DELETE:
                 for (ParametricStatement statement: _command.getStatements()) {
-                    count += statement.executeUpdate(connection, request);
+                    int rows = statement.executeUpdate(connection, request);
+                    if (_missing != null && rows == 0) {
+                        throw new ServiceException(_missing+statement.getTag());
+                    }
+                    count += rows;
                 }
                 binder.put("NumRowsAffected", String.valueOf(count));
                 break;
@@ -142,6 +157,20 @@ _logger.fine("CrudService.run: request = " + DataObject.Util.describe(request.ge
                 }
                 break;
             }
+        } catch (SQLIntegrityConstraintViolationException x) {
+            Matcher matcher = CONSTRAINT.matcher(x.getMessage());
+            if (matcher.find()) {
+                String message = CrudConfiguration.icve.get(matcher.group(1));
+                if (message != null) {
+                    throw new ServiceException(message);
+                } else {
+                    throw new ServiceException(x.getMessage(), x);
+                }
+            } else {
+                throw new ServiceException(x.getMessage(), x);
+            }
+        } catch (ServiceException x) {
+            throw x;
         } catch (Exception x) {
             throw new ServiceException(x.getMessage(), x);
         }

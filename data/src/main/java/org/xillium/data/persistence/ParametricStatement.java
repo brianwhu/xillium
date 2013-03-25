@@ -264,6 +264,24 @@ public class ParametricStatement {
     }
 
     /**
+     * Executes a batch INSERT statement.
+     *
+     * @returns the number of rows inserted.
+     */
+    public int executeInsert(Connection conn, Collection<DataObject> objects) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(_sql);
+        try {
+            for (DataObject object: objects) {
+                load(statement, object);
+                statement.addBatch();
+            }
+            return getAffectedRowCount(statement.executeBatch());
+        } finally {
+            statement.close();
+        }
+    }
+
+    /**
      * Executes a callable statement.
      *
      * @returns the number of rows affected
@@ -295,6 +313,14 @@ public class ParametricStatement {
         }
     }
 
+    public void setTag(String t) {
+        _tag = t;
+    }
+
+    public String getTag() {
+        return _tag;
+    }
+
     public StringBuilder print(StringBuilder sb) {
         sb.append('[');
         for (Param param: _params) {
@@ -308,6 +334,7 @@ public class ParametricStatement {
     private static final Pattern PARAM_SYNTAX = Pattern.compile(":([-+]?\\w+\\??):(\\w+)");
     private /*final*/ Param[] _params;
     protected String _sql;
+    protected String _tag;
 
     private static int getAffectedRowCount(int[] results) {
         int count = 0;

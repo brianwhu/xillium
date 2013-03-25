@@ -90,6 +90,18 @@ public class Persistence {
     }
 
     /**
+     * Executes a batch INSERT statement.
+     */
+    public int executeInsert(String name, Collection<DataObject> objects) throws SQLException {
+        ParametricStatement statement = _statements.get(name);
+        if (statement != null) {
+            return statement.executeInsert(DataSourceUtils.getConnection(_dataSource), objects);
+        } else {
+            throw new RuntimeException("ParametricStatement '" + name + "' not found");
+        }
+    }
+
+    /**
      * Executes a SELECT statement and passes the result set to the ResultSetWorker.
      */
     public <T> T executeSelect(String name, DataObject object, ParametricQuery.ResultSetWorker<T> worker) throws Exception {
