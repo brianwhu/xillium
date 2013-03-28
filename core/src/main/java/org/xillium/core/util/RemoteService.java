@@ -35,6 +35,14 @@ public class RemoteService {
             this.body = body;
             return this;
         }
+
+        public Response store(DataBinder binder, String target, String original) {
+            Object value = params.get(original);
+            if (value != null) {
+                binder.put(target, value.toString());
+            }
+            return this;
+        }
     }
 
     /**

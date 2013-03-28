@@ -20,6 +20,7 @@ import org.xillium.data.persistence.*;
  */
 public class CrudCommand {
 	private static final String STATEMENT_FIELD_NAME = "_STMT";
+	private static final char REQUIRED_INDICATOR = '*';
     private static final Map<String, Class<? extends DataObject>> _classes = new HashMap<String, Class<? extends DataObject>>();
 
     private final Operation _oper;
@@ -37,30 +38,43 @@ public class CrudCommand {
 	public static class Action {
 		final Operation op;
 		final String[] args;
+		final boolean[] reqd;
         final Map<String, String> restriction;
 
 		public Action(Operation op) {
 			this.op = op;
 			this.args = null;
+			this.reqd = null;
             this.restriction = null;
 		}
 
 		public Action(Operation op, Map<String, String> restriction) {
 			this.op = op;
 			this.args = null;
+			this.reqd = null;
             this.restriction = restriction;
 		}
 
+        /**
+         * Note: a leading asterisk indicates a required fields for SEARCH operation.
+         */
 		public Action(Operation op, String[] args) {
 			this.op = op;
 			this.args = args;
+			this.reqd = new boolean[args.length];
             this.restriction = null;
+            analyzeRequiredArgs();
 		}
 
+        /**
+         * Note: a leading asterisk indicates a required fields for SEARCH operation.
+         */
 		public Action(Operation op, String[] args, Map<String, String> restriction) {
 			this.op = op;
 			this.args = args;
+			this.reqd = new boolean[args.length];
             this.restriction = restriction;
+            analyzeRequiredArgs();
 		}
 
 /*
@@ -71,6 +85,15 @@ public class CrudCommand {
 
         public String toString() {
             return op.toString() + '[' + Arrays.toString(args) + ']' + restriction;
+        }
+
+        private void analyzeRequiredArgs() {
+            for (int i = 0; i < args.length; ++i) {
+                if (args[i].charAt(0) == REQUIRED_INDICATOR) {
+                    args[i] = args[i].substring(1);
+                    reqd[i] = true;
+                }
+            }
         }
 	}
 
@@ -206,6 +229,7 @@ public class CrudCommand {
 			}
 
 			Set<String> requested = new HashSet<String>();
+			Set<String> required = new HashSet<String>();
 			if (action.op == Operation.UPDATE) {
 				for (String column: calcUpdateColumns(action.args, colref, primaryKeys)) {
 					Integer idx = colref.get(column);
@@ -223,21 +247,22 @@ public class CrudCommand {
 					}
 				}
 			} else if (action.op == Operation.SEARCH && action.args != null) {
-                for (String column: action.args) {
-                    Integer idx = colref.get(column);
+                for (int c = 0; c < action.args.length; ++c) {
+                    Integer idx = colref.get(action.args[c]);
                     if (idx != null) {
     /*SQL*/             if (vals.length() > 0) vals.append(" AND ");
-    /*SQL*/             vals.append(tablenames[i]).append('.').append(column).append('=');
-    /*SQL*/             String restriction = action.restriction == null ? null : action.restriction.get(column);
+    /*SQL*/             vals.append(tablenames[i]).append('.').append(action.args[c]).append('=');
+    /*SQL*/             String restriction = action.restriction == null ? null : action.restriction.get(action.args[c]);
     /*SQL*/             if (restriction == null) {
     /*SQL*/                 //vals.append('?');
-    /*SQL*/                 vals.append("COALESCE(?,").append(tablenames[i]).append('.').append(column).append(')');
+    /*SQL*/                 vals.append("COALESCE(?,").append(tablenames[i]).append('.').append(action.args[c]).append(')');
     /*SQL*/                 if (flds.length() > 0) flds.append(',');
-                            flds.append(fieldName(tablenames[i], column)).append(':').append(rsmeta.getColumnType(idx.intValue()));
+                            flds.append(fieldName(tablenames[i], action.args[c])).append(':').append(rsmeta.getColumnType(idx.intValue()));
                         } else {
                             vals.append(restriction);
                         }
-                        requested.add(column);
+                        requested.add(action.args[c]);
+                        if (action.reqd[c]) required.add(action.args[c]);
                     }
                 }
             }
@@ -316,11 +341,13 @@ public class CrudCommand {
 					unique.add(name);
 				}
 
-				CtField field = new CtField(pool.getCtClass(sqlTypeName(rsmeta, idx)), fieldName(tablenames[i], name), cc);
+				CtField field = new CtField(pool.getCtClass(sqlTypeName(rsmeta, idx)), fname, cc);
                 field.setModifiers(java.lang.reflect.Modifier.PUBLIC);
 				AnnotationsAttribute attr = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
 
-				if (columns.getInt(IS_NULLABLE) == DatabaseMetaData.attributeNoNulls) {
+                if (required.contains(name)) {
+                    addAnnotation(attr, cp, "org.xillium.data.validation.required");
+                } else if (columns.getInt(IS_NULLABLE) == DatabaseMetaData.attributeNoNulls) {
 					if ((action.op != Operation.UPDATE && action.op != Operation.SEARCH) || primaryKeys.contains(name)) {
 						addAnnotation(attr, cp, "org.xillium.data.validation.required");
 					}

@@ -6,6 +6,7 @@ import java.util.*;
 import java.sql.*;
 import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.Strings;
+import org.xillium.base.beans.JSONBuilder;
 import org.xillium.data.persistence.ParametricQuery;
 
 
@@ -157,5 +158,84 @@ public class DataBinder extends HashMap<String, String> implements ParametricQue
             }
         }
         return count * 64;
+    }
+
+    public String toJSON() {
+        JSONBuilder jb = new JSONBuilder(estimateMaximumBytes()).append('{');
+
+/*
+        jb.quote("params").append(":{ ");
+        Iterator<String> it = binder.keySet().iterator();
+        while (it.hasNext()) {
+            String key = it.next();
+            String val = binder.get(key);
+            if (val == null) {
+                jb.quote(key).append(":null");
+            } else if (val.startsWith("json:")) {
+                jb.quote(key).append(':').append(val.substring(5));
+            } else {
+                jb.serialize(key, val);
+            }
+            jb.append(',');
+        }
+        jb.replaceLast('}').append(',');
+*/
+        jb.quote("params").append(':');
+        appendParams(jb).append(',');
+
+/*
+        jb.quote("tables").append(":{ ");
+        Set<String> rsets = binder.getResultSetNames();
+        it = rsets.iterator();
+        while (it.hasNext()) {
+            String name = it.next();
+            jb.quote(name).append(":");
+            binder.getResultSet(name).toJSON(jb);
+            jb.append(',');
+        }
+        jb.replaceLast('}');
+*/
+        jb.quote("tables").append(':');
+        appendTables(jb);
+
+        jb.append('}');
+
+        return jb.toString();
+    }
+
+    public JSONBuilder appendParams(JSONBuilder jb) {
+        jb.append("{ ");
+        Iterator<String> it = keySet().iterator();
+        while (it.hasNext()) {
+            String key = it.next();
+            if (key.charAt(0) == '#' && key.charAt(key.length()-1) == '#') continue;
+            String val = get(key);
+            if (val == null) {
+                jb.quote(key).append(":null");
+            } else if (val.startsWith("json:")) {
+                jb.quote(key).append(':').append(val.substring(5));
+            } else {
+                jb.serialize(key, val);
+            }
+            jb.append(',');
+        }
+        jb.replaceLast('}');
+
+        return jb;
+    }
+
+    public JSONBuilder appendTables(JSONBuilder jb) {
+        jb.append("{ ");
+        Set<String> rsets = getResultSetNames();
+        Iterator<String> it = rsets.iterator();
+        while (it.hasNext()) {
+            String name = it.next();
+            jb.quote(name).append(":");
+            getResultSet(name).toJSON(jb);
+            jb.append(',');
+        }
+        jb.replaceLast('}');
+
+        return jb;
     }
 }

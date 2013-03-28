@@ -164,7 +164,7 @@ _logger.fine("CrudService.run: request = " + DataObject.Util.describe(request.ge
                 if (message != null) {
                     throw new ServiceException(message);
                 } else {
-                    throw new ServiceException(x.getMessage(), x);
+                    throw new ServiceException(matcher.group(1), x);
                 }
             } else {
                 throw new ServiceException(x.getMessage(), x);

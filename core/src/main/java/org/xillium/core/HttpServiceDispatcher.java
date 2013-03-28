@@ -8,6 +8,7 @@ import java.util.logging.*;
 import java.util.regex.*;
 import javax.management.*;
 import javax.servlet.*;
+//import javax.servlet.annotation.*;
 import javax.servlet.http.*;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -47,6 +48,7 @@ import org.xillium.core.util.ModuleSorter;
  * </ul>
  */
 @SuppressWarnings("serial")
+//@WebServlet(urlPatterns="/", asyncSupported=true)
 public class HttpServiceDispatcher extends HttpServlet {
     private static final String DOMAIN_NAME = "Xillium-Domain-Name";
     private static final String MODULE_NAME = "Xillium-Module-Name";
@@ -132,7 +134,7 @@ public class HttpServiceDispatcher extends HttpServlet {
     }
 
     public void destroy() {
-        _logger.info("Terminating service dispatcher");
+        _logger.info("Terminating service dispatcher: " + _application);
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         while (!_manageables.empty()) {
             ObjectName on = _manageables.pop();
@@ -145,8 +147,8 @@ public class HttpServiceDispatcher extends HttpServlet {
         }
         while (!_plca.empty()) {
             List<PlatformLifeCycleAwareDef> plcas = _plca.pop();
-            // terminate PlatformLifeCycleAware objects in this level
             for (PlatformLifeCycleAwareDef plca: plcas) {
+                _logger.info("terminate PlatformLifeCycleAware: " + plca.module + '/' + plca.bean.getClass().getName());
                 plca.bean.terminate(_application, plca.module);
             }
         }
@@ -243,6 +245,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             binder.put(Service.REQUEST_CLIENT_PORT, String.valueOf(req.getRemotePort()));
             binder.put(Service.REQUEST_SERVER_PORT, String.valueOf(req.getServerPort()));
             binder.put(Service.REQUEST_HTTP_METHOD, req.getMethod());
+            binder.put(Service.REQUEST_SERVER_PATH, id);
 
             if (id.endsWith(".html")) {
                 // TODO provide a default, error reporting page template
@@ -306,6 +309,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                     String json = binder.get(Service.SERVICE_JSON_TUNNEL);
 
                     if (json == null) {
+/*
                         JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
 
                         jb.quote("params").append(":{ ");
@@ -338,6 +342,8 @@ public class HttpServiceDispatcher extends HttpServlet {
                         jb.append('}');
 
                         json = jb.toString();
+*/
+                        json = binder.toJSON();
                     }
 
                     res.getWriter().append(json).flush();

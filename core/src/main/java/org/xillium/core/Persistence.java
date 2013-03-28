@@ -30,6 +30,13 @@ public class Persistence {
     }
 
     /**
+     * Returns a reference to the data source.
+     */
+    public DataSource getDataSource() {
+        return _dataSource;
+    }
+
+    /**
      * Executes an UPDATE/DELETE statement or an anonymous block.
      */
     public int executeUpdate(String name, DataObject object) throws SQLException {

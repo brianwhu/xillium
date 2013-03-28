@@ -161,7 +161,7 @@ public class ParametricStatement {
                     }
                 } catch (Exception x) {
                     statement.close();
-                    throw new SQLException("Exception in retrieval of '" + _params[i].name + "' from DataObject (" + type.getName() + ')', x);
+                    throw new SQLException("Exception in retrieval of '" + _params[i].name + "' from " + type.getName() + ": " + x.getMessage(), x);
                 }
             }
         }
