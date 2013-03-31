@@ -25,6 +25,11 @@ public class CrudService extends SecuredService implements DynamicService {
     private final CrudCommand _command;
     private boolean _isUnique;
     private String _missing;
+    private Filter _filter;
+
+    public static interface Filter {
+        public void filtrate(DataBinder binder) throws ServiceException;
+    }
 
 	/**
 	 * Creates a non-retrieval CRUD service. A CRUD service object is typically configured in service-configuration.xml.
@@ -109,6 +114,10 @@ public class CrudService extends SecuredService implements DynamicService {
         return _command.getRequestType();
     }
 
+    public void setFilter(Filter filter) {
+        _filter = filter;
+    }
+
     public void setUnique(boolean unique) {
         _isUnique = unique;
     }
@@ -124,8 +133,11 @@ public class CrudService extends SecuredService implements DynamicService {
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
         int count = 0;
         try {
+            if (_filter != null) _filter.filtrate(binder);
+
             DataObject request = dict.collect(_command.getRequestType().newInstance(), binder);
 _logger.fine("CrudService.run: request = " + DataObject.Util.describe(request.getClass()));
+
             Connection connection = persist.getConnection();
 
             switch (_command.getOperation()) {
