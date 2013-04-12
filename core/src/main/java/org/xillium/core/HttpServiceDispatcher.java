@@ -254,19 +254,24 @@ public class HttpServiceDispatcher extends HttpServlet {
             // pre-service filter
 
             if (service instanceof Service.Extended) {
-                _logger.fine("Invoking extended operations");
                 ((Service.Extended)service).filtrate(binder);
             }
 
             // authorization
 
             if (service instanceof Service.Secured) {
-                _logger.fine("Trying to authorize invocation of a secured service");
                 ((Service.Secured)service).authorize(id, binder, _persistence);
             }
 
             binder = service.run(binder, _dict, _persistence);
 
+            // post-service filter
+
+            if (service instanceof Service.Extended) {
+                try { ((Service.Extended)service).successful(binder); } catch (Throwable t) { _logger.log(Level.WARNING, "successful()", t); }
+            }
+
+            // post-service action (deprecated)
             try {
                 Runnable task = (Runnable)binder.getNamedObject(Service.SERVICE_POST_ACTION);
                 if (task != null) {
@@ -287,15 +292,16 @@ public class HttpServiceDispatcher extends HttpServlet {
             CharArrayWriter sw = new CharArrayWriter();
             x.printStackTrace(new PrintWriter(sw));
             binder.put(Service.FAILURE_STACK, sw.toString());
-        } finally {
-            // TODO: post-service filter
+
+            // post-service exception handler
+
             if (service instanceof Service.Extended) {
-                _logger.fine("Invoking extended operations");
-                try {
-                    ((Service.Extended)service).complete(binder);
-                } catch (Throwable t) {
-                    _logger.log(Level.WARNING, "Extended service: complete() failed", t);
-                }
+                try { ((Service.Extended)service).aborted(binder, x); } catch (Throwable t) { _logger.log(Level.WARNING, "aborted()", t); }
+            }
+        } finally {
+            // post-service filter
+            if (service instanceof Service.Extended) {
+                try { ((Service.Extended)service).complete(binder); } catch (Throwable t) { _logger.log(Level.WARNING, "complete()", t); }
             }
 
             res.setHeader("Access-Control-Allow-Headers", "origin,x-prototype-version,x-requested-with,accept");

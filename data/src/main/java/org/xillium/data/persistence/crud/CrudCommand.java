@@ -56,7 +56,7 @@ public class CrudCommand {
 		}
 
         /**
-         * Note: a leading asterisk indicates a required fields for SEARCH operation.
+         * @param args - applies to UPDATE, SEARCH. A leading asterisk indicates a required fields for SEARCH operation.
          */
 		public Action(Operation op, String[] args) {
 			this.op = op;
@@ -67,7 +67,8 @@ public class CrudCommand {
 		}
 
         /**
-         * Note: a leading asterisk indicates a required fields for SEARCH operation.
+         * @param args - applies to UPDATE, SEARCH. A leading asterisk indicates a required fields for SEARCH operation.
+         * @param restriction - applies to CREATE, UPDATE, SEARCH, DELETE
          */
 		public Action(Operation op, String[] args, Map<String, String> restriction) {
 			this.op = op;

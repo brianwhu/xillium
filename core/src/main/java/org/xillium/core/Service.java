@@ -51,19 +51,37 @@ public interface Service {
 		public void authorize(String deployment, DataBinder parameters, Persistence persist) throws AuthorizationException;
 	}
 
-	/**
-	 * Interface to indicate a service that has 2 extra steps, one before and one after the main service method.
-	 */
-	public static interface Extended extends Service {
+    /**
+     * A service filter.
+     */
+    public static interface Filter {
         /**
-         * An extra 'filtrate' step that runs before the service starts.
+         * An extra step that runs before the service transaction starts.
          */
-        public void filtrate(DataBinder parameters);
+        public void filtrate(DataBinder parameters) throws ServiceException;
 
         /**
-         * An extra 'complete' step that runs after the service is committed.
+         * An extra step that runs after the service is successful and the associated transaction committed.
+         * It will NOT run if the service has failed.
          */
-		public void complete(DataBinder parameters);
+        public void successful(DataBinder parameters);
+
+        /**
+         * An extra step that runs after the service has failed and the associated transaction rolled back.
+         * It will NOT run if the service is successful.
+         */
+        public void aborted(DataBinder parameters, Throwable throwable);
+
+        /**
+         * An extra step that always runs after the service has been completed, disregard whether the associated transaction is committed or rolled back.
+         */
+        public void complete(DataBinder parameters);
+    }
+
+	/**
+	 * Interface to indicate a service that has the same extra steps as defined in the Filter interface.
+	 */
+	public static interface Extended extends Service, Filter {
 	}
 
     /**

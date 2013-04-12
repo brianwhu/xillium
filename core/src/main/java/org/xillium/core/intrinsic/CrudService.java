@@ -18,18 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Service description.
  */
-public class CrudService extends SecuredService implements DynamicService {
+public class CrudService extends SecuredService implements Service.Extended, DynamicService {
     private static final Logger _logger = Logger.getLogger(CrudService.class.getName());
     private static final Pattern CONSTRAINT = Pattern.compile("\\([A-Z_]+\\.([A-Z_]+)\\)");
 
     private final CrudCommand _command;
     private boolean _isUnique;
     private String _missing;
-    private Filter _filter;
-
-    public static interface Filter {
-        public void filtrate(DataBinder binder) throws ServiceException;
-    }
+    private Service.Filter _filter;
 
 	/**
 	 * Creates a non-retrieval CRUD service. A CRUD service object is typically configured in service-configuration.xml.
@@ -42,9 +38,7 @@ public class CrudService extends SecuredService implements DynamicService {
     public CrudService(DataSource source, String prefix, String tables, String action) throws Exception {
         Connection connection = DataSourceUtils.getConnection(source);
         try {
-            _command = new CrudCommand(connection, prefix, tables,
-                new CrudCommand.Action(Enum.valueOf(CrudCommand.Operation.class, action))
-            );
+            _command = new CrudCommand(connection, prefix, tables, new CrudCommand.Action(Enum.valueOf(CrudCommand.Operation.class, action)));
         } finally {
             connection.close();
         }
@@ -61,9 +55,7 @@ public class CrudService extends SecuredService implements DynamicService {
     public CrudService(DataSource source, String prefix, String tables, String action, Map<String, String> restrictions) throws Exception {
         Connection connection = DataSourceUtils.getConnection(source);
         try {
-            _command = new CrudCommand(connection, prefix, tables,
-                new CrudCommand.Action(Enum.valueOf(CrudCommand.Operation.class, action), restrictions)
-            );
+            _command = new CrudCommand(connection, prefix, tables, new CrudCommand.Action(Enum.valueOf(CrudCommand.Operation.class, action), restrictions));
         } finally {
             connection.close();
         }
@@ -81,9 +73,7 @@ public class CrudService extends SecuredService implements DynamicService {
     public CrudService(DataSource source, String prefix, String tables, String action, String... columns) throws Exception {
         Connection connection = DataSourceUtils.getConnection(source);
         try {
-            _command = new CrudCommand(connection, prefix, tables,
-                new CrudCommand.Action(Enum.valueOf(CrudCommand.Operation.class, action), columns)
-            );
+            _command = new CrudCommand(connection, prefix, tables, new CrudCommand.Action(Enum.valueOf(CrudCommand.Operation.class, action), columns));
         } finally {
             connection.close();
         }
@@ -114,7 +104,7 @@ public class CrudService extends SecuredService implements DynamicService {
         return _command.getRequestType();
     }
 
-    public void setFilter(Filter filter) {
+    public void setFilter(Service.Filter filter) {
         _filter = filter;
     }
 
@@ -129,12 +119,40 @@ public class CrudService extends SecuredService implements DynamicService {
         _missing = missing;
     }
 
+    /**
+     * An extra step that runs before the service transaction starts.
+     */
+    public void filtrate(DataBinder parameters) {
+        if (_filter != null) _filter.filtrate(parameters);
+    }
+
+    /**
+     * An extra step that runs after the service is successful and the associated transaction committed.
+     * It will NOT run if the service has failed.
+     */
+    public void successful(DataBinder parameters) {
+        if (_filter != null) _filter.successful(parameters);
+    }
+
+    /**
+     * An extra step that runs after the service has failed and the associated transaction rolled back.
+     * It will NOT run if the service is successful.
+     */
+    public void aborted(DataBinder parameters, Throwable throwable) {
+        if (_filter != null) _filter.aborted(parameters, throwable);
+    }
+
+    /**
+     * An extra step that always runs after the service has been completed, disregard whether the associated transaction is committed or rolled back.
+     */
+    public void complete(DataBinder parameters) {
+        if (_filter != null) _filter.complete(parameters);
+    }
+
     @Transactional
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
         int count = 0;
         try {
-            if (_filter != null) _filter.filtrate(binder);
-
             DataObject request = dict.collect(_command.getRequestType().newInstance(), binder);
 _logger.fine("CrudService.run: request = " + DataObject.Util.describe(request.getClass()));
 
