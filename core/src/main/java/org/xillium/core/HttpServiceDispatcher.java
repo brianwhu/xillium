@@ -129,8 +129,11 @@ public class HttpServiceDispatcher extends HttpServlet {
 
         _plca.push(plcas);
 
-        _services.put("x!/desc", new DescService(descriptions));
-        _services.put("x!/list", new ListService(_services));
+        String hide = System.getProperty("xillium.service.HideDescription");
+        if (hide == null || hide.length() == 0) {
+            _services.put("x!/desc", new DescService(descriptions));
+            _services.put("x!/list", new ListService(_services));
+        }
     }
 
     public void destroy() {
