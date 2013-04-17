@@ -40,13 +40,13 @@ public class JsohServer implements TestTarget {
         }
     }
 
-    public JsohServer(TestSuite suite, String[] args, int offset) throws MalformedURLException {
+    public JsohServer(TestSuite suite, String[] args, int offset) {
         if (args.length - offset != 1) {
             throw new IllegalArgumentException("Target-specific-arguments: URL");
         }
 
         // Create the IdcClient - first argument is the IDC connection URL
-        _url = new URL(args[offset]);
+        _url = args[offset];
 
         // TODO: connection pooling
     }
@@ -57,7 +57,13 @@ public class JsohServer implements TestTarget {
 
     public TestTarget.Response fire(TestTarget.Request request) throws TestFailureException {
         try {
-            URLConnection connection = _url.openConnection();
+            String path = ((Request)request).binder.get("_path_");
+            if (path != null && path.length() > 0) {
+                path = _url + path;
+            } else {
+                path = _url;
+            }
+            URLConnection connection = new URL(path).openConnection();
 			connection.setDoOutput(true);
     		OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
 
@@ -77,13 +83,13 @@ public class JsohServer implements TestTarget {
 			//connection.close();
 
             return new JsohServer.Response(binder);
-        //} catch (ServiceException x) {
-            //throw new TestFailureException(x.getStatusCode(), x);
+        } catch (MalformedURLException x) {
+            throw new TestFailureException(0, x.getMessage(), x);
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
     }
 
-    private final URL _url;
+    private final String _url;
 	private final ObjectMapper _mapper = new ObjectMapper();
 }
