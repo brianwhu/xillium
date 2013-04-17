@@ -189,7 +189,7 @@ public class TestCase implements Runnable {
         Pattern ignore = null;
         try {
             ignore = Pattern.compile(getProperty("ignore", ""));
-            System.err.println("\tignoring pattern " + ignore.pattern());
+            //System.err.println("\tignoring pattern " + ignore.pattern());
         } catch (Exception x) {
             _log.log(Level.INFO, "TestCase: invalid 'ignore' setting", x);
         }
@@ -236,9 +236,7 @@ public class TestCase implements Runnable {
                     break TestLoop;
                 } else if (wait > 0) {
                     int pause = wait * errors;
-                    //System.err.println(prefix + "Waiting for " + pause + " milliseconds before trying again");
                     _log.info(_name + ": Waiting for " + pause + " milliseconds before trying again");
-                    //try { wait(pause); } catch (Throwable t) {}
                     synchronized (this) { try { wait(pause); } catch (Throwable t) {} }
                 }
             } catch (Exception x) {

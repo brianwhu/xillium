@@ -106,23 +106,23 @@ public class TestAction {
 
             request.set(key, sb.toString());
         }
-        _log.info("Calling prescript");
+        _log.fine("Calling prescript");
         try {
             ((Invocable)engine).invokeMethod(listener, "prepare", context, request);
         } catch (Exception x) {
             x.printStackTrace(System.err);
         }
-        _log.info("Finished prescript");
-        _log.info(_case + '#' + _name + ": Sending request " + request);
+        _log.fine("Finished prescript");
+        _log.fine(_case + '#' + _name + ": Sending request " + request);
         long start = System.currentTimeMillis();
         TestTarget.Response response = target.fire(request);
-        _log.info("Calling POSTSCRIPT");
+        _log.fine("Calling POSTSCRIPT");
         try {
             ((Invocable)engine).invokeMethod(listener, "process", context, response);
         } catch (Exception x) {
             x.printStackTrace(System.err);
         }
-        _log.info("Finished POSTSCRIPT");
+        _log.fine("Finished POSTSCRIPT");
         return start;
     }
 
