@@ -167,7 +167,11 @@ public class Dictionary {
                         }
                     }
                 } else {
-                    if (isRequired(data, field, prefix, name, present)) {
+                    Object prefill = null;
+                    try {
+                        prefill = field.get(data);
+                    } catch (Throwable t) {}
+                    if (prefill == null && isRequired(data, field, prefix, name, present)) {
                         absent = name;
                     }
                     continue;
