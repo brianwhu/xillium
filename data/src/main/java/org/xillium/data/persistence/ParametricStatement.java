@@ -356,9 +356,10 @@ public class ParametricStatement {
     @SuppressWarnings("unchecked")
     protected void setValue(Object object, Field field, Object value) throws IllegalArgumentException, IllegalAccessException {
         if (value == null) {
-            if (field.getType().isAssignableFrom(Number.class)) {
-                value = BigDecimal.ZERO;
-            } else return;
+            //if (Number.class.isAssignableFrom(field.getType())) {
+                //value = BigDecimal.ZERO;
+            //} else return;
+            return;
         }
 
         try {

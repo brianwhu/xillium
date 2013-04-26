@@ -319,6 +319,63 @@ public class Beans {
     }
 
     /**
+     * Assigns a value to the field in an object, converting value type as necessary.
+     */
+    @SuppressWarnings("unchecked")
+    public static void setValue(Object object, Field field, Object value) throws IllegalArgumentException, IllegalAccessException {
+        if (value == null) {
+            //if (Number.class.isAssignableFrom(field.getType())) {
+                //value = java.math.BigDecimal.ZERO;
+            //} else return;
+            return;
+        }
+
+        try {
+            field.setAccessible(true);
+            field.set(object, value);
+        } catch (IllegalArgumentException x) {
+            @SuppressWarnings("rawtypes")
+            Class ftype = field.getType();
+            if (value instanceof Number) {
+                // size of "value" bigger than that of "field"?
+                try {
+                    Number number = (Number)value;
+                    if (Double.TYPE == ftype || Double.class.isAssignableFrom(ftype)) {
+                        field.set(object, number.doubleValue());
+                    } else if (Float.TYPE == ftype || Float.class.isAssignableFrom(ftype)) {
+                        field.set(object, number.floatValue());
+                    } else if (Long.TYPE == ftype || Long.class.isAssignableFrom(ftype)) {
+                        field.set(object, number.longValue());
+                    } else if (Integer.TYPE == ftype || Integer.class.isAssignableFrom(ftype)) {
+                        field.set(object, number.intValue());
+                    } else if (Short.TYPE == ftype || Short.class.isAssignableFrom(ftype)) {
+                        field.set(object, number.shortValue());
+                    } else {
+                        field.set(object, number.byteValue());
+                    }
+                } catch (Throwable t) {
+                    throw new IllegalArgumentException(t);
+                }
+            } else if (value instanceof java.sql.Timestamp) {
+                try {
+                    field.set(object, new java.sql.Date(((java.sql.Timestamp)value).getTime()));
+                } catch (Throwable t) {
+                    throw new IllegalArgumentException(t);
+                }
+            } else if ((value instanceof String) && Enum.class.isAssignableFrom(ftype)) {
+                try {
+                    field.set(object, Enum.valueOf(ftype, (String)value));
+                } catch (Throwable t) {
+                    throw new IllegalArgumentException(t);
+                }
+            } else {
+                throw new IllegalArgumentException(x);
+            }
+        }
+
+    }
+
+    /**
      * Fills empty, identically named public fields with values from another object.
      */
     public static Object fill(Object destination, Object source) {
