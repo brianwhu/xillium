@@ -32,7 +32,7 @@ public class CrudModelTest extends AbstractTransactionalTestNGSpringContextTests
         Connection connection = dataSource.getConnection();
 
         Map<String, String> restrictions = new HashMap<String, String>();
-        restrictions.put("EMAIL", "'me@mail.com'");
+        restrictions.put("EMAIL", "!'me@mail.com'");
         restrictions.put("LEVEL", "8");
 
         CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.CREATE));

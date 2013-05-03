@@ -16,11 +16,12 @@ import org.xillium.data.persistence.*;
  *
  * The following features are supported:
  * - multiple tables associated with ISA relations
- * - restrictions on values for specific columns
+ * - restrictions on values for specific columns; a value starting with '!' indicate negative comparison.
  */
 public class CrudCommand {
 	private static final String STATEMENT_FIELD_NAME = "_STMT";
 	private static final char REQUIRED_INDICATOR = '*';
+	private static final char NEGATIVE_INDICATOR = '!';
     private static final Map<String, Class<? extends DataObject>> _classes = new HashMap<String, Class<? extends DataObject>>();
 
     private final Operation _oper;
@@ -252,15 +253,20 @@ public class CrudCommand {
                     Integer idx = colref.get(action.args[c]);
                     if (idx != null) {
     /*SQL*/             if (vals.length() > 0) vals.append(" AND ");
-    /*SQL*/             vals.append(tablenames[i]).append('.').append(action.args[c]).append('=');
+    /*SQL*/             vals.append(tablenames[i]).append('.').append(action.args[c]);
     /*SQL*/             String restriction = action.restriction == null ? null : action.restriction.get(action.args[c]);
     /*SQL*/             if (restriction == null) {
     /*SQL*/                 //vals.append('?');
-    /*SQL*/                 vals.append("COALESCE(?,").append(tablenames[i]).append('.').append(action.args[c]).append(')');
+    /*SQL*/                 vals.append('=').append("COALESCE(?,").append(tablenames[i]).append('.').append(action.args[c]).append(')');
     /*SQL*/                 if (flds.length() > 0) flds.append(',');
                             flds.append(fieldName(tablenames[i], action.args[c])).append(':').append(rsmeta.getColumnType(idx.intValue()));
                         } else {
-                            vals.append(restriction);
+                            if (restriction.charAt(0) == NEGATIVE_INDICATOR) {
+    /*SQL*/                     vals.append("<>").append(restriction.substring(1));
+                            } else {
+    /*SQL*/                     vals.append('=').append(restriction);
+                            }
+ 
                         }
                         requested.add(action.args[c]);
                         if (action.reqd[c]) required.add(action.args[c]);
@@ -307,26 +313,35 @@ public class CrudCommand {
 				case DELETE:
 					// only primary key columns
 	/*SQL*/         if (vals.length() > 0) vals.append(" AND ");
-	/*SQL*/         vals.append(alias).append(name).append('=');
+	/*SQL*/         vals.append(alias).append(name);
     /*SQL*/         if (restriction == null) {
-	/*SQL*/             vals.append('?');
+	/*SQL*/             vals.append('=').append('?');
 	/*SQL*/             if (flds.length() > 0) flds.append(',');
 					    flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
                     } else {
-	/*SQL*/             vals.append(restriction);
+                        if (restriction.charAt(0) == NEGATIVE_INDICATOR) {
+	/*SQL*/                 vals.append("<>").append(restriction.substring(1));
+                        } else {
+	/*SQL*/                 vals.append('=').append(restriction);
+                        }
+ 
                     }
 					break;
 				case UPDATE:
 					// only primary key & updating columns
 					if (primaryKeys.contains(name)) {
 	/*SQL*/         	if (vals.length() > 0) vals.append(" AND ");
-	/*SQL*/         	vals.append(name).append('=');
+	/*SQL*/         	vals.append(name);
     /*SQL*/             if (restriction == null) {
-	/*SQL*/                 vals.append('?');
+	/*SQL*/                 vals.append('=').append('?');
 	/*SQL*/         	    if (flds.length() > 0) flds.append(',');
                             flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
                         } else {
-	/*SQL*/                 vals.append(restriction);
+                            if (restriction.charAt(0) == NEGATIVE_INDICATOR) {
+	/*SQL*/                     vals.append("<>").append(restriction.substring(1));
+                            } else {
+	/*SQL*/                     vals.append('=').append(restriction);
+                            }
                         }
 					}
 				case SEARCH:

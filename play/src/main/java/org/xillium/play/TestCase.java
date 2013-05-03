@@ -196,10 +196,11 @@ public class TestCase implements Runnable {
 
         int errors = 0;
         _stats.updateThreadCount(+1);
+    try {
+                Object context = _engine.eval("new Object()");
         TestLoop:
         while (_active) {
             try {
-                Object context = _engine.eval("new Object()");
                 synchronized (this) {
                     try { wait(nice); } catch (Throwable t) {}
                 }
@@ -244,6 +245,9 @@ public class TestCase implements Runnable {
                 break TestLoop;
             }
         }
+    } catch (Exception x) {
+        x.printStackTrace();
+    }
         _stats.updateThreadCount(-1);
     }
 

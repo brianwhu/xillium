@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 
 /**
  * A prepared SQL statement with named parameters. A parameter accepts null value if its name ends with '?'.
+ *
+ * TODO: remove nullable setting and checking, and let the database check column nullability
  */
 public class ParametricStatement {
     public static class Param {
@@ -140,25 +142,32 @@ public class ParametricStatement {
                 if ((_params[i].direction & Param.IN) == 0) continue;
                 try {
                     Field field = Beans.getKnownField(type, _params[i].name);
-                    // NOTE: Class.isEnum() fails to return true if the field type is declared with a template parameter
-                    if (Enum.class.isAssignableFrom(field.getType())) { // store as string or integer
-                        if (Types.CHAR == _params[i].type || Types.VARCHAR == _params[i].type) {
-                            statement.setObject(i+1, field.get(object).toString(), _params[i].type);
+                    Object value = field.get(object);
+                    if (value != null) {
+                        // NOTE: Class.isEnum() fails to return true if the field type is declared with a template parameter
+                        if (Enum.class.isAssignableFrom(field.getType())) { // store as string or integer
+                            if (Types.CHAR == _params[i].type || Types.VARCHAR == _params[i].type) {
+                                statement.setObject(i+1, value.toString(), _params[i].type);
+                            } else {
+                                statement.setObject(i+1, ((Enum<?>)value).ordinal(), _params[i].type);
+                            }
+                        } else if (Calendar.class.isAssignableFrom(field.getType())) {
+                            statement.setObject(i+1, new java.sql.Date(((Calendar)value).getTime().getTime()), _params[i].type);
                         } else {
-                            statement.setObject(i+1, ((Enum<?>)field.get(object)).ordinal(), _params[i].type);
+                            statement.setObject(i+1, value, _params[i].type);
                         }
-                    } else if (Calendar.class.isAssignableFrom(field.getType())) {
-                        statement.setObject(i+1, new java.sql.Date(((Calendar)field.get(object)).getTime().getTime()), _params[i].type);
                     } else {
-                        statement.setObject(i+1, field.get(object), _params[i].type);
+                        //throw new NoSuchFieldException(_params[i].name + ": null");
+                        statement.setNull(i+1, _params[i].type);
                     }
                 } catch (NoSuchFieldException x) {
-                    if (_params[i].nullable) {
+                    //if (_params[i].nullable) {
+                    // LET database check the nullability of this column
                         statement.setNull(i+1, _params[i].type);
-                    } else {
-                        statement.close();
-                        throw new SQLException("Failed to retrieve non-nullable '" + _params[i].name + "' from DataObject (" + type.getName() + ')', x);
-                    }
+                    //} else {
+                        //statement.close();
+                        //throw new SQLException("Failed to retrieve non-nullable '" + _params[i].name + "' from DataObject (" + type.getName() + ')', x);
+                    //}
                 } catch (Exception x) {
                     statement.close();
                     throw new SQLException("Exception in retrieval of '" + _params[i].name + "' from " + type.getName() + ": " + x.getMessage(), x);

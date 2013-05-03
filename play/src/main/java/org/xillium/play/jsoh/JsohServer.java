@@ -60,6 +60,7 @@ public class JsohServer implements TestTarget {
             String path = ((Request)request).binder.get("_path_");
             if (path != null && path.length() > 0) {
                 path = _url + path;
+                ((Request)request).binder.remove("_path_");
             } else {
                 path = _url;
             }

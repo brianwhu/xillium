@@ -171,7 +171,10 @@ public class Dictionary {
                     try {
                         prefill = field.get(data);
                     } catch (Throwable t) {}
-                    if (prefill == null && isRequired(data, field, prefix, name, present)) {
+                    if (prefill != null) {
+                        // re-translate the value, passing it through validation
+                        translate(field, name, String.valueOf(prefill));
+                    } else if (isRequired(data, field, prefix, name, present)) {
                         absent = name;
                     }
                     continue;
