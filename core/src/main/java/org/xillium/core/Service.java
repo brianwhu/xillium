@@ -18,6 +18,7 @@ public interface Service {
     public static final String SERVICE_POST_ACTION = "#post_action#";
     public static final String SERVICE_PAGE_TARGET = "#page_target#";
     public static final String SERVICE_JSON_TUNNEL = "_json_tunnel_";
+    public static final String SERVICE_HTTP_STATUS = "#http_status#";
 
     /**
      * A failure message is a string suitable for display to an end user. This value is only present when the service fails.

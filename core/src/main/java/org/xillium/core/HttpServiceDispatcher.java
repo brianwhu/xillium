@@ -185,12 +185,12 @@ public class HttpServiceDispatcher extends HttpServlet {
             service = _services.get(id);
             if (service == null) {
                 _logger.warning("Request not recognized: " + req.getRequestURI());
-                res.sendError(404);
+                res.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
         } else {
             _logger.warning("Request not recognized: " + req.getRequestURI());
-            res.sendError(404);
+            res.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
@@ -257,13 +257,31 @@ public class HttpServiceDispatcher extends HttpServlet {
             // pre-service filter
 
             if (service instanceof Service.Extended) {
-                ((Service.Extended)service).filtrate(binder);
+                try {
+                    ((Service.Extended)service).filtrate(binder);
+                } catch (AuthorizationException x) {
+                    if (binder.get(Service.SERVICE_HTTP_STATUS) != null) {
+                        res.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    } else {
+                        throw x;
+                    }
+                }
             }
 
             // authorization
 
             if (service instanceof Service.Secured) {
-                ((Service.Secured)service).authorize(id, binder, _persistence);
+                try {
+                    ((Service.Secured)service).authorize(id, binder, _persistence);
+                } catch (AuthorizationException x) {
+                    if (binder.get(Service.SERVICE_HTTP_STATUS) != null) {
+                        res.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    } else {
+                        throw x;
+                    }
+                }
             }
 
             binder = service.run(binder, _dict, _persistence);
