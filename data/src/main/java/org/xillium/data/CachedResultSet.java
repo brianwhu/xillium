@@ -115,6 +115,14 @@ public class CachedResultSet {
         this.rows = rows;
     }
 
+    public Map<String, Integer> buildIndex() {
+        Map<String, Integer> index = new HashMap<String, Integer>();
+        for (int i = 0; i < columns.length; ++i) {
+            index.put(columns[i], i);
+        }
+        return index;
+    }
+
     /**
      * Inside an object: serialized the cached result set into JSON.
      */
