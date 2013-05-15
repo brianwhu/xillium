@@ -375,6 +375,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 
                     res.getWriter().append(json).flush();
                 } else {
+                    res.setContentType("text/html;charset=utf-8");
                     _logger.info("\t=> " + getServletContext().getResource(page));
                     req.setAttribute(Service.SERVICE_DATA_BINDER, binder);
                     getServletContext().getRequestDispatcher(page).include(req, res);
