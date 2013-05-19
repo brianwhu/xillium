@@ -9,8 +9,7 @@ import org.xillium.base.etc.Arrays;
 import org.xillium.data.DataObject;
 import org.xillium.data.DataBinder;
 import org.xillium.data.CachedResultSet;
-import org.xillium.core.Service;
-import org.xillium.core.ServiceException;
+import org.xillium.core.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -98,7 +97,7 @@ public class RemoteService {
                     if (response.params != null) {
                         String message = (String)response.params.get(Service.FAILURE_MESSAGE);
                         if (message != null) {
-                            throw new ServiceException(message);
+                            throw new RemoteServiceException(message);
                         }
                     } else {
                         throw new ServiceException("***ProtocolErrorMissingParams");
