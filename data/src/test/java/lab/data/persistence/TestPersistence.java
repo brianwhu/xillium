@@ -1,6 +1,7 @@
 package lab.data.persistence;
 
 import java.util.*;
+import java.io.*;
 import javax.sql.DataSource;
 import javax.annotation.Resource;
 
@@ -12,6 +13,7 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.testng.annotations.*;
 
 import org.xillium.data.persistence.*;
+import org.xillium.data.persistence.xml.*;
 import org.xillium.base.beans.*;
 
 
@@ -78,4 +80,15 @@ System.err.println(getClass().getResource("/object-mapped.xml"));
         }
         //System.err.println(Beans.toString(memberships));
 	}
+
+	@Test(groups={"object"})
+    public void testResultSet2Xml() throws Exception {
+        XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
+        assembler.build(getClass().getResourceAsStream("/object-mapped.xml"));
+        @SuppressWarnings("unchecked")
+        ParametricQuery selectMemberships = (ParametricQuery)StorageConfiguration.getParametricStatement("SelectAllMemberships");
+        //StringWriter writer = new StringWriter();
+        selectMemberships.executeSelect(DataSourceUtils.getConnection(dataSource), null, new ResultSetStreamer("members", new OutputStreamWriter(System.out)));
+        System.err.println("***testResultSet2Xml: done");
+    }
 }

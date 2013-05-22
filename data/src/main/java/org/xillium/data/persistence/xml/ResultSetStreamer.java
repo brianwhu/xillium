@@ -1,4 +1,4 @@
-package org.xillium.data.persistence;
+package org.xillium.data.persistence.xml;
 
 import java.sql.*;
 
@@ -18,22 +18,24 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xillium.base.beans.Strings;
+import org.xillium.data.persistence.ParametricQuery;
 
 
 /**
  * A ParametricQuery.ResultSetWorker implementation that writes the result set as an XML document into a Writer.
  */
-public class XMLStreamer implements ParametricQuery.ResultSetWorker<Writer> {
-    private static final String NAMESPACE = "java://org.xillium.data.persistence.xml";
-    private static final String ROOT      = "sql-rs:data";
-    private static final String ROW       = "row";
-    private static final String COLUMN    = "column";
-    private static final String NAME      = "name";
+public class ResultSetStreamer implements ParametricQuery.ResultSetWorker<Writer> {
+    public static final String NAMESPACE = "java://org.xillium.data.persistence.xml";
+    public static final String ROOT      = "sql-rs:data";
+    public static final String ROW       = "row";
+    public static final String COLUMN    = "column";
+    public static final String NAME      = "name";
+    public static final String TYPE      = "type";
 
     private final String _name;
     private final Writer _sink;
 
-    public XMLStreamer(String name, Writer sink) {
+    public ResultSetStreamer(String name, Writer sink) {
         _name = name;
         _sink = sink;
     }
