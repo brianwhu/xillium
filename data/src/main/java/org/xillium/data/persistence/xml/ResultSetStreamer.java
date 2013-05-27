@@ -57,6 +57,9 @@ public class ResultSetStreamer implements ParametricQuery.ResultSetWorker<Writer
                 attr = doc.createAttribute(NAME);
                 attr.setValue(Strings.toLowerCamelCase(meta.getColumnName(i+1), '_'));
                 col.setAttributeNode(attr);
+                //attr = doc.createAttribute(TYPE);
+                //attr.setValue(Strings.toLowerCamelCase(meta.getColumnClassName(i+1), '_'));
+                //col.setAttributeNode(attr);
 
                 Object value = rs.getObject(i+1);
                 if (value != null) {
