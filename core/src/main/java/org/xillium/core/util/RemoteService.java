@@ -48,6 +48,13 @@ public class RemoteService {
      * Calls a remote service with non-static member values in the given DataObject as arguments.
      */
     public static Response call(String server, String service, DataObject data) {
+        return call(server, service, false, data);
+    }
+
+    /**
+     * Calls a remote service with non-static member values in the given DataObject as arguments.
+     */
+    public static Response call(String server, String service, boolean suppress, DataObject data) {
         List<String> params = new ArrayList<String>();
         for (Field field: data.getClass().getFields()) {
             if (Modifier.isStatic(field.getModifiers())) continue;
@@ -58,26 +65,40 @@ public class RemoteService {
                 params.add(field.getName() + '=' + value);
             } catch (IllegalAccessException x) {}
         }
-        return call(server, service, params.toArray(new String[params.size()]));
+        return call(server, service, suppress, params.toArray(new String[params.size()]));
     }
 
     /**
      * Calls a remote service with parameters in the given DataBinder as arguments.
      */
     public static Response call(String server, String service, DataBinder binder) {
+        return call(server, service, false, binder);
+    }
+
+    /**
+     * Calls a remote service with parameters in the given DataBinder as arguments.
+     */
+    public static Response call(String server, String service, boolean suppress, DataBinder binder) {
         List<String> params = new ArrayList<String>();
         for (Map.Entry<String, String> entry: binder.entrySet()) {
             String name = entry.getKey();
             if (name.charAt(0) == '_' || name.charAt(0) == '#') continue;
             params.add(name + '=' + entry.getValue());
         }
-        return call(server, service, params.toArray(new String[params.size()]));
+        return call(server, service, suppress, params.toArray(new String[params.size()]));
     }
 
     /**
      * Calls a remote service with a list of "name=value" string values as arguments.
      */
     public static Response call(String server, String service, String... params) {
+        return call(server, service, false, params);
+    }
+
+    /**
+     * Calls a remote service with a list of "name=value" string values as arguments.
+     */
+    public static Response call(String server, String service, boolean suppress, String... params) {
         try {
             URL url = new URL(server + '/' + service);
             URLConnection connection = url.openConnection();
@@ -94,13 +115,13 @@ public class RemoteService {
                 byte[] bytes = Arrays.read(in);
                 try {
                     Response response = _mapper.readValue(bytes, Response.class).setResponseBody(bytes);
-                    if (response.params != null) {
+                    if (response.params == null) {
+                        throw new ServiceException("***ProtocolErrorMissingParams");
+                    } else if (!suppress) {
                         String message = (String)response.params.get(Service.FAILURE_MESSAGE);
                         if (message != null) {
                             throw new RemoteServiceException(message);
                         }
-                    } else {
-                        throw new ServiceException("***ProtocolErrorMissingParams");
                     }
                     return response;
                 } catch (JsonProcessingException x) {
