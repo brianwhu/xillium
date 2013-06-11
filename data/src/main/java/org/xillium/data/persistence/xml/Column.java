@@ -30,7 +30,7 @@ public class Column<T extends DataObject> {
     public void set(String text) throws Exception {
         try {
             Field field = Beans.getKnownField(type, name);
-            Class<?> ftype = field.getType();
+            Class<?> ftype = Beans.boxPrimitive(field.getType());
             Method valueOf = null;
             try {
                 valueOf = ftype.getMethod("valueOf", String.class);
