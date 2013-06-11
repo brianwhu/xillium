@@ -104,7 +104,7 @@ public class RemoteService {
             URLConnection connection = url.openConnection();
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
-            PrintWriter pw = new PrintWriter(connection.getOutputStream());
+            PrintWriter pw = new PrintWriter(new OutputStreamWriter(connection.getOutputStream(), "utf-8"));
             for (String param: params) {
                 _logger.fine(param);
                 pw.print(param); pw.print('&');
