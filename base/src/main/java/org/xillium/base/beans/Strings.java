@@ -114,6 +114,13 @@ public class Strings {
     }
 
     /**
+     * Returns a substring from position 0 up to just before the stopper character.
+     */
+    public static String substringBefore(String text, char stopper) {
+        return text.substring(0, text.indexOf(stopper));
+    }
+
+    /**
      * Returns the substring following a given character, or the original if the character is not found.
      */
     public static String substringAfter(String text, char match) {
