@@ -117,7 +117,8 @@ public class Strings {
      * Returns a substring from position 0 up to just before the stopper character.
      */
     public static String substringBefore(String text, char stopper) {
-        return text.substring(0, text.indexOf(stopper));
+        int p = text.indexOf(stopper);
+        return p < 0 ? text : text.substring(0, p);
     }
 
     /**
