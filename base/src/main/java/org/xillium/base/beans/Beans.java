@@ -340,7 +340,9 @@ public class Beans {
                 // size of "value" bigger than that of "field"?
                 try {
                     Number number = (Number)value;
-                    if (Double.TYPE == ftype || Double.class.isAssignableFrom(ftype)) {
+                    if (Enum.class.isAssignableFrom(ftype)) {
+                        field.set(object, ftype.getEnumConstants()[number.intValue()]);
+                    } else if (Double.TYPE == ftype || Double.class.isAssignableFrom(ftype)) {
                         field.set(object, number.doubleValue());
                     } else if (Float.TYPE == ftype || Float.class.isAssignableFrom(ftype)) {
                         field.set(object, number.floatValue());
