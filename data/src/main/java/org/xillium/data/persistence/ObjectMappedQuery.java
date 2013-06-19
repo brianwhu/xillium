@@ -56,7 +56,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                 while (rs.next()) {
                     T object = _type.newInstance();
                     for (Column2Field c2f: _c2fs) {
-                        setValue(object, c2f.field, rs.getObject(c2f.index));
+                        Beans.setValue(object, c2f.field, rs.getObject(c2f.index));
                     }
                     if (!_collector.add(object)) break;
                 }

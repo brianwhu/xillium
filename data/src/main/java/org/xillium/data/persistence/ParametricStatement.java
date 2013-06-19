@@ -309,7 +309,7 @@ public class ParametricStatement {
             for (int i = 0; i < _params.length; ++i) {
                 if ((_params[i].direction & Param.OUT) == 0) continue;
                 try {
-                    setValue(object, Beans.getKnownField(type, _params[i].name), statement.getObject(i+1));
+                    Beans.setValue(object, Beans.getKnownField(type, _params[i].name), statement.getObject(i+1));
                 } catch (NoSuchFieldException x) {
                     // ignore
                 } catch (Exception x) {
@@ -362,6 +362,7 @@ public class ParametricStatement {
         return count;
     }
 
+/*
     @SuppressWarnings("unchecked")
     protected void setValue(Object object, Field field, Object value) throws IllegalArgumentException, IllegalAccessException {
         if (value == null) {
@@ -415,4 +416,5 @@ public class ParametricStatement {
         }
 
     }
+*/
 }
