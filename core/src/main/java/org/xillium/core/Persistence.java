@@ -111,7 +111,7 @@ public class Persistence {
     /**
      * Executes a SELECT statement and passes the result set to the ResultSetWorker.
      */
-    public <T> T executeSelect(String name, DataObject object, ParametricQuery.ResultSetWorker<T> worker) throws Exception {
+    public <T> T executeSelect(String name, DataObject object, ResultSetWorker<T> worker) throws Exception {
         ParametricQuery statement = (ParametricQuery)_statements.get(name);
         if (statement != null) {
             return statement.executeSelect(DataSourceUtils.getConnection(_dataSource), object, worker);

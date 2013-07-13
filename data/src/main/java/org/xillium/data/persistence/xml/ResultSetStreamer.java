@@ -18,13 +18,13 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xillium.base.beans.Strings;
-import org.xillium.data.persistence.ParametricQuery;
+import org.xillium.data.persistence.ResultSetWorker;
 
 
 /**
- * A ParametricQuery.ResultSetWorker implementation that writes the result set as an XML document into a Writer.
+ * A ResultSetWorker implementation that writes the result set as an XML document into a Writer.
  */
-public class ResultSetStreamer implements ParametricQuery.ResultSetWorker<Writer> {
+public class ResultSetStreamer implements ResultSetWorker<Writer> {
     public static final String NAMESPACE = "java://org.xillium.data.persistence.xml";
     public static final String ROOT      = "sql-rs:data";
     public static final String ROW       = "row";

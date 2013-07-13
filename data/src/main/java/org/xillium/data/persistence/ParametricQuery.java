@@ -8,13 +8,6 @@ import java.sql.*;
  * A prepared SQL SELECT statement with named parameters.
  */
 public class ParametricQuery extends ParametricStatement {
-	/**
-	 * All query results are passed to a ResultSetWorker, which processes the result set and produces an object of type T.
-	 */
-    public static interface ResultSetWorker<T> {
-        public T process(ResultSet rs) throws Exception;
-    }
-
     /**
      * Constructs a ParametricQuery with the named parameters and the SQL string.
      */

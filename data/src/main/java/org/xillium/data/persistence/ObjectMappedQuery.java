@@ -25,7 +25,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
         }
     }
 
-    private class  ResultSetMapper<C extends Collector<T>> implements ParametricQuery.ResultSetWorker<C> {
+    private class  ResultSetMapper<C extends Collector<T>> implements ResultSetWorker<C> {
         private final C _collector;
 
         public ResultSetMapper(C collector) {

@@ -43,7 +43,7 @@ public class DataAccess {
             System.out.println(Beans.toString(data));
 
             //ResultSet rset = DepartmentsByLocation.intoResultSet(conn, data);
-            DepartmentsByLocation.executeSelect(conn, data, new ParametricQuery.ResultSetWorker<Object>() {
+            DepartmentsByLocation.executeSelect(conn, data, new ResultSetWorker<Object>() {
                 public Object process(ResultSet rset) throws Exception {
                     CachedResultSet crs = new CachedResultSet(rset);
                     System.out.println(Beans.toString(crs));
@@ -53,7 +53,7 @@ public class DataAccess {
             });
 
             //rset = EmployeesWithSalaryAbove.intoResultSet(conn, data);
-            EmployeesWithSalaryAbove.executeSelect(conn, data, new ParametricQuery.ResultSetWorker<Object>() {
+            EmployeesWithSalaryAbove.executeSelect(conn, data, new ResultSetWorker<Object>() {
                 public Object process(ResultSet rset) throws Exception {
                     CachedResultSet crs = new CachedResultSet(rset);
                     System.out.println(Beans.toString(crs));
@@ -62,7 +62,7 @@ public class DataAccess {
                 }
             });
 
-            EmployeesWithSalaryAbove2.executeSelect(conn, data, new ParametricQuery.ResultSetWorker<Object>() {
+            EmployeesWithSalaryAbove2.executeSelect(conn, data, new ResultSetWorker<Object>() {
                 public Object process(ResultSet rset) throws Exception {
                     CachedResultSet crs = new CachedResultSet(rset);
                     System.out.println(Beans.toString(crs));

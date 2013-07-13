@@ -7,14 +7,14 @@ import java.sql.*;
 import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.Strings;
 import org.xillium.base.beans.JSONBuilder;
-import org.xillium.data.persistence.ParametricQuery;
+import org.xillium.data.persistence.ResultSetWorker;
 
 
 /**
  * A data binder
  */
 @SuppressWarnings("serial")
-public class DataBinder extends HashMap<String, String> implements ParametricQuery.ResultSetWorker<DataBinder>{
+public class DataBinder extends HashMap<String, String> implements ResultSetWorker<DataBinder>{
     private final Map<String, CachedResultSet> _rsets = new HashMap<String, CachedResultSet>();
     private final Map<String, Object> _named = new HashMap<String, Object>();
 

@@ -26,9 +26,9 @@ public class CachedResultSet {
     public final List<Object[]> rows;
 
     /**
-     * A ParametricQuery.ResultSetWorker implementation that builds a CachedResultSet.
+     * A ResultSetWorker implementation that builds a CachedResultSet.
      */
-    public static class Builder implements ParametricQuery.ResultSetWorker<CachedResultSet> {
+    public static class Builder implements ResultSetWorker<CachedResultSet> {
         public CachedResultSet process(ResultSet rs) throws SQLException {
             return new CachedResultSet(rs);
         }
