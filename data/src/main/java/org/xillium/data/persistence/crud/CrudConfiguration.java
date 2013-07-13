@@ -28,8 +28,8 @@ public class CrudConfiguration {
     /**
      * Defines a mapping from the name of a constraint to an appropriate message when that constraint is violated.
      */
-    public CrudConfiguration(String constraint, String message) throws Exception {
-        icve.put(constraint, message);
+    public CrudConfiguration(Map<String, String> messages) throws Exception {
+        icve.putAll(messages);
     }
 }
 

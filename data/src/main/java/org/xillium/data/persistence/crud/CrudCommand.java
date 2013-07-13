@@ -479,6 +479,14 @@ public class CrudCommand {
         }
         if (action.restriction != null) for (String key: action.restriction.keySet()) {
             sb.append(Strings.toCamelCase(key, '_'));
+            String value = action.restriction.get(key);
+            if (value != null) {
+                if (value.charAt(0) == NEGATIVE_INDICATOR) {
+                    sb.append('0');
+                    value = value.substring(1);
+                }
+                sb.append(Strings.toCamelCase(value, '_'));
+            }
         }
         return sb.toString();
     }
