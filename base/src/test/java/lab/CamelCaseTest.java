@@ -107,4 +107,16 @@ public class CamelCaseTest {
 
         System.out.println(Strings.toCamelCase("This is a simple message", ' '));
     }
+
+    @Test(groups={"functional"})
+    public void testSplitCamelCase() {
+        assert "lowercase".equals(Strings.splitCamelCase("lowercase", " "));
+        assert "Class".equals(Strings.splitCamelCase("Class", " "));
+        assert "My Class".equals(Strings.splitCamelCase("MyClass", " "));
+        assert "HTML".equals(Strings.splitCamelCase("HTML", " "));
+        assert "PDF Loader".equals(Strings.splitCamelCase("PDFLoader", " "));
+        assert "A String".equals(Strings.splitCamelCase("AString", " "));
+        assert "Simple XML Parser".equals(Strings.splitCamelCase("SimpleXMLParser", " "));
+        assert "GL 11 Version".equals(Strings.splitCamelCase("GL11Version", " "));
+    }
 }

@@ -90,6 +90,14 @@ public class Strings {
         return new String(chars, 0, base);
     }
 
+    static final Pattern CAMEL_REGEX = Pattern.compile(
+        String.format("%s|%s|%s", "(?<=[A-Z])(?=[A-Z][a-z])", "(?<=[^A-Z])(?=[A-Z])", "(?<=[A-Za-z])(?=[^A-Za-z])")
+    );
+
+    public static String splitCamelCase(String text, String separator) {
+        return CAMEL_REGEX.matcher(text).replaceAll(separator);
+    }
+
     /**
      * Capitalizes a word
      */

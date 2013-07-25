@@ -307,9 +307,11 @@ public class HttpServiceDispatcher extends HttpServlet {
                 message = "***"+Throwables.getRootCause(x).getClass().getSimpleName();
             }
             binder.put(Service.FAILURE_MESSAGE, message);
-            _logger.warning("Exception caught in dispatcher (" + id + "): " + message);
 
-            _logger.log(Level.INFO, "Exception stack trace:", x);
+            if (binder.get(Service.SUPPRESS_EX_LOGGING) == null) {
+                _logger.warning("Exception caught in dispatcher (" + id + "): " + message);
+                _logger.log(Level.INFO, "Exception stack trace:", x);
+            }
             CharArrayWriter sw = new CharArrayWriter();
             x.printStackTrace(new PrintWriter(sw));
             binder.put(Service.FAILURE_STACK, sw.toString());

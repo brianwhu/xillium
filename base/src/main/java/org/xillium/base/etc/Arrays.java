@@ -2,6 +2,7 @@ package org.xillium.base.etc;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.util.List;
 
 
 /**
@@ -24,4 +25,14 @@ public class Arrays {
         if (sb.length() > 0) sb.setLength(sb.length()-1);
         return sb.toString();
     }
+
+    public static <T> String join(List<T> list, char separator) {
+        StringBuilder sb = new StringBuilder();
+        for (T element: list) {
+            sb.append(element != null ? element.toString() : "null").append(separator);
+        }
+        if (sb.length() > 0) sb.setLength(sb.length()-1);
+        return sb.toString();
+    }
+
 }
