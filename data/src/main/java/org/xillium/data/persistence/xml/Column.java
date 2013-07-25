@@ -47,7 +47,7 @@ public class Column<T extends DataObject> {
             } else {
                 data = valueOf.getParameterTypes().length == 1 ? valueOf.invoke(null, text) : valueOf.invoke(null, valueOf.getReturnType(), text);
             }
-        } catch (Exception x) {
+        } catch (NoSuchFieldException x) {
             // ignore
         }
     }
