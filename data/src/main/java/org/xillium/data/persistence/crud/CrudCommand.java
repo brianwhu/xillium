@@ -195,6 +195,11 @@ public class CrudCommand {
 			}
 			keys.close();
 
+            // RETRIEVE is not compatible with tables without a primary key
+            if (primaryKeys.isEmpty() && action.op == Operation.RETRIEVE) {
+                throw new RuntimeException("Primary key expected for RETRIEVE command, but missing on table " + tablenames[i]);
+            }
+
             // ISA keys and table join conditions
 			Set<String> isaKeys = new HashSet<String>();
 			if (i > 0) {
