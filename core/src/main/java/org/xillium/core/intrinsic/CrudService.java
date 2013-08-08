@@ -1,7 +1,6 @@
 package org.xillium.core.intrinsic;
 
-import java.sql.Connection;
-import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.*;
 import javax.sql.DataSource;
 import java.util.Map;
 import java.util.logging.*;
@@ -197,6 +196,12 @@ public class CrudService extends SecuredService implements Service.Extended, Dyn
                 }
                 break;
             }
+        } catch (SQLSyntaxErrorException x) {
+            _logger.warning("Check SQL syntax!");
+            for (int i = 0; i < _command.getStatements().length; ++i) {
+                _logger.warning(_command.getStatements()[i].getSQL());
+            }
+            throw new ServiceException(x.getMessage(), x);
         } catch (SQLIntegrityConstraintViolationException x) {
             Matcher matcher = CONSTRAINT.matcher(x.getMessage());
             if (matcher.find()) {
