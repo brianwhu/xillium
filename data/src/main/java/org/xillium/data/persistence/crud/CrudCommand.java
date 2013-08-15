@@ -19,9 +19,9 @@ import org.xillium.data.persistence.*;
  * - restrictions on values for specific columns; a value starting with '!' indicate negative comparison.
  */
 public class CrudCommand {
-	private static final String STATEMENT_FIELD_NAME = "_STMT";
-	private static final char REQUIRED_INDICATOR = '*';
-	private static final char NEGATIVE_INDICATOR = '!';
+    private static final String STATEMENT_FIELD_NAME = "_STMT";
+    private static final char REQUIRED_INDICATOR = '*';
+    private static final char NEGATIVE_INDICATOR = '!';
     private static final Map<String, Class<? extends DataObject>> _classes = new HashMap<String, Class<? extends DataObject>>();
 
     private final Operation _oper;
@@ -33,56 +33,66 @@ public class CrudCommand {
         RETRIEVE,
         UPDATE,
         DELETE,
-		SEARCH
+        SEARCH
     }
 
-	public static class Action {
-		final Operation op;
-		final String[] args;
-		final boolean[] reqd;
+    public static class Action {
+        final Operation op;
+        final String[] args;
+        final boolean[] reqd;
         final Map<String, String> restriction;
 
-		public Action(Operation op) {
-			this.op = op;
-			this.args = null;
-			this.reqd = null;
+        public Action(Operation op) {
+            this.op = op;
+            this.args = null;
+            this.reqd = null;
             this.restriction = null;
-		}
+        }
 
-		public Action(Operation op, Map<String, String> restriction) {
-			this.op = op;
-			this.args = null;
-			this.reqd = null;
+        public Action(Operation op, Map<String, String> restriction) {
+            this.op = op;
+            if (op == Operation.SEARCH) {
+                this.args = restriction.keySet().toArray(new String[restriction.size()]);
+                this.reqd = new boolean[this.args.length];
+            } else {
+                this.args = null;
+                this.reqd = null;
+            }
             this.restriction = restriction;
-		}
+        }
 
         /**
          * @param args - applies to UPDATE, SEARCH. A leading asterisk indicates a required fields for SEARCH operation.
          */
-		public Action(Operation op, String[] args) {
-			this.op = op;
-			this.args = args;
-			this.reqd = new boolean[args.length];
+        public Action(Operation op, String[] args) {
+            this.op = op;
+            this.args = args;
+            this.reqd = new boolean[this.args.length];
             this.restriction = null;
             analyzeRequiredArgs();
-		}
+        }
 
         /**
          * @param args - applies to UPDATE, SEARCH. A leading asterisk indicates a required fields for SEARCH operation.
          * @param restriction - applies to CREATE, UPDATE, SEARCH, DELETE
          */
-		public Action(Operation op, String[] args, Map<String, String> restriction) {
-			this.op = op;
-			this.args = args;
-			this.reqd = new boolean[args.length];
+        public Action(Operation op, String[] args, Map<String, String> restriction) {
+            this.op = op;
+            if (op == Operation.SEARCH) {
+                this.args = restriction.keySet().toArray(new String[restriction.size() + args.length]);
+                System.arraycopy(args, 0, this.args, restriction.size(), args.length);
+            } else {
+                this.args = args;
+            }
+            this.reqd = new boolean[this.args.length];
             this.restriction = restriction;
             analyzeRequiredArgs();
-		}
+        }
 
 /*
-		public boolean isValid() {
-			return (op != Operation.UPDATE) || (args != null && args.length > 0);
-		}
+        public boolean isValid() {
+            return (op != Operation.UPDATE) || (args != null && args.length > 0);
+        }
 */
 
         public String toString() {
@@ -97,7 +107,7 @@ public class CrudCommand {
                 }
             }
         }
-	}
+    }
 
     /**
      * Constructs a CrudCommand.
@@ -141,59 +151,58 @@ public class CrudCommand {
      * For RETRIEVE and SEARCH operations the array contains only 1 statement.
      */ 
     public ParametricStatement[] getStatements() {
-		try {
-			return (ParametricStatement[])_type.getDeclaredField(STATEMENT_FIELD_NAME).get(null);
-		} catch (Exception x) {
-			throw new RuntimeException("Unexpected CRUD class error", x);
-		}
+        try {
+            return (ParametricStatement[])_type.getDeclaredField(STATEMENT_FIELD_NAME).get(null);
+        } catch (Exception x) {
+            throw new RuntimeException("Unexpected CRUD class error", x);
+        }
     }
 
     /**
      * Creates a new Java model class for carrying out the CRUD action on the entity represented by the list of tables.
      */
     @SuppressWarnings("unchecked")
-    public static Class<? extends DataObject>
-    modelFromTables(Connection connection, String classname, Action action, String... tablenames) throws Exception {
+    public static Class<? extends DataObject> modelFromTables(Connection connection, String classname, Action action, String... tablenames) throws Exception {
 /*
-		if (!action.isValid()) {
-			throw new RuntimeException("Invalid CRUD action: update without column list");
-		}
+        if (!action.isValid()) {
+            throw new RuntimeException("Invalid CRUD action: update without column list");
+        }
 */
 
-		ClassPool pool = ClassPool.getDefault();
+        ClassPool pool = ClassPool.getDefault();
         // this line is necessary for web applications (web container class loader in play)
         pool.appendClassPath(new LoaderClassPath(org.xillium.data.DataObject.class.getClassLoader()));
 
-		CtClass cc = pool.makeClass(classname);
-		cc.addInterface(pool.getCtClass("org.xillium.data.DataObject"));
-		ConstPool cp = cc.getClassFile().getConstPool();
+        CtClass cc = pool.makeClass(classname);
+        cc.addInterface(pool.getCtClass("org.xillium.data.DataObject"));
+        ConstPool cp = cc.getClassFile().getConstPool();
 
-		List<String> fragments = new ArrayList<String>();
-		Set<String> unique = new HashSet<String>();
+        List<String> fragments = new ArrayList<String>();
+        Set<String> unique = new HashSet<String>();
 
-/*SQL*/	StringBuilder
-            cols = new StringBuilder(),	// CREATE: COLUMNS, RETRIEVE: TABLES, UPDATE: SET CLAUSES, DELETE: (not used), SEARCH: TABLES
-            vals = new StringBuilder(),	// CREATE: VALUES,  RETRIEVE: COND'S, UPDATE: COND'S,      DELETE: COND'S,     SEARCH: COND'S
+/*SQL*/    StringBuilder
+            cols = new StringBuilder(),    // CREATE: COLUMNS, RETRIEVE: TABLES, UPDATE: SET CLAUSES, DELETE: (not used), SEARCH: TABLES
+            vals = new StringBuilder(),    // CREATE: VALUES,  RETRIEVE: COND'S, UPDATE: COND'S,      DELETE: COND'S,     SEARCH: COND'S
             flds = new StringBuilder();
 
         DatabaseMetaData meta = connection.getMetaData();
         String schema = meta.getUserName();
 
-		for (int i = 0; i < tablenames.length; ++i) {
+        for (int i = 0; i < tablenames.length; ++i) {
 
-			PreparedStatement stmt = connection.prepareStatement("SELECT * FROM " + tablenames[i]);
-			ResultSetMetaData rsmeta = stmt.getMetaData();
-			Map<String, Integer> colref = new HashMap<String, Integer>();
-			for (int j = 1, jj = rsmeta.getColumnCount(); j <= jj; ++j) {
-				colref.put(rsmeta.getColumnName(j), new Integer(j));
-			}
+            PreparedStatement stmt = connection.prepareStatement("SELECT * FROM " + tablenames[i]);
+            ResultSetMetaData rsmeta = stmt.getMetaData();
+            Map<String, Integer> colref = new HashMap<String, Integer>();
+            for (int j = 1, jj = rsmeta.getColumnCount(); j <= jj; ++j) {
+                colref.put(rsmeta.getColumnName(j), new Integer(j));
+            }
 
-			Set<String> primaryKeys = new HashSet<String>();
-			ResultSet keys = meta.getPrimaryKeys(connection.getCatalog(), schema, tablenames[i]);
-			while (keys.next()) {
-				primaryKeys.add(keys.getString(PKEY_COLUMN));
-			}
-			keys.close();
+            Set<String> primaryKeys = new HashSet<String>();
+            ResultSet keys = meta.getPrimaryKeys(connection.getCatalog(), schema, tablenames[i]);
+            while (keys.next()) {
+                primaryKeys.add(keys.getString(PKEY_COLUMN));
+            }
+            keys.close();
 
             // RETRIEVE is not compatible with tables without a primary key
             if (primaryKeys.isEmpty() && action.op == Operation.RETRIEVE) {
@@ -201,10 +210,10 @@ public class CrudCommand {
             }
 
             // ISA keys and table join conditions
-			Set<String> isaKeys = new HashSet<String>();
-			if (i > 0) {
-				keys = meta.getImportedKeys(connection.getCatalog(), schema, tablenames[i]);
-				while (keys.next()) {
+            Set<String> isaKeys = new HashSet<String>();
+            if (i > 0) {
+                keys = meta.getImportedKeys(connection.getCatalog(), schema, tablenames[i]);
+                while (keys.next()) {
                     String jointable = null;
                     for (int j = 0; j < i; ++j) {
                         if (keys.getString(FKEY_REFERENCED_TABLE).equals(tablenames[j])) {
@@ -213,47 +222,47 @@ public class CrudCommand {
                         }
                     }
                     if (jointable != null && primaryKeys.contains(keys.getString(FKEY_REFERENCING_COLUMN))) {
-						String column = keys.getString(FKEY_REFERENCING_COLUMN);
-						isaKeys.add(column);
+                        String column = keys.getString(FKEY_REFERENCING_COLUMN);
+                        isaKeys.add(column);
                         if (action.op == Operation.RETRIEVE || action.op == Operation.SEARCH) {
-    /*SQL*/     		    if (vals.length() > 0) vals.append(" AND ");
-    /*SQL*/     		    vals.append(tablenames[i]).append('.').append(column).append('=').append(jointable).append('.').append(column);
+    /*SQL*/                 if (vals.length() > 0) vals.append(" AND ");
+    /*SQL*/                 vals.append(tablenames[i]).append('.').append(column).append('=').append(jointable).append('.').append(column);
                         }
-					}
-				}
-				keys.close();
-			}
+                    }
+                }
+                keys.close();
+            }
 
-			String alias = ((action.op == Operation.RETRIEVE || action.op == Operation.SEARCH) && tablenames.length > 1) ? tablenames[i]+'.' : "";
+            String alias = ((action.op == Operation.RETRIEVE || action.op == Operation.SEARCH) && tablenames.length > 1) ? tablenames[i]+'.' : "";
 
-			if (action.op != Operation.RETRIEVE && action.op != Operation.SEARCH) {
-				cols.setLength(0);
-				vals.setLength(0);
-				flds.setLength(0);
-			} else {
-	/*SQL*/     if (cols.length() > 0) cols.append(',');
-	/*SQL*/     cols.append(tablenames[i]);
-			}
+            if (action.op != Operation.RETRIEVE && action.op != Operation.SEARCH) {
+                cols.setLength(0);
+                vals.setLength(0);
+                flds.setLength(0);
+            } else {
+    /*SQL*/     if (cols.length() > 0) cols.append(',');
+    /*SQL*/     cols.append(tablenames[i]);
+            }
 
-			Set<String> requested = new HashSet<String>();
-			Set<String> required = new HashSet<String>();
-			if (action.op == Operation.UPDATE) {
-				for (String column: calcUpdateColumns(action.args, colref, primaryKeys)) {
-					Integer idx = colref.get(column);
-					if (idx != null) {
-	/*SQL*/         	if (cols.length() > 0) cols.append(',');
+            Set<String> requested = new HashSet<String>();
+            Set<String> required = new HashSet<String>();
+            if (action.op == Operation.UPDATE) {
+                for (String column: calcUpdateColumns(action.args, colref, primaryKeys)) {
+                    Integer idx = colref.get(column);
+                    if (idx != null) {
+    /*SQL*/             if (cols.length() > 0) cols.append(',');
     /*SQL*/             String restriction = action.restriction == null ? null : action.restriction.get(column);
                         if (restriction == null) {
-	/*SQL*/         	    cols.append(column).append("=COALESCE(?,").append(column).append(')');
-	/*SQL*/                 if (flds.length() > 0) flds.append(',');
-						    flds.append(fieldName(tablenames[i], column)).append(':').append(rsmeta.getColumnType(idx.intValue()));
-						    requested.add(column);
+    /*SQL*/                 cols.append(column).append("=COALESCE(?,").append(column).append(')');
+    /*SQL*/                 if (flds.length() > 0) flds.append(',');
+                            flds.append(fieldName(tablenames[i], column)).append(':').append(rsmeta.getColumnType(idx.intValue()));
+                            requested.add(column);
                         } else {
-	/*SQL*/         	    cols.append(column).append('=').append(restriction);
+    /*SQL*/                 cols.append(column).append('=').append(restriction);
                         }
-					}
-				}
-			} else if (action.op == Operation.SEARCH && action.args != null) {
+                    }
+                }
+            } else if (action.op == Operation.SEARCH && action.args != null) {
                 for (int c = 0; c < action.args.length; ++c) {
                     Integer idx = colref.get(action.args[c]);
                     if (idx != null) {
@@ -279,146 +288,146 @@ public class CrudCommand {
                 }
             }
 
-			ResultSet columns = meta.getColumns(connection.getCatalog(), schema, tablenames[i], "%");
-			while (columns.next()) {
-				String name = columns.getString(COLUMN_NAME), fname = fieldName(tablenames[i], name);
-				int idx = colref.get(name).intValue();
+            ResultSet columns = meta.getColumns(connection.getCatalog(), schema, tablenames[i], "%");
+            while (columns.next()) {
+                String name = columns.getString(COLUMN_NAME), fname = fieldName(tablenames[i], name);
+                int idx = colref.get(name).intValue();
 
-				if ((action.op == Operation.RETRIEVE || action.op == Operation.DELETE) && !primaryKeys.contains(name)) {
-					continue;
-				} else if (action.op == Operation.UPDATE && !requested.contains(name) && !primaryKeys.contains(name)) {
-					continue;
-				} else if (action.op == Operation.SEARCH && !requested.contains(name)) {
+                if ((action.op == Operation.RETRIEVE || action.op == Operation.DELETE) && !primaryKeys.contains(name)) {
+                    continue;
+                } else if (action.op == Operation.UPDATE && !requested.contains(name) && !primaryKeys.contains(name)) {
+                    continue;
+                } else if (action.op == Operation.SEARCH && !requested.contains(name)) {
                     continue;
                 }
 
     /*SQL*/     String restriction = action.restriction == null ? null : action.restriction.get(name);
-				switch (action.op) {
-				case CREATE:
-	/*SQL*/         if (cols.length() > 0) {
-	/*SQL*/             cols.append(',');
-	/*SQL*/             vals.append(',');
-	/*SQL*/         }
-	/*SQL*/         cols.append(name);
+                switch (action.op) {
+                case CREATE:
+    /*SQL*/         if (cols.length() > 0) {
+    /*SQL*/             cols.append(',');
+    /*SQL*/             vals.append(',');
+    /*SQL*/         }
+    /*SQL*/         cols.append(name);
     /*SQL*/         if (restriction == null) {
-	/*SQL*/             vals.append('?');
-	/*SQL*/             if (flds.length() > 0) flds.append(',');
-					    flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
+    /*SQL*/             vals.append('?');
+    /*SQL*/             if (flds.length() > 0) flds.append(',');
+                        flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
                     } else {
-	/*SQL*/             vals.append(restriction);
+    /*SQL*/             vals.append(restriction);
                     }
-					break;
-				case RETRIEVE:
-					if (i > 0) {
-						// NOTE: ISA relation dictates that sub-tables' primary key == super-table's primary key
-						// therefore the join condition generated above is sufficient already
-						break;
-					}
-					// fall through for the super-table
-				case DELETE:
-					// only primary key columns
-	/*SQL*/         if (vals.length() > 0) vals.append(" AND ");
-	/*SQL*/         vals.append(alias).append(name);
+                    break;
+                case RETRIEVE:
+                    if (i > 0) {
+                        // NOTE: ISA relation dictates that sub-tables' primary key == super-table's primary key
+                        // therefore the join condition generated above is sufficient already
+                        break;
+                    }
+                    // fall through for the super-table
+                case DELETE:
+                    // only primary key columns
+    /*SQL*/         if (vals.length() > 0) vals.append(" AND ");
+    /*SQL*/         vals.append(alias).append(name);
     /*SQL*/         if (restriction == null) {
-	/*SQL*/             vals.append('=').append('?');
-	/*SQL*/             if (flds.length() > 0) flds.append(',');
-					    flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
+    /*SQL*/             vals.append('=').append('?');
+    /*SQL*/             if (flds.length() > 0) flds.append(',');
+                        flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
                     } else {
                         if (restriction.charAt(0) == NEGATIVE_INDICATOR) {
-	/*SQL*/                 vals.append("<>").append(restriction.substring(1));
+    /*SQL*/                 vals.append("<>").append(restriction.substring(1));
                         } else {
-	/*SQL*/                 vals.append('=').append(restriction);
+    /*SQL*/                 vals.append('=').append(restriction);
                         }
  
                     }
-					break;
-				case UPDATE:
-					// only primary key & updating columns
-					if (primaryKeys.contains(name)) {
-	/*SQL*/         	if (vals.length() > 0) vals.append(" AND ");
-	/*SQL*/         	vals.append(name);
+                    break;
+                case UPDATE:
+                    // only primary key & updating columns
+                    if (primaryKeys.contains(name)) {
+    /*SQL*/             if (vals.length() > 0) vals.append(" AND ");
+    /*SQL*/             vals.append(name);
     /*SQL*/             if (restriction == null) {
-	/*SQL*/                 vals.append('=').append('?');
-	/*SQL*/         	    if (flds.length() > 0) flds.append(',');
+    /*SQL*/                 vals.append('=').append('?');
+    /*SQL*/                 if (flds.length() > 0) flds.append(',');
                             flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
                         } else {
                             if (restriction.charAt(0) == NEGATIVE_INDICATOR) {
-	/*SQL*/                     vals.append("<>").append(restriction.substring(1));
+    /*SQL*/                     vals.append("<>").append(restriction.substring(1));
                             } else {
-	/*SQL*/                     vals.append('=').append(restriction);
+    /*SQL*/                     vals.append('=').append(restriction);
                             }
                         }
-					}
-				case SEARCH:
-					break;
-				}
+                    }
+                case SEARCH:
+                    break;
+                }
 
-				if (restriction != null || isaKeys.contains(name)) {
-					continue;
-				} else if (unique.contains(name)) {
-					continue;
-					//throw new RuntimeException("Duplicate column in ISA relationship detected " + tablenames[i] + ':' + name);
-				} else {
-					unique.add(name);
-				}
+                if (restriction != null || isaKeys.contains(name)) {
+                    continue;
+                } else if (unique.contains(name)) {
+                    continue;
+                    //throw new RuntimeException("Duplicate column in ISA relationship detected " + tablenames[i] + ':' + name);
+                } else {
+                    unique.add(name);
+                }
 
-				CtField field = new CtField(pool.getCtClass(sqlTypeName(rsmeta, idx)), fname, cc);
+                CtField field = new CtField(pool.getCtClass(sqlTypeName(rsmeta, idx)), fname, cc);
                 field.setModifiers(java.lang.reflect.Modifier.PUBLIC);
-				AnnotationsAttribute attr = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
+                AnnotationsAttribute attr = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
 
                 if (required.contains(name)) {
                     addAnnotation(attr, cp, "org.xillium.data.validation.required");
                 } else if (columns.getInt(IS_NULLABLE) == DatabaseMetaData.attributeNoNulls) {
-					if ((action.op != Operation.UPDATE && action.op != Operation.SEARCH) || primaryKeys.contains(name)) {
-						addAnnotation(attr, cp, "org.xillium.data.validation.required");
-					}
-				}
+                    if ((action.op != Operation.UPDATE && action.op != Operation.SEARCH) || primaryKeys.contains(name)) {
+                        addAnnotation(attr, cp, "org.xillium.data.validation.required");
+                    }
+                }
 
                 if (rsmeta.getPrecision(idx) != 0) {
                     addAnnotation(attr, cp, "org.xillium.data.validation.size", "value", new IntegerMemberValue(cp, rsmeta.getPrecision(idx)));
                 }
 
-				field.getFieldInfo().addAttribute(attr);
-				cc.addField(field);
-			}
-			columns.close();
-			stmt.close();
+                field.getFieldInfo().addAttribute(attr);
+                cc.addField(field);
+            }
+            columns.close();
+            stmt.close();
 
-			switch (action.op) {
-			case CREATE:
-				fragments.add("org.xillium.data.persistence.ParametricStatement");
-				fragments.add(flds.toString());
-				fragments.add("INSERT INTO " + tablenames[i] + '(' + cols.toString() + ") VALUES(" + vals.toString() + ')');
-				fragments.add(Strings.toCamelCase(tablenames[i], '_'));
-				break;
-			case UPDATE:
+            switch (action.op) {
+            case CREATE:
+                fragments.add("org.xillium.data.persistence.ParametricStatement");
+                fragments.add(flds.toString());
+                fragments.add("INSERT INTO " + tablenames[i] + '(' + cols.toString() + ") VALUES(" + vals.toString() + ')');
+                fragments.add(Strings.toCamelCase(tablenames[i], '_'));
+                break;
+            case UPDATE:
                 if (cols.length() > 0) {
                     fragments.add("org.xillium.data.persistence.ParametricStatement");
                     fragments.add(flds.toString());
                     fragments.add("UPDATE " + tablenames[i] + " SET " + cols.toString() + " WHERE " + vals.toString());
                     fragments.add(Strings.toCamelCase(tablenames[i], '_'));
                 }
-				break;
-			case DELETE:
-				fragments.add("org.xillium.data.persistence.ParametricStatement");
-				fragments.add(flds.toString());
-				fragments.add("DELETE FROM " + tablenames[i] + " WHERE " + vals.toString());
-				fragments.add(Strings.toCamelCase(tablenames[i], '_'));
-				break;
-			case RETRIEVE:
+                break;
+            case DELETE:
+                fragments.add("org.xillium.data.persistence.ParametricStatement");
+                fragments.add(flds.toString());
+                fragments.add("DELETE FROM " + tablenames[i] + " WHERE " + vals.toString());
+                fragments.add(Strings.toCamelCase(tablenames[i], '_'));
+                break;
+            case RETRIEVE:
             case SEARCH:
                 break;
-			}
-		}
+            }
+        }
 
-		if (action.op == Operation.RETRIEVE) {
-			fragments.add("org.xillium.data.persistence.ParametricQuery");
-			fragments.add(flds.toString());
-			fragments.add("SELECT * FROM " + cols + " WHERE " + vals);
+        if (action.op == Operation.RETRIEVE) {
+            fragments.add("org.xillium.data.persistence.ParametricQuery");
+            fragments.add(flds.toString());
+            fragments.add("SELECT * FROM " + cols + " WHERE " + vals);
             fragments.add("");
-		} else if (action.op == Operation.SEARCH) {
-			fragments.add("org.xillium.data.persistence.ParametricQuery");
-			fragments.add(flds.toString());
+        } else if (action.op == Operation.SEARCH) {
+            fragments.add("org.xillium.data.persistence.ParametricQuery");
+            fragments.add(flds.toString());
             if (vals.length() > 0) {
                 fragments.add("SELECT * FROM " + cols + " WHERE " + vals);
             } else {
@@ -427,32 +436,32 @@ public class CrudCommand {
             fragments.add("");
         }
 
-		CtField field = new CtField(pool.getCtClass("org.xillium.data.persistence.ParametricStatement[]"), STATEMENT_FIELD_NAME, cc);
-		field.setModifiers(java.lang.reflect.Modifier.PUBLIC | java.lang.reflect.Modifier.STATIC | java.lang.reflect.Modifier.FINAL);
-		cc.addField(field, CtField.Initializer.byCallWithParams(
-			pool.getCtClass(CrudCommand.class.getName()), "buildStatements", fragments.toArray(new String[fragments.size()])
-		));
+        CtField field = new CtField(pool.getCtClass("org.xillium.data.persistence.ParametricStatement[]"), STATEMENT_FIELD_NAME, cc);
+        field.setModifiers(java.lang.reflect.Modifier.PUBLIC | java.lang.reflect.Modifier.STATIC | java.lang.reflect.Modifier.FINAL);
+        cc.addField(field, CtField.Initializer.byCallWithParams(
+            pool.getCtClass(CrudCommand.class.getName()), "buildStatements", fragments.toArray(new String[fragments.size()])
+        ));
 
-		return (Class<? extends DataObject>)cc.toClass(CrudCommand.class.getClassLoader(), CrudCommand.class.getProtectionDomain());
+        return (Class<? extends DataObject>)cc.toClass(CrudCommand.class.getClassLoader(), CrudCommand.class.getProtectionDomain());
     }
 
-	public static ParametricStatement[] buildStatements(String[] args) throws Exception {
-		ParametricStatement[] stmts = new ParametricStatement[args.length/4];
-		for (int i = 0; i < stmts.length; ++i) {
-			stmts[i] = ((ParametricStatement)Class.forName(args[i*4+0]).getConstructor(String.class).newInstance(args[i*4+1])).set(args[i*4+2]);
+    public static ParametricStatement[] buildStatements(String[] args) throws Exception {
+        ParametricStatement[] stmts = new ParametricStatement[args.length/4];
+        for (int i = 0; i < stmts.length; ++i) {
+            stmts[i] = ((ParametricStatement)Class.forName(args[i*4+0]).getConstructor(String.class).newInstance(args[i*4+1])).set(args[i*4+2]);
             stmts[i].setTag(args[i*4+3]);
-		}
-		return stmts;
-	}
+        }
+        return stmts;
+    }
 
-	private static final int COLUMN_NAME = 4;
-	//private static final int COLUMN_TYPE = 5;	// java.sql.Types.#
-	private static final int COLUMN_SIZE = 7;
-	private static final int IS_NULLABLE = 11;
-	private static final int PKEY_COLUMN = 4;
-	private static final int FKEY_REFERENCED_TABLE = 3;
-	//private static final int FKEY_REFERENCED_COLUMN = 4;
-	private static final int FKEY_REFERENCING_COLUMN = 8;
+    private static final int COLUMN_NAME = 4;
+    //private static final int COLUMN_TYPE = 5;    // java.sql.Types.#
+    private static final int COLUMN_SIZE = 7;
+    private static final int IS_NULLABLE = 11;
+    private static final int PKEY_COLUMN = 4;
+    private static final int FKEY_REFERENCED_TABLE = 3;
+    //private static final int FKEY_REFERENCED_COLUMN = 4;
+    private static final int FKEY_REFERENCING_COLUMN = 8;
 
     private static String[] calcUpdateColumns(String[] columns, Map<String, Integer> colref, Set<String> keys) {
         if (columns != null) {
@@ -496,37 +505,37 @@ public class CrudCommand {
         return sb.toString();
     }
 
-	private static String sqlTypeName(ResultSetMetaData rsmeta, int index) throws SQLException {
-		switch (rsmeta.getColumnType(index)) {
-		case Types.NUMERIC:
-			int precision = rsmeta.getPrecision(index);
-			if (rsmeta.getScale(index) == 0) {
-				if (precision > 9) {
-					return "java.lang.Long";
-				} else if (precision > 4) {
-					return "java.lang.Integer";
-				} else if (precision > 2) {
-					return "java.lang.Short";
-				} else {
-					return "java.lang.Byte";
-				}
-			} else {
-				if (precision > 7) {
-					return "java.lang.Double";
-				} else {
-					return "java.lang.Float";
-				}
-			}
+    private static String sqlTypeName(ResultSetMetaData rsmeta, int index) throws SQLException {
+        switch (rsmeta.getColumnType(index)) {
+        case Types.NUMERIC:
+            int precision = rsmeta.getPrecision(index);
+            if (rsmeta.getScale(index) == 0) {
+                if (precision > 9) {
+                    return "java.lang.Long";
+                } else if (precision > 4) {
+                    return "java.lang.Integer";
+                } else if (precision > 2) {
+                    return "java.lang.Short";
+                } else {
+                    return "java.lang.Byte";
+                }
+            } else {
+                if (precision > 7) {
+                    return "java.lang.Double";
+                } else {
+                    return "java.lang.Float";
+                }
+            }
         case Types.TIMESTAMP:
             if (rsmeta.getScale(index) == 0) {
                 return "java.sql.Date";
             } else {
                 return "java.sql.Timestamp";
             }
-		default:
-			return rsmeta.getColumnClassName(index);
-		}
-	}
+        default:
+            return rsmeta.getColumnClassName(index);
+        }
+    }
 
     private static String fieldName(String table, String column) {
         Map<String, String> alias = CrudConfiguration.aliases.get(table);
