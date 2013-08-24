@@ -291,7 +291,7 @@ public class ParametricStatement {
     }
 
     /**
-     * Executes a callable statement.
+     * Executes a callable statement that performs updates.
      *
      * @returns the number of rows affected
      */
@@ -303,7 +303,9 @@ public class ParametricStatement {
                 statement.registerOutParameter(i+1, _params[i].type);
             }
             load(statement, object);
-            int code = statement.executeUpdate();
+            statement.execute();
+
+            int result = statement.getUpdateCount();
 
             Class<? extends DataObject> type = object.getClass();
             for (int i = 0; i < _params.length; ++i) {
@@ -316,7 +318,7 @@ public class ParametricStatement {
                     throw new SQLException("Exception in storage of '" + _params[i].name + "' into DataObject (" + type.getName() + ')', x);
                 }
             }
-            return code;
+            return result;
         } finally {
             statement.close();
         }
