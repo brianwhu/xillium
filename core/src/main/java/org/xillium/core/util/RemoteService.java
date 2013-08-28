@@ -119,7 +119,7 @@ public class RemoteService {
                         throw new ServiceException("***ProtocolErrorMissingParams");
                     } else if (!suppress) {
                         String message = (String)response.params.get(Service.FAILURE_MESSAGE);
-                        if (message != null) {
+                        if (message != null && message.length() > 0) {
                             throw new RemoteServiceException(message);
                         }
                     }
