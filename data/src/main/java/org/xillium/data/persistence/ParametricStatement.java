@@ -137,19 +137,21 @@ public class ParametricStatement {
         return _sql;
     }
 
+    /**
+     * Returns a DataObject class appropriate for this statement. If this statement defines no in/out parameters, this method returns null.
+     *
+     * @param cname - the class name to be associated with this class
+     */
     @SuppressWarnings("unchecked")
-    public Class<? extends DataObject> generateDataObjectClass(String cname) throws Exception {
+    public Class<? extends DataObject> getDataObjectClass(String cname) throws Exception {
+        Class<? extends DataObject> c = null;
 
         try {
-            return (Class<? extends DataObject>)Class.forName(cname);
-    /*
+            c = (Class<? extends DataObject>)Class.forName(cname);
             if (!DataObject.class.isAssignableFrom(c)) {
-                throw new ClassCastException(cname);
+                throw new ClassCastException(cname + " is not an implementation of DataObject");
             }
-    */
         } catch (ClassNotFoundException x) {
-            Class<? extends DataObject> c = null;
-
             if (_params != null && _params.length > 0) {
                 Map<String, ParametricStatement.Param> params = new HashMap<String, ParametricStatement.Param>();
                 for (ParametricStatement.Param param: _params) {
@@ -165,7 +167,6 @@ public class ParametricStatement {
                 ConstPool cp = cc.getClassFile().getConstPool();
 
                 for (ParametricStatement.Param param: params.values()) {
-    System.out.println(param);
                     CtField field = new CtField(pool.getCtClass(sqlTypeName(param.type)), param.name, cc);
                     field.setModifiers(java.lang.reflect.Modifier.PUBLIC);
                     if ((param.direction & ParametricStatement.Param.IN) != 0 && !param.nullable) {
@@ -179,9 +180,9 @@ public class ParametricStatement {
 
                 c = cc.toClass(DataObject.class.getClassLoader(), DataObject.class.getProtectionDomain());
             }
-
-            return c;
         }
+
+        return c;
     }
 
     protected <T extends PreparedStatement> T load(T statement, DataObject object) throws SQLException {

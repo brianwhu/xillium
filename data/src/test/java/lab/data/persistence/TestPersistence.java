@@ -12,9 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.testng.annotations.*;
 
+import org.xillium.data.*;
 import org.xillium.data.persistence.*;
 import org.xillium.data.persistence.xml.*;
 import org.xillium.base.beans.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 
 /**
@@ -91,4 +95,37 @@ System.err.println(getClass().getResource("/object-mapped.xml"));
         selectMemberships.executeSelect(DataSourceUtils.getConnection(dataSource), null, new ResultSetStreamer("members", new OutputStreamWriter(System.out)));
         System.err.println("***testResultSet2Xml: done");
     }
+
+    @Test(groups={"object"})
+    public void testDataObjectClassGen() throws Exception {
+        XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
+        assembler.build(getClass().getResourceAsStream("/object-mapped.xml"));
+
+        StorageConfiguration.getParametricStatement("CreateMembership").executeInsert(DataSourceUtils.getConnection(dataSource), null, false);
+
+        @SuppressWarnings("unchecked")
+        ObjectMappedQuery<Membership> selectMembership = (ObjectMappedQuery<Membership>)StorageConfiguration.getParametricStatement("SelectMembership");
+
+        Class<? extends DataObject> c = selectMembership.getDataObjectClass("lab.data.persistence.test.ObjectMappedQueryData");
+        ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        System.out.print("testDataObjectClassGen: Request = "); System.out.println(mapper.writeValueAsString(mapper.readTree(DataObject.Util.describe(c))));
+
+        Properties p = new Properties();
+        p.load(getClass().getResourceAsStream("/object-mapped.properties"));
+        DataObject t = new org.xillium.data.validation.Dictionary().collect(c.newInstance(), new DataBinder().load(p));
+        System.out.print("testDataObjectClassGen: Data = " + Beans.toString(t));
+        List<Membership> memberships = selectMembership.getResults(DataSourceUtils.getConnection(dataSource), t);
+        System.err.println("***testDataObjectClassGen: # of results = " + memberships.size());
+        assert memberships.size() == 1;
+        for (Membership membership: memberships) {
+            System.err.println(membership.email);
+            System.err.println(membership.firstName);
+            System.err.println(membership.lastName);
+        }
+        //System.err.println(Beans.toString(memberships));
+        int rows = StorageConfiguration.getParametricStatement("DeleteMembership").executeUpdate(DataSourceUtils.getConnection(dataSource), t);
+        assert rows == 1;
+    }
+
+
 }

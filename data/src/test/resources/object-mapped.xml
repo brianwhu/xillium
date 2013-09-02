@@ -1,7 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lab:storage-configuration xmlns:persist="java://org.xillium.data.persistence" xmlns:lab="java://lab.data.persistence">
+
+    <persist:parametric-statement><?assemble name="CreateMembership"?>
+        <![CDATA[
+        INSERT INTO MEMBERSHIP(EMAIL,FIRST_NAME,LAST_NAME) VALUES('test@xillium.org', 'System', 'Tester')
+        ]]>
+    </persist:parametric-statement>
+
     <persist:object-mapped-query class="lab.data.persistence.TestPersistence$Membership"><?assemble name="SelectAllMemberships"?>
+        <![CDATA[
         SELECT * FROM MEMBERSHIP
+        ]]>
     </persist:object-mapped-query>
+
+    <persist:object-mapped-query class="lab.data.persistence.TestPersistence$Membership"><?assemble name="SelectMembership"?>
+        <![CDATA[
+        SELECT * FROM MEMBERSHIP WHERE EMAIL = :email:VARCHAR
+        ]]>
+    </persist:object-mapped-query>
+
+    <persist:parametric-statement><?assemble name="DeleteMembership"?>
+        <![CDATA[
+        DELETE FROM MEMBERSHIP WHERE EMAIL = :email:VARCHAR
+        ]]>
+    </persist:parametric-statement>
+
 </lab:storage-configuration>
 
