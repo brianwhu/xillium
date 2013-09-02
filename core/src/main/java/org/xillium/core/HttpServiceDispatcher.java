@@ -329,11 +329,24 @@ public class HttpServiceDispatcher extends HttpServlet {
 
             res.setHeader("Access-Control-Allow-Headers", "origin,x-prototype-version,x-requested-with,accept");
             res.setHeader("Access-Control-Allow-Origin", "*");
+
             try {
+                String status = binder.get(Service.SERVICE_HTTP_STATUS);
+                if (status != null) {
+                    try { res.setStatus(Integer.parseInt(status)); } catch (Exception x) {}
+                    Object headers = binder.getNamedObject(Service.SERVICE_HTTP_HEADER);
+                    if (headers != null) {
+                        try {
+                            for (Map.Entry<String, String> e: ((Map<String, String>)headers).entrySet()) {
+                                res.setHeader(e.getKey(), e.getValue());
+                            }
+                        } catch (Exception x) {}
+                    }
+            } else {
                 String page = binder.get(Service.SERVICE_PAGE_TARGET);
-                binder.clearAutoValues();
 
                 if (page == null) {
+                    binder.clearAutoValues();
                     res.setHeader("Content-Type", "application/json;charset=UTF-8");
                     String json = binder.get(Service.SERVICE_JSON_TUNNEL);
 
@@ -382,6 +395,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                     req.setAttribute(Service.SERVICE_DATA_BINDER, binder);
                     getServletContext().getRequestDispatcher(page).include(req, res);
                 }
+            }
             } finally {
                 for (File tmp: upload) {
                     try { tmp.delete(); } catch (Exception x) {}
