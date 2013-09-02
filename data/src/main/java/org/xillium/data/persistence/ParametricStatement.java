@@ -7,6 +7,10 @@ import java.util.*;
 import java.util.regex.*;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import javassist.*;
+import javassist.bytecode.*;
+import javassist.bytecode.annotation.Annotation;
+import javassist.bytecode.annotation.MemberValue;
 
 
 /**
@@ -131,6 +135,53 @@ public class ParametricStatement {
 
     public String getSQL() {
         return _sql;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Class<? extends DataObject> generateDataObjectClass(String cname) throws Exception {
+
+        try {
+            return (Class<? extends DataObject>)Class.forName(cname);
+    /*
+            if (!DataObject.class.isAssignableFrom(c)) {
+                throw new ClassCastException(cname);
+            }
+    */
+        } catch (ClassNotFoundException x) {
+            Class<? extends DataObject> c = null;
+
+            if (_params != null && _params.length > 0) {
+                Map<String, ParametricStatement.Param> params = new HashMap<String, ParametricStatement.Param>();
+                for (ParametricStatement.Param param: _params) {
+                    params.put(param.name, param);
+                }
+
+                ClassPool pool = ClassPool.getDefault();
+                // this line is necessary for web applications (web container class loader in play)
+                pool.appendClassPath(new LoaderClassPath(org.xillium.data.DataObject.class.getClassLoader()));
+
+                CtClass cc = pool.makeClass(cname);
+                cc.addInterface(pool.getCtClass("org.xillium.data.DataObject"));
+                ConstPool cp = cc.getClassFile().getConstPool();
+
+                for (ParametricStatement.Param param: params.values()) {
+    System.out.println(param);
+                    CtField field = new CtField(pool.getCtClass(sqlTypeName(param.type)), param.name, cc);
+                    field.setModifiers(java.lang.reflect.Modifier.PUBLIC);
+                    if ((param.direction & ParametricStatement.Param.IN) != 0 && !param.nullable) {
+                        AnnotationsAttribute attr = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
+                        //addAnnotation(attr, cp, "org.xillium.data.validation.required");
+                        attr.addAnnotation(new Annotation("org.xillium.data.validation.required", cp));
+                        field.getFieldInfo().addAttribute(attr);
+                    }
+                    cc.addField(field);
+                }
+
+                c = cc.toClass(DataObject.class.getClassLoader(), DataObject.class.getProtectionDomain());
+            }
+
+            return c;
+        }
     }
 
     protected <T extends PreparedStatement> T load(T statement, DataObject object) throws SQLException {
@@ -362,6 +413,26 @@ public class ParametricStatement {
             }
         }
         return count;
+    }
+
+    private static String sqlTypeName(int type) {
+        switch (type) {
+        case Types.NUMERIC:
+            return "java.math.BigDecimal";
+        case Types.INTEGER:
+            return "java.lang.Integer";
+        case Types.TINYINT:
+            return "java.lang.Byte";
+        case Types.CHAR:
+        case Types.VARCHAR:
+            return "java.lang.String";
+        case Types.DATE:
+            return "java.sql.Date";
+        case Types.TIMESTAMP:
+            return "java.sql.Timestamp";
+        default:
+            return "java.lang.Object";
+        }
     }
 
 /*
