@@ -31,7 +31,7 @@
   ** Service beans
   -->
 
-  <bean id="hello" class="${package}.${rootArtifactId}.${artifactId}.Hello">
+  <bean id="hello" class="${package}.${rootArtifactId}.${module1name}.Hello">
   </bean>
 
 </beans>

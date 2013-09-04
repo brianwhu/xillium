@@ -6,7 +6,7 @@
     <artifactId>xillium-arch</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>maven-archetype</packaging>
-    <name>xillium-simple-archetype</name>
+    <name>Xillium Platform - Archetype</name>
 
     <parent>
         <groupId>org.xillium</groupId>

@@ -1,7 +1,7 @@
 #set( $symbol_pound = '#' )
 #set( $symbol_dollar = '$' )
 #set( $symbol_escape = '\' )
-package ${package}.${rootArtifactId}.${artifactId}.util;
+package ${package}.${rootArtifactId}.${module1name}.util;
 
 import org.xillium.data.*;
 import org.xillium.data.validation.*;

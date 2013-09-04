@@ -5,6 +5,7 @@
 
   <requiredProperties>
     <requiredProperty key="persistence"><defaultValue>none</defaultValue></requiredProperty>
+    <requiredProperty key="module1name"><defaultValue>core</defaultValue></requiredProperty>
   </requiredProperties>
 
   <fileSets>
@@ -47,7 +48,7 @@
         <fileSet encoding="UTF-8">
           <directory>doc</directory>
           <includes>
-            <include>**/*.</include>
+            <include>**/*.*</include>
           </includes>
         </fileSet>
         <fileSet filtered="true" packaged="true" encoding="UTF-8">
@@ -59,42 +60,38 @@
       </fileSets>
     </module>
     <module id="modules" dir="modules" name="modules">
-      <modules>
-        <module id="core" dir="core" name="core">
-          <fileSets>
-            <fileSet filtered="true" packaged="true" encoding="UTF-8">
-              <directory>src/main/java</directory>
-              <includes>
-                <include>**/*.java</include>
-              </includes>
-            </fileSet>
-            <fileSet filtered="true" encoding="UTF-8">
-              <directory>src/main/resources</directory>
-              <includes>
-                <include>**/*.xml</include>
-              </includes>
-            </fileSet>
-            <fileSet filtered="true" encoding="UTF-8">
-              <directory>src/test/java</directory>
-              <includes>
-                <include>**/*.txt</include>
-              </includes>
-            </fileSet>
-            <fileSet filtered="true" encoding="UTF-8">
-              <directory>src/test/resources</directory>
-              <includes>
-                <include>**/*.properties</include>
-              </includes>
-            </fileSet>
-            <fileSet encoding="UTF-8">
-              <directory>doc</directory>
-              <includes>
-                <include>**/*.</include>
-              </includes>
-            </fileSet>
-          </fileSets>
-        </module>
-      </modules>
+      <fileSets>
+        <fileSet filtered="true" encoding="UTF-8">
+          <directory>__module1name__</directory>
+          <includes>
+            <include>**/*.xml</include>
+          </includes>
+        </fileSet>
+        <fileSet filtered="true" packaged="true" encoding="UTF-8">
+          <directory>__module1name__/src/main/java</directory>
+          <includes>
+            <include>**/*.java</include>
+          </includes>
+        </fileSet>
+        <fileSet filtered="true" encoding="UTF-8">
+          <directory>__module1name__/src/test/java</directory>
+          <includes>
+            <include>**/*.txt</include>
+          </includes>
+        </fileSet>
+        <fileSet filtered="true" encoding="UTF-8">
+          <directory>__module1name__/src/test/resources</directory>
+          <includes>
+            <include>**/*.properties</include>
+          </includes>
+        </fileSet>
+        <fileSet encoding="UTF-8">
+          <directory>__module1name__/doc</directory>
+          <includes>
+            <include>**/*.</include>
+          </includes>
+        </fileSet>
+      </fileSets>
     </module>
   </modules>
 </archetype-descriptor>

@@ -1,7 +1,7 @@
 #set( $symbol_pound = '#' )
 #set( $symbol_dollar = '$' )
 #set( $symbol_escape = '\' )
-package ${package}.${rootArtifactId}.${artifactId};
+package ${package}.${rootArtifactId}.${module1name};
 
 import java.util.logging.*;
 import org.xillium.core.*;
@@ -9,7 +9,7 @@ import org.xillium.data.*;
 import org.xillium.data.validation.*;
 import org.xillium.data.persistence.*;
 import ${package}.${rootArtifactId}.*;
-import ${package}.${rootArtifactId}.${artifactId}.util.*;
+import ${package}.${rootArtifactId}.${module1name}.util.*;
 
 
 /**

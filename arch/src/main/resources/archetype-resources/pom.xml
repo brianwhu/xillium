@@ -12,6 +12,12 @@
   <version>${version}</version>
   <name>${project.groupId}:${project.artifactId}</name>
 
+    <modules>
+        <module>commons</module>
+        <module>modules</module>
+        <!--module>deploys</module--> <!-- will not auto-build deployment archives -->
+    </modules>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>

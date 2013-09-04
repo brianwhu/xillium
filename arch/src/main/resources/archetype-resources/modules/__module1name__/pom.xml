@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>${groupId}</groupId>
-  <artifactId>${artifactId}</artifactId>
+  <artifactId>${module1name}</artifactId>
   <version>${version}</version>
   <name>${project.groupId}:${rootArtifactId} - ${project.parent.artifactId}:${project.artifactId}</name>
 
