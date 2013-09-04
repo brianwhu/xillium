@@ -73,8 +73,11 @@ public class CrudCommand {
         }
 
         /**
+         * An Action with both column list (args) and restriction list.
+         *
          * @param args - applies to UPDATE, SEARCH. A leading asterisk indicates a required fields for SEARCH operation.
-         * @param restriction - applies to CREATE, UPDATE, SEARCH, DELETE
+         * @param restriction - applies to CREATE, UPDATE, SEARCH, DELETE.  On UPDATE, if a restricted column name appears in the column list, it
+         *        appears in the SET clause; otherwise it appears in the WHERE clause.
          */
         public Action(Operation op, String[] args, Map<String, String> restriction) {
             this.op = op;

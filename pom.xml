@@ -52,9 +52,9 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>${env.M2R_SNAPSHOT_ID}</id>
-            <name>${env.M2R_SNAPSHOT_NAME}</name>
-            <url>${env.M2R_SNAPSHOT_URL}</url>
+            <id>sonatype-snapshots</id>
+            <name>Sonatype Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 
