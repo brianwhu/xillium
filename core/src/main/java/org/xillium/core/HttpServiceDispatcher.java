@@ -309,8 +309,8 @@ public class HttpServiceDispatcher extends HttpServlet {
             binder.put(Service.FAILURE_MESSAGE, message);
 
             if (binder.get(Service.SUPPRESS_EX_LOGGING) == null) {
-                _logger.warning("Exception caught in dispatcher (" + id + "): " + message);
-                _logger.log(Level.INFO, "Exception stack trace:", x);
+                _logger.warning(x.getClass().getSimpleName() + " caught in dispatcher (" + id + "): " + message);
+                _logger.log(Level.FINE, "Exception stack trace:", x);
             }
             CharArrayWriter sw = new CharArrayWriter();
             x.printStackTrace(new PrintWriter(sw));
@@ -391,7 +391,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                     res.getWriter().append(json).flush();
                 } else {
                     res.setContentType("text/html;charset=utf-8");
-                    _logger.info("\t=> " + getServletContext().getResource(page));
+                    _logger.fine("\t=> " + getServletContext().getResource(page));
                     req.setAttribute(Service.SERVICE_DATA_BINDER, binder);
                     getServletContext().getRequestDispatcher(page).include(req, res);
                 }
@@ -410,7 +410,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 
         try {
             Set<String> jars = context.getResourcePaths("/WEB-INF/lib/");
-            _logger.info("There are " + jars.size() + " resource paths");
+            _logger.config("There are " + jars.size() + " resource paths");
             for (String jar : jars) {
                 try {
                     //_logger.info("... " + jar);
@@ -453,32 +453,37 @@ public class HttpServiceDispatcher extends HttpServlet {
                     JarInputStream jis = new JarInputStream(context.getResourceAsStream(module.path));
                     try {
                         String domain = jis.getManifest().getMainAttributes().getValue(DOMAIN_NAME);
-                        _logger.fine("Scanning module " + module.name + ", special=" + isSpecial);
+                        _logger.config("Scanning module " + module.name + ", special=" + isSpecial);
                         if (_persistence != null) {
                             factory.setBurnedIn(StorageConfiguration.class, _persistence.getStatementMap(), module.name);
                         }
+
+                        // go through service resources, loading service configuration at last
                         JarEntry entry;
+                        ByteArrayInputStream serviceConfiguration = null;
                         while ((entry = jis.getNextJarEntry()) != null) {
                             String jarname = entry.getName();
                             if (jarname == null) continue;
 
                             if (SERVICE_CONFIG.equals(jarname)) {
-                                _logger.info("ServiceConfiguration:" + module.path + ":" + jarname);
-                                if (isSpecial) {
-                                    wac =
-                                    loadServiceModule(wac, domain, module.name, new ByteArrayInputStream(Arrays.read(jis)), descs, plcas);
-                                } else {
-                                    loadServiceModule(wac, domain, module.name, new ByteArrayInputStream(Arrays.read(jis)), descs, plcas);
-                                }
+                                _logger.config("ServiceConfiguration:" + module.path + ":" + jarname);
+                                serviceConfiguration = new ByteArrayInputStream(Arrays.read(jis));
                             } else if (_persistence != null && jarname.startsWith(STORAGE_PREFIX) && jarname.endsWith(".xml")) {
-                                _logger.info("StorageConfiguration:" + module.path + ":" + jarname);
+                                _logger.config("StorageConfiguration:" + module.path + ":" + jarname);
                                 assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
                             } else if (VALIDATION_DIC.equals(jarname)) {
-                                _logger.info("ValidationDictionary:" + module.path + ":" + jarname);
+                                _logger.config("ValidationDictionary:" + module.path + ":" + jarname);
                                 assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
                             } else if (jarname.startsWith(XILLIUM_PREFIX) && jarname.endsWith(".xml")) {
-                                _logger.info("ApplicationResources:" + module.path + ":" + jarname);
+                                _logger.config("ApplicationResources:" + module.path + ":" + jarname);
                                 assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
+                            }
+                        }
+                        if (serviceConfiguration != null) {
+                            if (isSpecial) {
+                                wac = loadServiceModule(wac, domain, module.name, serviceConfiguration, descs, plcas);
+                            } else {
+                                loadServiceModule(wac, domain, module.name, serviceConfiguration, descs, plcas);
                             }
                         }
                     } finally {
@@ -486,12 +491,12 @@ public class HttpServiceDispatcher extends HttpServlet {
                     }
                     if (isSpecial) {
                         for (PlatformLifeCycleAwareDef plca: plcas) {
-                            _logger.info("Configuring SPECIAL PlatformLifeCycleAware " + plca.bean.getClass().getName());
+                            _logger.config("Configuring SPECIAL PlatformLifeCycleAware " + plca.bean.getClass().getName());
                             plca.bean.configure(_application, module.name);
                         }
 
                         for (PlatformLifeCycleAwareDef plca: plcas) {
-                            _logger.info("Initalizing SPECIAL PlatformLifeCycleAware " + plca.bean.getClass().getName());
+                            _logger.config("Initalizing SPECIAL PlatformLifeCycleAware " + plca.bean.getClass().getName());
                             plca.bean.initialize(_application, module.name);
                         }
                         //plcas.clear();
@@ -507,7 +512,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             throw new ServletException("Failed to construct an XMLBeanAssembler", x);
         }
 
-        _logger.info("Done with service modules scanning (" + (isSpecial ? "SPECIAL" : "REGULAR") + ')');
+        _logger.config("Done with service modules scanning (" + (isSpecial ? "SPECIAL" : "REGULAR") + ')');
         return wac;
     }
 
@@ -519,20 +524,20 @@ public class HttpServiceDispatcher extends HttpServlet {
         reader.loadBeanDefinitions(new InputStreamResource(stream));
         gac.refresh();
 
-        _logger.info("Loading service modules from ApplicationContext " + gac.getId());
+        _logger.config("Loading service modules from ApplicationContext " + gac.getId());
 
         for (String id: gac.getBeanNamesForType(Service.class)) {
             String fullname = name + '/' + id;
 
             try {
                 Class<? extends DataObject> request = ((DynamicService)gac.getBean(id)).getRequestType();
-                _logger.info("Service '" + fullname + "' request description captured: " + request.getName());
+                _logger.config("Service '" + fullname + "' request description captured: " + request.getName());
                 desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
             } catch (ClassCastException x) {
                 try {
                     Class<?> request = Class.forName(gac.getBeanDefinition(id).getBeanClassName()+"$Request");
                     if (DataObject.class.isAssignableFrom(request)) {
-                        _logger.info("Service '" + fullname + "' request description captured: " + request.getName());
+                        _logger.config("Service '" + fullname + "' request description captured: " + request.getName());
                         desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
                     } else {
                         _logger.warning("Service '" + fullname + "' defines a Request type that is not a DataObject");
@@ -544,7 +549,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                 }
             }
 
-            _logger.info("Service '" + fullname + "' class=" + gac.getBean(id).getClass().getName());
+            _logger.config("Service '" + fullname + "' class=" + gac.getBean(id).getClass().getName());
             _services.put(fullname, (Service)gac.getBean(id));
         }
 
@@ -558,7 +563,7 @@ public class HttpServiceDispatcher extends HttpServlet {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         for (String id: gac.getBeanNamesForType(Manageable.class)) {
             try {
-                _logger.info("Registering MBean '" + id + "', domain=" + domain);
+                _logger.config("Registering MBean '" + id + "', domain=" + domain);
                 ObjectName on = new ObjectName(domain == null ? "org.xillium.core.management" : domain, "type", id + contextPath);
                 Manageable manageable = (Manageable)gac.getBean(id);
                 manageable.assignObjectName(on);
@@ -569,7 +574,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             }
         }
 
-        _logger.info("Done with service modules in ApplicationContext " + gac.getId());
+        _logger.config("Done with service modules in ApplicationContext " + gac.getId());
         return gac;
     }
 }
