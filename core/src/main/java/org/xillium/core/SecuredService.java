@@ -19,7 +19,7 @@ public abstract class SecuredService implements Service.Secured {
 		if (_authorizer != null) {
 			_authorizer.authorize(this, deployment, parameters, persist);
 		} else {
-			_logger.info("No Authorizer configured");
+			_logger.fine("No Authorizer configured");
 		}
 	}
 }

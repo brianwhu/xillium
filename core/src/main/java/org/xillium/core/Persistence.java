@@ -37,6 +37,18 @@ public class Persistence {
     }
 
     /**
+     * Looks up a ParametricStatement by its name.
+     */
+    public ParametricStatement getParametricStatement(String name) throws SQLException {
+        ParametricStatement statement = _statements.get(name);
+        if (statement != null) {
+            return statement;
+        } else {
+            throw new RuntimeException("ParametricStatement '" + name + "' not found");
+        }
+    }
+
+    /**
      * Executes an UPDATE/DELETE statement or an anonymous block.
      */
     public int executeUpdate(String name, DataObject object) throws SQLException {
