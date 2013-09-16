@@ -78,6 +78,11 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
 		));
     }
 
+    public void sendAlert(Logger logger, String message, long sequence) {
+        logger.log(Level.WARNING, message);
+        sendAlert(Manageable.Severity.ALERT, message, sequence);
+    }
+
     public <T extends Throwable> T sendAlert(T throwable, long sequence) {
         sendAlert(Manageable.Severity.ALERT, Throwables.getFullMessage(throwable), sequence);
         return throwable;
