@@ -134,7 +134,7 @@ public class CrudService extends SecuredService implements Service.Extended, Dyn
      * An extra step that runs after the service is successful and the associated transaction committed.
      * It will NOT run if the service has failed.
      */
-    public void successful(DataBinder parameters) {
+    public void successful(DataBinder parameters) throws Throwable {
         if (_filter != null) _filter.successful(parameters);
     }
 
@@ -142,14 +142,14 @@ public class CrudService extends SecuredService implements Service.Extended, Dyn
      * An extra step that runs after the service has failed and the associated transaction rolled back.
      * It will NOT run if the service is successful.
      */
-    public void aborted(DataBinder parameters, Throwable throwable) {
+    public void aborted(DataBinder parameters, Throwable throwable) throws Throwable {
         if (_filter != null) _filter.aborted(parameters, throwable);
     }
 
     /**
      * An extra step that always runs after the service has been completed, disregard whether the associated transaction is committed or rolled back.
      */
-    public void complete(DataBinder parameters) {
+    public void complete(DataBinder parameters) throws Throwable {
         if (_filter != null) _filter.complete(parameters);
     }
 
