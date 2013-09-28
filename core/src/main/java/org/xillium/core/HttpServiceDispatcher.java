@@ -308,13 +308,13 @@ public class HttpServiceDispatcher extends HttpServlet {
             }
             binder.put(Service.FAILURE_MESSAGE, message);
 
-            if (binder.get(Service.SUPPRESS_EX_LOGGING) == null) {
+            if (binder.get(Service.SERVICE_STACK_TRACE) != null) {
                 _logger.warning(x.getClass().getSimpleName() + " caught in dispatcher (" + id + "): " + message);
                 _logger.log(Level.FINE, "Exception stack trace:", x);
+                CharArrayWriter sw = new CharArrayWriter();
+                x.printStackTrace(new PrintWriter(sw));
+                binder.put(Service.FAILURE_STACK, sw.toString());
             }
-            CharArrayWriter sw = new CharArrayWriter();
-            x.printStackTrace(new PrintWriter(sw));
-            binder.put(Service.FAILURE_STACK, sw.toString());
 
             // post-service exception handler
 
