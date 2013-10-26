@@ -160,11 +160,7 @@ public class TestCase implements Runnable {
                 for (int i = 0; i < getSize(); ++i) {
                     new Thread(TestCase.this).start();
                     if (ramp > 0) {
-                        synchronized (this) {
-                            try {
-                                wait(ramp);
-                            } catch (Exception x) {}
-                        }
+                        try { Thread.sleep(ramp); } catch (Exception x) {}
                     }
                 }
                 System.err.println("Test Case: " + getName() + "\tstarted in " + getSize() + " threads");
@@ -196,58 +192,56 @@ public class TestCase implements Runnable {
 
         int errors = 0;
         _stats.updateThreadCount(+1);
-    try {
-                Object context = _engine.eval("new Object()");
-        TestLoop:
-        while (_active) {
-            try {
-                synchronized (this) {
-                    try { wait(nice); } catch (Throwable t) {}
-                }
-                for (TestAction action: _actions) {
-                    long start = action.run(context, _target, _engine);
-                    if (start == 0) {
-                        break TestLoop;
+        try {
+            Object context = _engine.eval("new Object()");
+            TestLoop:
+            while (_active) {
+                try {
+                    if (nice > 0) try { Thread.sleep(nice); } catch (Exception x) {}
+                    for (TestAction action: _actions) {
+                        long start = action.run(context, _target, _engine);
+                        if (start == 0) {
+                            break TestLoop;
+                        } else {
+                            _stats.addSuccessPeg(System.currentTimeMillis() - start);
+                        }
+                    }
+                    errors = 0;
+                } catch (TestFailureException x) {
+                    //String prefix = new StringBuilder("*** ").append(Thread.currentThread().getName()).append(": ").toString();
+                    String message = x.getMessage();
+                    if (message != null) {
+                        if (ignore != null && ignore.matcher(message).matches()) {
+                            //System.err.println(prefix + "(ignored) " + message);
+                            _log.info(_name + ": (ignored) " + message);
+                            continue; // ignored
+                        } else if (message.length() > 128) {
+                            message = message.substring(0, 128);
+                        }
                     } else {
-                        _stats.addSuccessPeg(System.currentTimeMillis() - start);
+                        message = x.getClass().getName() + "(No message)";
                     }
-                }
-                errors = 0;
-            } catch (TestFailureException x) {
-                //String prefix = new StringBuilder("*** ").append(Thread.currentThread().getName()).append(": ").toString();
-                String message = x.getMessage();
-                if (message != null) {
-                    if (ignore != null && ignore.matcher(message).matches()) {
-                        //System.err.println(prefix + "(ignored) " + message);
-                        _log.info(_name + ": (ignored) " + message);
-                        continue; // ignored
-                    } else if (message.length() > 128) {
-                        message = message.substring(0, 128);
+                    _stats.addFailurePeg(x);
+                    ++errors;
+                    //System.err.println(prefix + message);
+                    _log.warning(_name + ": " + message);
+                    if (errors >= maxErrors || wait < 0) {
+                        //System.err.println(prefix + "Give up");
+                        _log.warning(_name + ": Give up");
+                        break TestLoop;
+                    } else if (wait > 0) {
+                        int pause = wait * errors;
+                        _log.info(_name + ": Waiting for " + pause + " milliseconds before trying again");
+                        try { Thread.sleep(pause); } catch (Exception t) {}
                     }
-                } else {
-                    message = x.getClass().getName() + "(No message)";
-                }
-                _stats.addFailurePeg(x);
-                ++errors;
-                //System.err.println(prefix + message);
-                _log.warning(_name + ": " + message);
-                if (errors >= maxErrors || wait < 0) {
-                    //System.err.println(prefix + "Give up");
-                    _log.warning(_name + ": Give up");
+                } catch (Exception x) {
+                    x.printStackTrace();
                     break TestLoop;
-                } else if (wait > 0) {
-                    int pause = wait * errors;
-                    _log.info(_name + ": Waiting for " + pause + " milliseconds before trying again");
-                    synchronized (this) { try { wait(pause); } catch (Throwable t) {} }
                 }
-            } catch (Exception x) {
-                x.printStackTrace();
-                break TestLoop;
             }
+        } catch (Exception x) {
+            x.printStackTrace();
         }
-    } catch (Exception x) {
-        x.printStackTrace();
-    }
         _stats.updateThreadCount(-1);
     }
 

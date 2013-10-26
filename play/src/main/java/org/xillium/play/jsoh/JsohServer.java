@@ -6,6 +6,9 @@ import java.util.*;
 
 import java.text.ParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.databind.type.SimpleType;
 
 import org.xillium.play.TestFailureException;
 import org.xillium.play.TestSuite;
@@ -33,10 +36,10 @@ public class JsohServer implements TestTarget {
     }
 
     public class Response implements TestTarget.Response {
-        public final Map<String, Object> binder;
+        public final List<Map<String, Object>> binders;
 
-        Response(Map<String, Object> binder) {
-            this.binder = binder;
+        Response(List<Map<String, Object>> binders) {
+            this.binders = binders;
         }
     }
 
@@ -64,29 +67,53 @@ public class JsohServer implements TestTarget {
             } else {
                 path = _url;
             }
-            URLConnection connection = new URL(path).openConnection();
-			connection.setDoOutput(true);
-    		OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
+            String method = ((Request)request).binder.get("_method_");
+            if (method != null && method.length() > 0) {
+                ((Request)request).binder.remove("_method_");
+            }
 
-			StringBuilder sb = new StringBuilder();
-			for (Map.Entry<String, String> entry: ((JsohServer.Request)request).binder.entrySet()) {
-				sb.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append('=').append(URLEncoder.encode(entry.getValue(), "UTF-8")).append('&');
-			}
-			if (sb.length() > 0) sb.setLength(sb.length()-1);
-			wr.write(sb.toString());
-    		wr.flush();
+            URLConnection connection = null;
+            if (method.equalsIgnoreCase("post")) {
+                connection = new URL(path).openConnection();
+                connection.setDoOutput(true);
+                OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
+
+                StringBuilder sb = new StringBuilder();
+                for (Map.Entry<String, String> entry: ((JsohServer.Request)request).binder.entrySet()) {
+                    sb.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append('=').append(URLEncoder.encode(entry.getValue(), "UTF-8")).append('&');
+                }
+                if (sb.length() > 0) sb.setLength(sb.length()-1);
+                wr.write(sb.toString());
+                wr.flush();
+                wr.close();
+            } else {
+                StringBuilder sb = new StringBuilder(path).append('?');
+                for (Map.Entry<String, String> entry: ((JsohServer.Request)request).binder.entrySet()) {
+                    sb.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append('=').append(URLEncoder.encode(entry.getValue(), "UTF-8").replace("+", "%20")).append('&');
+                }
+                if (sb.length() > 0) sb.setLength(sb.length()-1);
+                connection = new URL(sb.toString()).openConnection();
+            }
 
             InputStream in = connection.getInputStream();
-			@SuppressWarnings("unchecked")
-			Map<String, Object> binder = _mapper.readValue(in, Map.class);
-            in.close();
-			wr.close();
-			//connection.close();
-
-            return new JsohServer.Response(binder);
+			List<Map<String, Object>> binders = new ArrayList<Map<String, Object>>();
+            try {
+                @SuppressWarnings("unchecked")
+                Iterator<Map<String, Object>> iterator = _mapper.readValues(new JsonFactory().createJsonParser(in),
+                    MapType.construct(Map.class, SimpleType.construct(String.class), SimpleType.construct(Object.class))
+                );
+                while (iterator.hasNext()) {
+                    binders.add(iterator.next());
+                }
+            } catch (IOException x) {
+                //
+            } finally {
+                in.close();
+            }
+            return new JsohServer.Response(binders);
         } catch (MalformedURLException x) {
             throw new TestFailureException(0, x.getMessage(), x);
-        } catch (IOException x) {
+        } catch (Exception x) {
             throw new RuntimeException(x);
         }
     }
