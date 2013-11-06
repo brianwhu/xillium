@@ -13,7 +13,6 @@ import javax.servlet.http.*;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
-//import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.context.ApplicationContext;
@@ -37,15 +36,6 @@ import org.xillium.core.util.ModuleSorter;
  * </pre>
  * When a request URI matches the above pattern, this servlet looks up a Service instance registered under the name 'module/service'.
  * <p/>
- * The fabric of operation, administration, and maintenance (foam)
- * <ul>
- *    <li><code>/[context]/x!/[service]</code><p/>
- *        <ul>
- *            <li>list</li>
- *            <li>desc - parameter description</li>
- *        </ul>
- *    </li>
- * </ul>
  */
 @SuppressWarnings("serial")
 //@WebServlet(urlPatterns="/", asyncSupported=true)
@@ -248,7 +238,10 @@ public class HttpServiceDispatcher extends HttpServlet {
             binder.put(Service.REQUEST_CLIENT_PORT, String.valueOf(req.getRemotePort()));
             binder.put(Service.REQUEST_SERVER_PORT, String.valueOf(req.getServerPort()));
             binder.put(Service.REQUEST_HTTP_METHOD, req.getMethod());
-            binder.put(Service.REQUEST_SERVER_PATH, id);
+            binder.put(Service.REQUEST_SERVER_PATH, _application);
+            binder.put(Service.REQUEST_TARGET_PATH, id);
+            binder.putNamedObject(Service.REQUEST_HTTP_COOKIE, req.getCookies());
+            if (req.isSecure()) binder.put(Service.REQUEST_HTTP_SECURE, Service.REQUEST_HTTP_SECURE);
 
             if (id.endsWith(".html")) {
                 // TODO provide a default, error reporting page template
@@ -259,8 +252,15 @@ public class HttpServiceDispatcher extends HttpServlet {
             if (service instanceof Service.Extended) {
                 try {
                     ((Service.Extended)service).filtrate(binder);
+                } catch (AuthenticationRequiredException x) {
+                    if (binder.get(Service.REQUEST_HTTP_STATUS) != null) {
+                        res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                        return;
+                    } else {
+                        throw x;
+                    }
                 } catch (AuthorizationException x) {
-                    if (binder.get(Service.SERVICE_HTTP_STATUS) != null) {
+                    if (binder.get(Service.REQUEST_HTTP_STATUS) != null) {
                         res.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
                     } else {
@@ -274,8 +274,15 @@ public class HttpServiceDispatcher extends HttpServlet {
             if (service instanceof Service.Secured) {
                 try {
                     ((Service.Secured)service).authorize(id, binder, _persistence);
+                } catch (AuthenticationRequiredException x) {
+                    if (binder.get(Service.REQUEST_HTTP_STATUS) != null) {
+                        res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                        return;
+                    } else {
+                        throw x;
+                    }
                 } catch (AuthorizationException x) {
-                    if (binder.get(Service.SERVICE_HTTP_STATUS) != null) {
+                    if (binder.get(Service.REQUEST_HTTP_STATUS) != null) {
                         res.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
                     } else {
@@ -331,17 +338,20 @@ public class HttpServiceDispatcher extends HttpServlet {
             res.setHeader("Access-Control-Allow-Origin", "*");
 
             try {
+                // HTTP headers
+                Object headers = binder.getNamedObject(Service.SERVICE_HTTP_HEADER);
+                if (headers != null) {
+                    try {
+                        for (Map.Entry<String, String> e: ((Map<String, String>)headers).entrySet()) {
+                            res.setHeader(e.getKey(), e.getValue());
+                        }
+                    } catch (Exception x) {}
+                }
+
+                // return status only?
                 String status = binder.get(Service.SERVICE_HTTP_STATUS);
                 if (status != null) {
                     try { res.setStatus(Integer.parseInt(status)); } catch (Exception x) {}
-                    Object headers = binder.getNamedObject(Service.SERVICE_HTTP_HEADER);
-                    if (headers != null) {
-                        try {
-                            for (Map.Entry<String, String> e: ((Map<String, String>)headers).entrySet()) {
-                                res.setHeader(e.getKey(), e.getValue());
-                            }
-                        } catch (Exception x) {}
-                    }
             } else {
                 String page = binder.get(Service.SERVICE_PAGE_TARGET);
 
