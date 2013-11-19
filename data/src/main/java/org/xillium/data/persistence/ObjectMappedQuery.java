@@ -67,10 +67,6 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
         }
     }
 
-    @SuppressWarnings("serial")
-    private static class ListCollector<T> extends ArrayList<T> implements Collector<T> {
-    }
-
     private static class SingleObjectCollector<T> implements Collector<T> {
         public T value;
         public boolean add(T object) {
@@ -110,7 +106,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
      * Executes the query and returns the results as a list of objects.
      */
     public List<T> getResults(Connection conn, DataObject object) throws Exception {
-        return executeSelect(conn, object, new ResultSetMapper<ListCollector<T>>(new ListCollector<T>()));
+        return executeSelect(conn, object, new ResultSetMapper<ArrayListCollector<T>>(new ArrayListCollector<T>()));
     }
 
     /**
