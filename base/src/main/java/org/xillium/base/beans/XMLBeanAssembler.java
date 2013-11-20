@@ -23,8 +23,12 @@ public class XMLBeanAssembler extends DefaultHandler {
     private static final String SAX_NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes";
     SAXParser _parser;
     ObjectFactory _factory;
+    String _jpkg;
     boolean _lenient;
 
+    /**
+     * Constructs an XMLBeanAssembler that uses the given ObjectFactory to create objects during assembly.
+     */
     public XMLBeanAssembler(ObjectFactory factory) throws ParserConfigurationException, SAXException {
         _factory = factory;
         SAXParserFactory pfactory = SAXParserFactory.newInstance();
@@ -35,10 +39,17 @@ public class XMLBeanAssembler extends DefaultHandler {
     }
 
     /**
+     * Tells XMLBeanAssembler to use a default Java package when a package can't be derived from namespace specification.
+     */
+    public XMLBeanAssembler setPackage(String pkg) {
+        _jpkg = pkg;
+        return this;
+    }
+
+    /**
      * Assembles a bean from an XML file.
      */
-    public Object build(String file)
-    throws ParserConfigurationException, SAXException, IOException {
+    public Object build(String file) throws ParserConfigurationException, SAXException, IOException {
         _parser.parse(new File(file), this);
         return getBean();
     }
@@ -46,8 +57,7 @@ public class XMLBeanAssembler extends DefaultHandler {
     /**
      * Assembles a bean from an XML stream.
      */
-    public Object build(InputStream stream)
-    throws ParserConfigurationException, SAXException, IOException {
+    public Object build(InputStream stream) throws ParserConfigurationException, SAXException, IOException {
         _parser.parse(stream, this);
         return getBean();
     }
@@ -472,6 +482,8 @@ public class XMLBeanAssembler extends DefaultHandler {
             info.jpkg = "java.lang";
         } else if (!_stack.isEmpty()) {
             info.jpkg = _stack.get(_stack.size()-1).jpkg;
+        } else {
+            info.jpkg = _jpkg;
         }
 
         _logger.fine("to create element with package = " + info.jpkg);
@@ -487,7 +499,7 @@ public class XMLBeanAssembler extends DefaultHandler {
 	                int size = a.getLength();
 	                TypedValueGroup arguments = new TypedValueGroup();
 	                for (int i = 0; i < size; ++i) {
-	                    if (!a.getQName(i).startsWith("xmlns:")) {
+	                    if (!a.getQName(i).startsWith("xmlns:") && !a.getQName(i).equals("xmlns")) {
 	                        arguments.add(guessUntypedValue(a.getQName(i), a.getValue(i)));
 	                    }
 	                }
@@ -495,7 +507,7 @@ public class XMLBeanAssembler extends DefaultHandler {
                     _logger.fine(S.fine(_logger) ? "arguments=" + arguments : null);
 	
 	                if (arguments.size() > 0) {
-	                    if (arguments.size() == 1 && info.jpkg.equals("java.lang")) {
+	                    if (arguments.size() == 1 && "java.lang".equals(info.jpkg)) {
 	                        info.inst.put("@as", Strings.toCamelCase(arguments.get(0).name, '-', false)); // respect original spelling
 	                        info.data = arguments.get(0).get(0).data;
 	                        info.type = arguments.get(0).get(0).type;

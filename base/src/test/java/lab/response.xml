@@ -1,0 +1,6 @@
+<CSubmitState xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://tempuri.org/">
+<State>1013</State>
+<MsgID>0</MsgID>
+<MsgState>账号密码不正确或账号未启用</MsgState>
+<Reserve>0</Reserve>
+</CSubmitState>

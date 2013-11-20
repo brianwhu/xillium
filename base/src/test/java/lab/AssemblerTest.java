@@ -13,7 +13,7 @@ public class AssemblerTest {
 
     @Test(groups={"functional"})
     public void testAssember() throws Exception {
-        Object bean = new XMLBeanAssembler(new DefaultObjectFactory()).build("src/test/java/lab/swing.xml");
+        Object bean = new XMLBeanAssembler(new DefaultObjectFactory()).setPackage("non.existent").build("src/test/java/lab/swing.xml");
         if (bean.getClass() == JFrame.class) {
             JFrame frame = (JFrame)bean;
             frame.pack();
@@ -32,5 +32,10 @@ public class AssemblerTest {
     @Test(groups={"upscale"})
     public void testUpScale() throws Exception {
         System.out.println("Dimension = " + new XMLBeanAssembler(new DefaultObjectFactory()).build("src/test/java/lab/upscale.xml"));
+    }
+
+    @Test(groups={"package"})
+    public void testNonCompliant() throws Exception {
+        System.out.println("Response = " + Beans.toString(new XMLBeanAssembler(new DefaultObjectFactory()).setPackage("lab.sms").build("src/test/java/lab/response.xml")));
     }
 }
