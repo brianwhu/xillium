@@ -14,9 +14,16 @@ import org.xillium.data.persistence.ResultSetWorker;
  * A data binder
  */
 @SuppressWarnings("serial")
-public class DataBinder extends HashMap<String, String> implements ResultSetWorker<DataBinder>{
+public class DataBinder extends HashMap<String, String> implements ResultSetWorker<DataBinder> {
     private final Map<String, CachedResultSet> _rsets = new HashMap<String, CachedResultSet>();
     private final Map<String, Object> _named = new HashMap<String, Object>();
+
+    /**
+     * Puts a new string value into this binder, but using an alternative value if the given one is null.
+     */
+    public String put(String name, String value, String alternative) {
+        return put(name, value != null ? value : alternative);
+    }
 
     /**
      * Puts a new result set into this binder.
@@ -78,7 +85,7 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     }
 
     /**
-     * Fills the data binder with non-static, non-transient fields of an Object.
+     * Fills the data binder with non-static, non-transient fields of an Object, excluding null values.
      */
     public DataBinder put(Object object) throws Exception {
         for (Field field: Beans.getKnownInstanceFields(object.getClass())) {
@@ -109,7 +116,7 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     }
 
     /**
-     * Loads parameters from command line arguments in the form of name=value.
+     * Loads parameters from an array of strings each in the form of name=value.
      */
     public DataBinder load(String[] args, int offset) {
         for (int i = offset; i < args.length; ++i) {
@@ -160,6 +167,9 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
         return count * 64;
     }
 
+    /**
+     * Returns a JSON string representing the contents of this data binder, excluding named objects.
+     */
     public String toJSON() {
         JSONBuilder jb = new JSONBuilder(estimateMaximumBytes()).append('{');
 
