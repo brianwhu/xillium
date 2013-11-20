@@ -310,9 +310,6 @@ public class HttpServiceDispatcher extends HttpServlet {
             }
         } catch (Throwable x) {
             String message = Throwables.getFirstMessage(x);
-            if (message == null || message.length() == 0) {
-                message = "***"+Throwables.getRootCause(x).getClass().getSimpleName();
-            }
             binder.put(Service.FAILURE_MESSAGE, message);
 
             if (binder.get(Service.SERVICE_STACK_TRACE) != null) {

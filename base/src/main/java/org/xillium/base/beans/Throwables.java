@@ -25,6 +25,9 @@ public class Throwables {
     public static String getFirstMessage(Throwable x) {
         String message;
         while ((message = x.getMessage()) == null && (x = x.getCause()) != null);
+        if (message == null || message.length() == 0) {
+            message = "***" + getRootCause(x).getClass().getSimpleName();
+        }
         return message;
     }
 
