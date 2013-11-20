@@ -43,7 +43,7 @@ public class XmlDataTest {
 
     @Test(groups={"function"})
     public void testUpdator() throws Exception {
-        System.err.println("start processing xml data");
+        System.err.println("start xml data processing");
 
         BurnedInArgumentsObjectFactory factory = new BurnedInArgumentsObjectFactory();
         XMLBeanAssembler assembler = new XMLBeanAssembler(factory);
@@ -51,7 +51,22 @@ public class XmlDataTest {
         factory.setBurnedIn(Row.class, Reconciliation.class);
         factory.setBurnedIn(Column.class, Reconciliation.class);
         Data<Reconciliation, Proc> results = (Data<Reconciliation, Proc>)assembler.build(getClass().getResourceAsStream("/FT05.xml"));
-        System.err.println("# of data rows: " + results.getRowCount());
         results.getCollector().hello();
+    }
+
+    @Test(groups={"function"})
+    public void testCoalescing() throws Exception {
+        System.err.println("start xml data coalescing");
+        Proc p = Data.coalesce(getClass().getResourceAsStream("/FT05.xml"), Reconciliation.class, new Proc());
+        p.hello();
+    }
+
+    @Test(groups={"function"})
+    public void testSimplified() throws Exception {
+        System.err.println("start simplified xml data processing");
+        List<Reconciliation> list = Data.coalesce(getClass().getResourceAsStream("/FT05.xml"), Reconciliation.class);
+        for (Reconciliation r: list) {
+            System.out.println(Beans.toString(r));
+        }
     }
 }
