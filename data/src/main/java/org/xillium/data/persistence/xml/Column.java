@@ -1,13 +1,12 @@
 package org.xillium.data.persistence.xml;
 
-//import java.util.logging.*;
 import java.lang.reflect.*;
 import org.xillium.base.beans.Beans;
 import org.xillium.data.DataObject;
 
 
 /**
- * A java bean mapped to a sql-rs:data element, the root element of an sql-rs XML document.
+ * A java bean mapped to a sql-rs:column element.
  */
 public class Column<T extends DataObject> {
     //private static final Logger _logger = Logger.getLogger(Column.class.getName());

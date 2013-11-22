@@ -22,7 +22,7 @@ import org.xillium.data.persistence.ResultSetWorker;
 
 
 /**
- * A ResultSetWorker implementation that writes the result set as an XML document into a Writer.
+ * A ResultSetWorker implementation that writes the result set as a sql-rs XML document into a Writer.
  */
 public class ResultSetStreamer implements ResultSetWorker<Writer> {
     public static final String NAMESPACE = "java://org.xillium.data.persistence.xml";

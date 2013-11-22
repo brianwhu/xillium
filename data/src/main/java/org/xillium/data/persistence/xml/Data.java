@@ -8,7 +8,7 @@ import org.xillium.base.beans.*;
 
 
 /**
- * This class models the top-level element of an sql-rs XML document. It also provides
+ * This class models the top-level element of a sql-rs XML document. It also provides
  * static methods to coalesce (deserialize) an sql-rs XML document from a stream.
  *
  * To coalesce a compliant sql-rs XML document, do the following.
@@ -36,7 +36,7 @@ import org.xillium.base.beans.*;
  *      </li>
  * </ol>
  * If a simple java.util.List is all that is desired, the second step can be skipped and the last step becomes
- * <ol>
+ * <ol start="3">
  * <li> <xmp>
  *      List<R> list = Data.coalesce(inputStream, R.class);
  *      </xmp>

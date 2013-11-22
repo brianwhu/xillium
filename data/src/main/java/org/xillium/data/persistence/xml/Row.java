@@ -8,7 +8,7 @@ import org.xillium.data.DataObject;
 
 
 /**
- * A java bean mapped to a sql-rs:data element, the root element of an sql-rs XML document.
+ * A java bean mapped to a sql-rs:row element.
  */
 public class Row<T extends DataObject> {
     private static final Logger _logger = Logger.getLogger(Row.class.getName());
