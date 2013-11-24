@@ -122,7 +122,7 @@ public class CrudModelTest extends AbstractTransactionalTestNGSpringContextTests
 		}
 
         command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.SEARCH, new String[] {
-            "TELEPHONE", "LEVEL", "FIRST_NAME"
+            "TELEPHONE", "LEVEL", "FIRST_NAME", "EMAIL"
         }, restrictions));
 		System.out.println("SEARCH: -- with restrictions ---------------------------");
         System.out.println(command.getRequestType().getName());
