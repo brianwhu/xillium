@@ -279,7 +279,13 @@ public class CrudCommand {
                             flds.append(fieldName(tablenames[i], action.args[c])).append(':').append(rsmeta.getColumnType(idx.intValue()));
                         } else {
                             if (restriction.charAt(0) == NEGATIVE_INDICATOR) {
-    /*SQL*/                     vals.append("<>").append(restriction.substring(1));
+    /*SQL*/                     vals.append("<>").append(restriction.substring(1))
+                                    // the column should also accept an input value
+    /*SQL*/                         .append(" AND ")
+    /*SQL*/                         .append(tablenames[i]).append('.').append(action.args[c])
+    /*SQL*/                         .append('=').append("COALESCE(?,").append(tablenames[i]).append('.').append(action.args[c]).append(')');
+    /*SQL*/                     if (flds.length() > 0) flds.append(',');
+                                flds.append(fieldName(tablenames[i], action.args[c])).append(':').append(rsmeta.getColumnType(idx.intValue()));
                             } else {
     /*SQL*/                     vals.append('=').append(restriction);
                             }
@@ -361,6 +367,7 @@ public class CrudCommand {
                             }
                         }
                     }
+                    break;
                 case SEARCH:
                     break;
                 }
@@ -381,7 +388,7 @@ public class CrudCommand {
                 if (required.contains(name)) {
                     addAnnotation(attr, cp, "org.xillium.data.validation.required");
                 } else if (columns.getInt(IS_NULLABLE) == DatabaseMetaData.attributeNoNulls) {
-                    if ((action.op != Operation.UPDATE && action.op != Operation.SEARCH) || primaryKeys.contains(name)) {
+                    if ((action.op != Operation.UPDATE || primaryKeys.contains(name)) && action.op != Operation.SEARCH) {
                         addAnnotation(attr, cp, "org.xillium.data.validation.required");
                     }
                 }
