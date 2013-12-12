@@ -349,60 +349,59 @@ public class HttpServiceDispatcher extends HttpServlet {
                 String status = binder.get(Service.SERVICE_HTTP_STATUS);
                 if (status != null) {
                     try { res.setStatus(Integer.parseInt(status)); } catch (Exception x) {}
-            } else {
-                String page = binder.get(Service.SERVICE_PAGE_TARGET);
-
-                if (page == null) {
-                    binder.clearAutoValues();
-                    res.setHeader("Content-Type", "application/json;charset=UTF-8");
-                    String json = binder.get(Service.SERVICE_JSON_TUNNEL);
-
-                    if (json == null) {
-/*
-                        JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
-
-                        jb.quote("params").append(":{ ");
-                        Iterator<String> it = binder.keySet().iterator();
-                        while (it.hasNext()) {
-                            String key = it.next();
-                            String val = binder.get(key);
-                            if (val == null) {
-                                jb.quote(key).append(":null");
-                            } else if (val.startsWith("json:")) {
-                                jb.quote(key).append(':').append(val.substring(5));
-                            } else {
-                                jb.serialize(key, val);
-                            }
-                            jb.append(',');
-                        }
-                        jb.replaceLast('}').append(',');
-
-                        jb.quote("tables").append(":{ ");
-                        Set<String> rsets = binder.getResultSetNames();
-                        it = rsets.iterator();
-                        while (it.hasNext()) {
-                            String name = it.next();
-                            jb.quote(name).append(":");
-                            binder.getResultSet(name).toJSON(jb);
-                            jb.append(',');
-                        }
-                        jb.replaceLast('}');
-
-                        jb.append('}');
-
-                        json = jb.toString();
-*/
-                        json = binder.toJSON();
-                    }
-
-                    res.getWriter().append(json).flush();
                 } else {
-                    res.setContentType("text/html;charset=utf-8");
-                    _logger.fine("\t=> " + getServletContext().getResource(page));
-                    req.setAttribute(Service.SERVICE_DATA_BINDER, binder);
-                    getServletContext().getRequestDispatcher(page).include(req, res);
+                    String page = binder.get(Service.SERVICE_PAGE_TARGET);
+
+                    if (page == null) {
+                        binder.clearAutoValues();
+                        res.setContentType("application/json;charset=utf-8");
+                        String json = binder.get(Service.SERVICE_JSON_TUNNEL);
+
+                        if (json == null) {
+    /*
+                            JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
+
+                            jb.quote("params").append(":{ ");
+                            Iterator<String> it = binder.keySet().iterator();
+                            while (it.hasNext()) {
+                                String key = it.next();
+                                String val = binder.get(key);
+                                if (val == null) {
+                                    jb.quote(key).append(":null");
+                                } else if (val.startsWith("json:")) {
+                                    jb.quote(key).append(':').append(val.substring(5));
+                                } else {
+                                    jb.serialize(key, val);
+                                }
+                                jb.append(',');
+                            }
+                            jb.replaceLast('}').append(',');
+
+                            jb.quote("tables").append(":{ ");
+                            Set<String> rsets = binder.getResultSetNames();
+                            it = rsets.iterator();
+                            while (it.hasNext()) {
+                                String name = it.next();
+                                jb.quote(name).append(":");
+                                binder.getResultSet(name).toJSON(jb);
+                                jb.append(',');
+                            }
+                            jb.replaceLast('}');
+
+                            jb.append('}');
+
+                            json = jb.toString();
+    */
+                            json = binder.toJSON();
+                        }
+
+                        res.getWriter().append(json).flush();
+                    } else {
+                        _logger.fine("\t=> " + getServletContext().getResource(page));
+                        req.setAttribute(Service.SERVICE_DATA_BINDER, binder);
+                        getServletContext().getRequestDispatcher(page).include(req, res);
+                    }
                 }
-            }
             } finally {
                 for (File tmp: upload) {
                     try { tmp.delete(); } catch (Exception x) {}
