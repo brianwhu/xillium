@@ -23,10 +23,11 @@ public class Throwables {
     }
 
     public static String getFirstMessage(Throwable x) {
+        Throwable cause = x;
         String message;
-        while ((message = x.getMessage()) == null && (x = x.getCause()) != null);
+        while ((message = x.getMessage()) == null && (x = x.getCause()) != null) cause = x;
         if (message == null || message.length() == 0) {
-            message = "***" + getRootCause(x).getClass().getSimpleName();
+            message = "***" + cause.getClass().getSimpleName();
         }
         return message;
     }

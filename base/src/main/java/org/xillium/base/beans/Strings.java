@@ -165,17 +165,34 @@ public class Strings {
     /**
      * Collects object member values into an array of Strings, each prefixed by the field name.
      */
-    public static String[] collect(Object object, String[] names) {
-        String[] values = new String[names.length];
+    public static String[] collect(Object object, String... names) {
+        return collect(null, 0, "", object, ':', names);
+    }
+
+    /**
+     * Collects object member values into an array of Strings, each prefixed by the field name.
+     */
+    public static String[] collect(Object object, char separator, String... names) {
+        return collect(null, 0, "", object, separator, names);
+    }
+
+    /**
+     * Collects object member values into an array of Strings, each prefixed by the field name.
+     */
+    public static String[] collect(String[] storage, int offset, String prefix, Object object, char separator, String... names) {
+        if (storage == null) {
+            storage = new String[names.length];
+            offset = 0;
+        }
         Class<?> type = object.getClass();
-        for (int i = 0; i < values.length; ++i) {
+        for (int i = 0; i < names.length; ++i) {
             try {
-                values[i] = names[i] + ':' + Beans.getKnownField(type, names[i]).get(object);
+                storage[offset + i] = prefix + names[i] + separator + Beans.getKnownField(type, names[i]).get(object);
             } catch (Exception x) {
-                values[i] = names[i] + ':';
+                storage[offset + i] = prefix + names[i] + separator;
             }
         }
-        return values;
+        return storage;
     }
 
     /**

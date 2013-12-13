@@ -329,7 +329,7 @@ public class ParametricStatement {
      *
      * @returns the number of rows inserted.
      */
-    public int executeInsert(Connection conn, Collection<DataObject> objects) throws SQLException {
+    public int executeInsert(Connection conn, Collection<? extends DataObject> objects) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql);
         try {
             for (DataObject object: objects) {

@@ -111,7 +111,7 @@ public class Persistence {
     /**
      * Executes a batch INSERT statement.
      */
-    public int executeInsert(String name, Collection<DataObject> objects) throws SQLException {
+    public int executeInsert(String name, Collection<? extends DataObject> objects) throws SQLException {
         ParametricStatement statement = _statements.get(name);
         if (statement != null) {
             return statement.executeInsert(DataSourceUtils.getConnection(_dataSource), objects);
