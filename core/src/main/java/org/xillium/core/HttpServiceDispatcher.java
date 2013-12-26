@@ -21,6 +21,7 @@ import org.springframework.web.context.support.*;
 import org.xillium.base.etc.Arrays;
 import org.xillium.base.beans.*;
 import org.xillium.data.*;
+import org.xillium.data.persistence.crud.CrudConfiguration;
 import org.xillium.core.conf.*;
 import org.xillium.core.management.*;
 import org.xillium.core.intrinsic.*;
@@ -50,6 +51,7 @@ public class HttpServiceDispatcher extends HttpServlet {
     private static final String XILLIUM_PREFIX = "xillium-";
 
     private static final Pattern URI_REGEX = Pattern.compile("/[^/?]+/([^/?]+/[^/?]+)"); // '/context/module/service'
+    private static final Pattern SQL_CONSTRAINT = Pattern.compile("\\([A-Z_]+\\.([A-Z_]+)\\)");
     private static final File TEMPORARY = null;
     private static final Logger _logger = Logger.getLogger(HttpServiceDispatcher.class.getName());
 
@@ -123,6 +125,7 @@ public class HttpServiceDispatcher extends HttpServlet {
         if (hide == null || hide.length() == 0) {
             _services.put("x!/desc", new DescService(descriptions));
             _services.put("x!/list", new ListService(_services));
+            _services.put("x!/ping", new PingService());
         }
     }
 
@@ -308,23 +311,18 @@ public class HttpServiceDispatcher extends HttpServlet {
             } catch (Throwable t) {
                 _logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
             }
-        } catch (Throwable x) {
+        } catch (org.springframework.transaction.TransactionException x) {
             String message = Throwables.getFirstMessage(x);
-            binder.put(Service.FAILURE_MESSAGE, message);
-
-            if (binder.get(Service.SERVICE_STACK_TRACE) != null) {
-                _logger.warning(x.getClass().getSimpleName() + " caught in dispatcher (" + id + "): " + message);
-                _logger.log(Level.FINE, "Exception stack trace:", x);
-                CharArrayWriter sw = new CharArrayWriter();
-                x.printStackTrace(new PrintWriter(sw));
-                binder.put(Service.FAILURE_STACK, sw.toString());
+            Matcher matcher = SQL_CONSTRAINT.matcher(message);
+            if (matcher.find()) {
+                message = CrudConfiguration.icve.get(matcher.group(1));
+                if (message == null) {
+                    message = matcher.group(1);
+                }
             }
-
-            // post-service exception handler
-
-            if (service instanceof Service.Extended) {
-                try { ((Service.Extended)service).aborted(binder, x); } catch (Throwable t) { _logger.log(Level.WARNING, "aborted()", t); }
-            }
+            serviceAborted(binder, id, service, x, message);
+        } catch (Throwable x) {
+            serviceAborted(binder, id, service, x, Throwables.getFirstMessage(x));
         } finally {
             // post-service filter
             if (service instanceof Service.Extended) {
@@ -582,5 +580,24 @@ public class HttpServiceDispatcher extends HttpServlet {
 
         _logger.config("Done with service modules in ApplicationContext " + gac.getId());
         return gac;
+    }
+
+    private static void serviceAborted(DataBinder binder, String id, Service service, Throwable x, String message) {
+        binder.put(Service.FAILURE_MESSAGE, message);
+
+        // post-service exception handler
+        if (service instanceof Service.Extended) {
+            try { ((Service.Extended)service).aborted(binder, x); } catch (Throwable t) { _logger.log(Level.WARNING, "aborted()", t); }
+        }
+
+        String sst = binder.get(Service.SERVICE_STACK_TRACE);
+        String pst = System.getProperty("xillium.service.PrintStackTrace");
+        if (sst != null || pst != null) {
+            CharArrayWriter sw = new CharArrayWriter();
+            x.printStackTrace(new PrintWriter(sw));
+            String stack = sw.toString();
+            if (sst != null) binder.put(Service.FAILURE_STACK, stack);
+            if (pst != null) _logger.warning(x.getClass().getSimpleName() + " caught in (" + id + "): " + message + '\n' + stack);
+        }
     }
 }
