@@ -1,0 +1,16 @@
+#!/bin/sh
+
+x=`dirname $0`
+b=`basename $0`
+if j=`cygpath -d $x/$b.jar 2> /dev/null`
+then
+    java -jar $j $*
+else
+    java -jar $x/$b.jar
+fi
+
+##############################################################################
+#
+# Copyright (c) 2004 Brian W. Hu. All rights reserved.
+#
+##############################################################################

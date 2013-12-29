@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+# To install an executable jar
+#
+
+case $# in
+1) d=/usr/local/bin;;
+2) d="$2";;
+*) echo Usage: `basename $0` JAR-FILE-NAME [ DEST-DIR ]; exit 0;;
+esac
+
+if ! expr "$1" : '.*\.jar' > /dev/null
+then
+    echo Error: "'$1'" is not a jar file
+    exit 1
+fi
+
+if [ ! -d "$d" ]
+then
+    echo Error: destination not a directory
+    exit 1
+fi
+
+if [ ! -x "$d/jwrapper" ]
+then
+    echo Error: jwrapper not installed in $d
+    exit 1
+fi
+
+b=`basename "$1"`
+c=`expr $b : '\([^0-9][^0-9]*\)\(-[0-9].*\)*'`
+cp "$1" "$d"
+#ln -sf "$d"/"$b" "$d"/"$c".jar
+ln -sf "$b" "$d"/"$c".jar
+ln -sf jwrapper "$d"/"$c"
+
+##############################################################################
+#
+# Copyright (c) 2004 Brian W. Hu. All rights reserved.
+#
+##############################################################################

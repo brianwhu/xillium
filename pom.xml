@@ -19,6 +19,7 @@
         <module>core</module>
         <module>arch</module>
         <module>play</module>
+        <module>tool</module>
     </modules>
 
     <properties>
