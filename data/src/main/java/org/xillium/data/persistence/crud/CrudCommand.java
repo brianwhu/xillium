@@ -15,7 +15,7 @@ import org.xillium.data.persistence.*;
  * A CRUD operation generated from database schema.
  *
  * The following features are supported:
- * - multiple tables associated with ISA relations
+ * - multiple tables associated with ISA relations; dominant tables can be specified in this case so that only their columns are selected.
  * - restrictions on values for specific columns; a value starting with '!' indicate negative comparison.
  */
 public class CrudCommand {
@@ -190,9 +190,13 @@ public class CrudCommand {
 
         DatabaseMetaData meta = connection.getMetaData();
         String schema = meta.getUserName();
+        List<String> dominant = new ArrayList<String>();
 
         for (int i = 0; i < tablenames.length; ++i) {
-
+            if (tablenames[i].charAt(0) == '*') {
+                tablenames[i] = tablenames[i].substring(1);
+                dominant.add(tablenames[i]);
+            }
             PreparedStatement stmt = connection.prepareStatement("SELECT * FROM " + tablenames[i]);
             ResultSetMetaData rsmeta = stmt.getMetaData();
             Map<String, Integer> colref = new HashMap<String, Integer>();
@@ -433,15 +437,15 @@ public class CrudCommand {
         if (action.op == Operation.RETRIEVE) {
             fragments.add("org.xillium.data.persistence.ParametricQuery");
             fragments.add(flds.toString());
-            fragments.add("SELECT * FROM " + cols + " WHERE " + vals);
+            fragments.add("SELECT " + selectTarget(dominant) + " FROM " + cols + " WHERE " + vals);
             fragments.add("");
         } else if (action.op == Operation.SEARCH) {
             fragments.add("org.xillium.data.persistence.ParametricQuery");
             fragments.add(flds.toString());
             if (vals.length() > 0) {
-                fragments.add("SELECT * FROM " + cols + " WHERE " + vals);
+                fragments.add("SELECT " + selectTarget(dominant) + " FROM " + cols + " WHERE " + vals);
             } else {
-                fragments.add("SELECT * FROM " + cols);
+                fragments.add("SELECT " + selectTarget(dominant) + " FROM " + cols);
             }
             fragments.add("");
         }
@@ -554,6 +558,19 @@ public class CrudCommand {
             return (name != null) ? name : Strings.toLowerCamelCase(column, '_');
         } else {
             return Strings.toLowerCamelCase(column, '_');
+        }
+    }
+
+    private static String selectTarget(List<String> tables) {
+        if (tables.size() == 0) {
+            return "*";
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (String table: tables) {
+                sb.append(table).append(".*,");
+            }
+            sb.setLength(sb.length() - 1);
+            return sb.toString();
         }
     }
 }
