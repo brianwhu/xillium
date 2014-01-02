@@ -6,7 +6,7 @@ if j=`cygpath -d $x/$b.jar 2> /dev/null`
 then
     java -jar $j $*
 else
-    java -jar $x/$b.jar
+    java -jar $x/$b.jar $*
 fi
 
 ##############################################################################
