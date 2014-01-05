@@ -76,17 +76,6 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
         _mchannels.add(channel);
     }
 
-    /**
-     * Sets(adds) a MessageChannel from bean assembly.
-     */
-    public void setMessageChannel(String path) {
-        try {
-            setMessageChannel((MessageChannel)new XMLBeanAssembler(new DefaultObjectFactory()).build(path));
-        } catch (Exception x) {
-            sendAlert(Manageable.Severity.ALERT, x.getMessage(), 0L);
-        }
-    }
-
     public Status getStatus() {
         return _status;
     }

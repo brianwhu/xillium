@@ -1,8 +1,10 @@
 package org.xillium.core.util;
 
+import java.io.*;
 import java.util.Properties;
 import javax.mail.*;
 import javax.mail.internet.*;
+import org.xillium.base.util.XilliumProperties;
 
 
 /**
@@ -22,16 +24,37 @@ public class EmailChannel implements MessageChannel {
     /**
      * Constructs an EmailChannel and configures it with given properties.
      */
-    public EmailChannel(Properties p) {
-        setProperties(p);
+    public EmailChannel(Properties properties) {
+        setProperties(properties);
+    }
+
+    /**
+     * Constructs an EmailChannel and configures it with given properties.
+     */
+    public EmailChannel(String path) {
+        setPropertiesFile(path);
+    }
+
+    /**
+     * Configures the EmailChannel with a properties file.
+     */
+    public void setPropertiesFile(String path) {
+        try {
+            Reader reader = new InputStreamReader(new FileInputStream(path), "UTF-8");
+            try {
+                setProperties(new XilliumProperties(reader)); 
+            } finally {
+                reader.close();
+            }
+        } catch (Exception x) {}
     }
 
     /**
      * Configures the EmailChannel with given properties.
      */
-    public void setProperties(Properties p) {
-        _properties = p;
-        _recipients = p.getProperty("mail.smtp.to").split(" *[,;] *");
+    public void setProperties(Properties properties) {
+        _properties = properties;
+        _recipients = properties.getProperty("mail.smtp.to").split(" *[,;] *");
         _authenticator = new Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(_properties.getProperty("mail.smtp.user"), _properties.getProperty("mail.smtp.pass"));

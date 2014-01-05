@@ -1,6 +1,7 @@
 package lab;
 
 import org.xillium.base.beans.*;
+import org.xillium.core.util.MessageChannel;
 import org.xillium.core.management.ManagedComponent;
 import org.testng.annotations.*;
 import com.dumbster.smtp.*;
@@ -14,7 +15,7 @@ public class ManagedComponentTest extends ManagedComponent {
     public void test() throws Exception {
         SimpleSmtpServer server = SimpleSmtpServer.start(2525);
 
-        setMessageChannel("src/test/java/lab/email-channel.xml");
+        setMessageChannel((MessageChannel)new XMLBeanAssembler(new DefaultObjectFactory()).build("src/test/java/lab/email-channel.xml"));
         sendMessage(SUBJECT, MESSAGE);
 
         server.stop();
