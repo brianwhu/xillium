@@ -1,32 +1,37 @@
 package org.xillium.core.management;
 
+import java.util.*;
 import java.util.logging.*;
 import javax.management.*;
+import org.xillium.base.beans.XMLBeanAssembler;
+import org.xillium.base.beans.DefaultObjectFactory;
 import org.xillium.base.beans.Throwables;
+import org.xillium.core.util.*;
 
 
 public abstract class ManagedComponent implements Manageable, NotificationEmitter {
-	private NotificationBroadcaster _broadcaster;
-	private ObjectName _name;
-	private Status _status = Status.INITIALIZING;
+    private NotificationBroadcaster _broadcaster;
+    private List<MessageChannel> _mchannels;
+    private ObjectName _name;
+    private Status _status = Status.INITIALIZING;
     private boolean _active = true;
 
-	protected ManagedComponent setStatus(Manageable.Status status) {
-		if (_broadcaster != null) _broadcaster.sendNotification(new AttributeChangeNotification(
-			_name != null ? _name : this,
-			0,
-			System.currentTimeMillis(),
-			"Status Change",
-			"Status",
-			Manageable.Status.class.getName(),
-			_status,
-			status
-		));
-		_status = status;
+    protected ManagedComponent setStatus(Manageable.Status status) {
+        if (_broadcaster != null) _broadcaster.sendNotification(new AttributeChangeNotification(
+            _name != null ? _name : this,
+            0,
+            System.currentTimeMillis(),
+            "Status Change",
+            "Status",
+            Manageable.Status.class.getName(),
+            _status,
+            status
+        ));
+        _status = status;
         return this;
-	}
+    }
 
-	protected ManagedComponent setActive(boolean active) {
+    protected ManagedComponent setActive(boolean active) {
         _active = active;
         return this;
     }
@@ -61,21 +66,42 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
         _broadcaster = broadcaster;
     }
 
-	public Status getStatus() {
-		return _status;
-	}
+    /**
+     * Sets(adds) a MessageChannel.
+     */
+    public void setMessageChannel(MessageChannel channel) {
+        if (_mchannels == null) {
+            _mchannels = new ArrayList<MessageChannel>();
+        }
+        _mchannels.add(channel);
+    }
 
-	public boolean isActive() {
-		return _active;
-	}
+    /**
+     * Sets(adds) a MessageChannel from bean assembly.
+     */
+    public void setMessageChannel(String path) {
+        try {
+            setMessageChannel((MessageChannel)new XMLBeanAssembler(new DefaultObjectFactory()).build(path));
+        } catch (Exception x) {
+            sendAlert(Manageable.Severity.ALERT, x.getMessage(), 0L);
+        }
+    }
+
+    public Status getStatus() {
+        return _status;
+    }
+
+    public boolean isActive() {
+        return _active;
+    }
 
     public void sendAlert(Manageable.Severity severity, String message, long sequence) {
-		if (_broadcaster != null) _broadcaster.sendNotification(new Notification(
+        if (_broadcaster != null) _broadcaster.sendNotification(new Notification(
             severity.toString(),
-			_name != null ? _name : this,
-			sequence,
-			message
-		));
+            _name != null ? _name : this,
+            sequence,
+            message
+        ));
     }
 
     public void sendAlert(Logger logger, String message, long sequence) {
@@ -92,6 +118,15 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
         logger.log(Level.WARNING, message, throwable);
         sendAlert(Manageable.Severity.ALERT, message + ": " + Throwables.getFullMessage(throwable), 0);
         return throwable;
+    }
+
+    public void sendMessage(final String subject, final String text) {
+        if (_mchannels != null) {
+            if (_broadcaster != null) _broadcaster.getExecutor().execute(new Runnable() {
+                public void run() { for (MessageChannel channel: _mchannels) channel.sendMessage(subject, text); }
+            });
+            else for (MessageChannel channel: _mchannels) channel.sendMessage(subject, text);
+        }
     }
 
     public void addNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) {

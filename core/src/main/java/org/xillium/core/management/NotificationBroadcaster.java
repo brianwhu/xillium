@@ -5,22 +5,29 @@ import javax.management.*;
 
 
 public class NotificationBroadcaster extends NotificationBroadcasterSupport {
-	public NotificationBroadcaster(Executor executor) {
-		super(executor);
-	}
+    private final Executor _executor;
 
-	public MBeanNotificationInfo[] getNotificationInfo() {
-		return new MBeanNotificationInfo[] {
-			new MBeanNotificationInfo(
-				new String[] { AttributeChangeNotification.ATTRIBUTE_CHANGE },
-				AttributeChangeNotification.class.getName(),
-				"Bean attribute change"
-			),
-			new MBeanNotificationInfo(
-				new String[] { Manageable.Severity.ALERT.toString(), Manageable.Severity.NOTICE.toString() },
-				Notification.class.getName(),
-				"Alert"
-			)
-		};
-	}
+    public NotificationBroadcaster(Executor executor) {
+        super(executor);
+        _executor = executor;
+    }
+
+    public MBeanNotificationInfo[] getNotificationInfo() {
+        return new MBeanNotificationInfo[] {
+            new MBeanNotificationInfo(
+                new String[] { AttributeChangeNotification.ATTRIBUTE_CHANGE },
+                AttributeChangeNotification.class.getName(),
+                "Bean attribute change"
+            ),
+            new MBeanNotificationInfo(
+                new String[] { Manageable.Severity.ALERT.toString(), Manageable.Severity.NOTICE.toString() },
+                Notification.class.getName(),
+                "Alert"
+            )
+        };
+    }
+
+    Executor getExecutor() {
+        return _executor;
+    }
 }

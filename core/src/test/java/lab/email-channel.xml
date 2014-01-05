@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<core-util:email-channel xmlns:core-util="java://org.xillium.core.util">
+    <base-util:xillium-properties xmlns:base-util="java://org.xillium.base.util">
+        <xillium-property key="mail.smtp.host" value="localhost"/>
+        <xillium-property key="mail.smtp.port" value="2525"/>
+        <xillium-property key="mail.smtp.ssl.enable" value="false"/>
+        <xillium-property key="mail.smtp.auth" value="true"/>
+        <xillium-property key="mail.smtp.user" value="research@xillium.org"/>
+        <xillium-property key="mail.smtp.pass" value="password"/>
+        <xillium-property key="mail.smtp.to" value="sales@xillium.org; admin@xillium.org"/>
+    </base-util:xillium-properties>
+</core-util:email-channel>
+
