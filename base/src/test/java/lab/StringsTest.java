@@ -13,6 +13,7 @@ import org.testng.annotations.*;
  */
 public class StringsTest {
     public static class B {
+        long q = 21;
         int a = 12;
         String b = "Jon";
         double c = 12.25;
@@ -26,15 +27,15 @@ public class StringsTest {
         }
 
         System.out.println("collect(Object object, char separator, String... names)");
-        for (String s: Strings.collect(new B(), '=', "a", "b", "c")) {
+        for (String s: Strings.collect(new B(), '=', "a", "b", "c", "q")) {
             System.err.println(s);
         }
 
         System.out.println("collect(String[] storage, int offset, Object object, char separator, String... names)");
-        String[] args = new String[5];
+        String[] args = new String[6];
         args[0] = "STATIC 1";
         args[1] = "STATIC 2";
-        for (String s: Strings.collect(args, 2, "p.", new B(), '=', "a", "b", "c")) {
+        for (String s: Strings.collect(args, 2, "p.", new B(), '=', "q", "a", "b", "c")) {
             System.err.println(s);
         }
     }

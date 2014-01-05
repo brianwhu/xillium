@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<util:properties xmlns:util="java://java.util">
+    <string property="property1"><?assemble name="value a"?></string>
+    <string property="property2"><?assemble name="value b"?></string>
+</util:properties>
+

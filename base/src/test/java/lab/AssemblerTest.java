@@ -36,6 +36,8 @@ public class AssemblerTest {
 
     @Test(groups={"package"})
     public void testNonCompliant() throws Exception {
-        System.out.println("Response = " + Beans.toString(new XMLBeanAssembler(new DefaultObjectFactory()).setPackage("lab.sms").build("src/test/java/lab/response.xml")));
+        XMLBeanAssembler a = new XMLBeanAssembler(new DefaultObjectFactory());
+        System.out.println("Response = " + Beans.toString(a.setPackage("lab.sms").build("src/test/java/lab/response.xml")));
+        System.out.println("Properties = " + Beans.toString(a.setPackage(null).build("src/test/java/lab/java-util-properties.xml")));
     }
 }

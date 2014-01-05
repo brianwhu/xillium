@@ -45,6 +45,11 @@ Array Objects
         ..
     </type...>
 
+Implicit Java Package
+---------------------
+
+    An implicit Java package can be specified if and only if the top-most element does not specify
+    a java package via XML namespace attributes.
 
 Generics
 --------
