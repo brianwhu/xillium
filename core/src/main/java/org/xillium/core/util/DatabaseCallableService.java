@@ -41,9 +41,10 @@ public class DatabaseCallableService extends SecuredService implements Service.E
     /**
      * Defines parameter mappings. One parameter can be mapped to multiple new names, so a list is used instead of a map as the input to this method.
      */
+    @SuppressWarnings("unchecked")
     public void setMappings(List<String> mappings) {
         if (mappings.size() > 0) {
-            _renames = new Pair[mappings.size()];
+            _renames = (Pair<String, String>[])new Pair[mappings.size()];
             for (int i = 0; i < _renames.length; ++i) {
                 String[] names = mappings.get(i).split("[ ,]+");
                 _renames[i] = new Pair<String, String>(names[0], names[1]);
