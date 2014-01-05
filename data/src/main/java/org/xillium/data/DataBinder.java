@@ -61,6 +61,13 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     }
 
     /**
+     * Retrieves a named object of a specific type from this binder.
+     */
+    public <T> T getNamedObject(String name, Class<T> type) {
+        return type.cast(_named.get(name));
+    }
+
+    /**
      * Fills the data binder with columns in the current row of a result set.
      */
     @Override

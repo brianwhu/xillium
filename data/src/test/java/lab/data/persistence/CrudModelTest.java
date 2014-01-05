@@ -29,6 +29,7 @@ public class CrudModelTest extends AbstractTransactionalTestNGSpringContextTests
     public void crud() throws Exception {
         String username = "yep";
         String tablenames = "MEMBERSHIP,MEMBERPREF,PURCHASE";
+        String tablenamesD = "*MEMBERSHIP,MEMBERPREF,*PURCHASE";
         Connection connection = dataSource.getConnection();
 
         Map<String, String> restrictions = new HashMap<String, String>();
@@ -58,6 +59,14 @@ public class CrudModelTest extends AbstractTransactionalTestNGSpringContextTests
 		for (ParametricStatement statement: command.getStatements()) {
 			System.out.println(statement.print(new StringBuilder()));
 		}
+
+        command = new CrudCommand(connection, username, tablenamesD, new CrudCommand.Action(CrudCommand.Operation.RETRIEVE));
+        System.out.println("SELECT: -- dominant tables -----------------------------");
+        System.out.println(command.getRequestType().getName());
+        System.out.println(DataObject.Util.describe(command.getRequestType()));
+        for (ParametricStatement statement: command.getStatements()) {
+            System.out.println(statement.print(new StringBuilder()));
+        }
 
         command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.RETRIEVE, restrictions));
 		System.out.println("SELECT: -- with restrictions ---------------------------");
