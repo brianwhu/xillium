@@ -46,8 +46,8 @@ public class ObjectBrowser extends SecuredService {
                 binder.put("default", mbs.getDefaultDomain());
                 break;
             case GET_OBJECTS:
-                binder.put("count", String.valueOf(mbs.getMBeanCount()));
                 TreeSet<ObjectName> names = new TreeSet<ObjectName>(mbs.queryNames(request.object != null ? new ObjectName(request.object) : null, null));
+                binder.put("count", String.valueOf(names.size()));
                 binder.putResultSet("objects", toCachedResultSet(names, "domain", "canonicalName"));
                 break;
             case INFO: {
