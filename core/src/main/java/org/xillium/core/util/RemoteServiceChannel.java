@@ -44,20 +44,17 @@ public class RemoteServiceChannel implements MessageChannel {
     }
 
     @Override
-    public String sendMessage(String subject, String message) {
+    public void sendMessage(String subject, String message) {
         if (_properties != null) {
             try {
                 DataBinder binder = new DataBinder();
                 for (String name: _properties.stringPropertyNames()) {
                     binder.put(name, URLEncoder.encode(_properties.getProperty(name), "UTF-8"));
                 }
-                binder.put("subject", URLEncoder.encode(subject));
-                binder.put("message", URLEncoder.encode(message));
+                binder.put("subject", URLEncoder.encode(subject, "UTF-8"));
+                binder.put("message", URLEncoder.encode(message, "UTF-8"));
                 RemoteService.call(_host, _path, binder);
-            } catch (Exception x) {
-                return x.getMessage();
-            }
+            } catch (Exception x) {}
         }
-        return null;
     }
 }

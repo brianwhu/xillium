@@ -2,13 +2,11 @@ package org.xillium.core.util;
 
 
 /**
- * An abstract message channel via which a non-JMX/SNMP message can be sent.
+ * An abstract channel via which a one-way non-JMX/SNMP notification message can be sent.
  */
 public interface MessageChannel {
     /**
-     * Sends a message that consists of a subject and a body.
-     *
-     * @return null if the operation is successful, the error message otherwise.
+     * Sends a message that consists of a subject and a message body. Delivery errors are silently ignored.
      */
-    public String sendMessage(String subject, String message);
+    public void sendMessage(String subject, String message);
 }

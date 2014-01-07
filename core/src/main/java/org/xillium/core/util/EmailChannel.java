@@ -63,7 +63,7 @@ public class EmailChannel implements MessageChannel {
     }
 
     @Override
-    public String sendMessage(String subject, String text) {
+    public void sendMessage(String subject, String text) {
         if (_properties != null) {
             try {
                 MimeMessage message = new MimeMessage(Session.getDefaultInstance(_properties, _authenticator));
@@ -72,11 +72,7 @@ public class EmailChannel implements MessageChannel {
                 message.setSubject(subject);
                 message.setText(text);
                 Transport.send(message);
-            } catch (Exception x) {
-                //x.printStackTrace(System.err);
-                return x.getMessage();
-            }
+            } catch (Exception x) {}
         }
-        return null;
     }
 }

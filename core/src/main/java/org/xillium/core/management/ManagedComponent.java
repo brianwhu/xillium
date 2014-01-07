@@ -1,17 +1,14 @@
 package org.xillium.core.management;
 
-import java.util.*;
 import java.util.logging.*;
 import javax.management.*;
-import org.xillium.base.beans.XMLBeanAssembler;
-import org.xillium.base.beans.DefaultObjectFactory;
 import org.xillium.base.beans.Throwables;
 import org.xillium.core.util.*;
 
 
 public abstract class ManagedComponent implements Manageable, NotificationEmitter {
     private NotificationBroadcaster _broadcaster;
-    private List<MessageChannel> _mchannels;
+    private MessageChannel _mchannel;
     private ObjectName _name;
     private Status _status = Status.INITIALIZING;
     private boolean _active = true;
@@ -70,10 +67,11 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
      * Sets(adds) a MessageChannel.
      */
     public void setMessageChannel(MessageChannel channel) {
-        if (_mchannels == null) {
-            _mchannels = new ArrayList<MessageChannel>();
+        if (_mchannel == null) {
+            _mchannel = channel;
+        } else {
+            _mchannel = new CompoundChannel(_mchannel, channel);
         }
-        _mchannels.add(channel);
     }
 
     public Status getStatus() {
@@ -110,11 +108,11 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
     }
 
     public void sendMessage(final String subject, final String text) {
-        if (_mchannels != null) {
+        if (_mchannel != null) {
             if (_broadcaster != null) _broadcaster.getExecutor().execute(new Runnable() {
-                public void run() { for (MessageChannel channel: _mchannels) channel.sendMessage(subject, text); }
+                public void run() { _mchannel.sendMessage(subject, text); }
             });
-            else for (MessageChannel channel: _mchannels) channel.sendMessage(subject, text);
+            else _mchannel.sendMessage(subject, text);
         }
     }
 
