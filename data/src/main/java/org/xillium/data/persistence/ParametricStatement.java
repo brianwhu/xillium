@@ -359,15 +359,17 @@ public class ParametricStatement {
 
             int result = statement.getUpdateCount();
 
-            Class<? extends DataObject> type = object.getClass();
-            for (int i = 0; i < _params.length; ++i) {
-                if ((_params[i].direction & Param.OUT) == 0) continue;
-                try {
-                    Beans.setValue(object, Beans.getKnownField(type, _params[i].name), statement.getObject(i+1));
-                } catch (NoSuchFieldException x) {
-                    // ignore
-                } catch (Exception x) {
-                    throw new SQLException("Exception in storage of '" + _params[i].name + "' into DataObject (" + type.getName() + ')', x);
+            if (object != null) {
+                Class<? extends DataObject> type = object.getClass();
+                for (int i = 0; i < _params.length; ++i) {
+                    if ((_params[i].direction & Param.OUT) == 0) continue;
+                    try {
+                        Beans.setValue(object, Beans.getKnownField(type, _params[i].name), statement.getObject(i+1));
+                    } catch (NoSuchFieldException x) {
+                        // ignore
+                    } catch (Exception x) {
+                        throw new SQLException("Exception in storage of '" + _params[i].name + "' into DataObject (" + type.getName() + ')', x);
+                    }
                 }
             }
             return result;
