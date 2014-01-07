@@ -1,0 +1,94 @@
+#
+# xillium service invocation from curl
+#
+_x_() {
+s=$1
+shift
+d='curl -k --data-urlencode "#stack_trace#=1"'
+while true; do
+    case $# in
+    0) break;;
+    *) d="$d --data-urlencode '$1'";shift;;
+    esac
+done
+eval "$d $XILLIUM_S/$s" | awk '
+BEGIN { step = 0; }
+{
+    text = $0;
+    do {
+        match(text, /("[^"\\]*(\\.[^"\\]*)*")/, a);
+        if (1 in a) {
+            data[step] = substr(text, a[1,"start"], a[1,"length"]);
+            text = substr(text, 1, a[1,"start"] - 1) "<" step ">" substr(text, a[1,"start"] + a[1,"length"]);
+            ++step;
+        }
+    } while (1 in a);
+    gsub(/ *{ */, "\n{\n", text);
+    gsub(/ *} */, "\n}", text);
+    gsub(/ *, */, "\n", text);
+    gsub(/ *\[ */, "\n[\n", text);
+    gsub(/ *] */, "\n]", text);
+    gsub(/^\n/, "", text);
+    gsub(/\n\n*/, "\n", text);
+}
+END {
+    for (step in data) {
+        gsub("<" step ">", data[step], text);
+    }
+    gsub(/\\n/, "\n", text); gsub(/\\t/, "\t", text);
+    print text;
+}
+' | awk '
+function p(indent, text, subscript, array) {
+    if (indent > 0) {
+        printf "%"indent"s", "";
+    }
+    if (subscript[array] > 0) {
+        printf "[%04d] %s\n", (subscript[array]-1), text;
+        ++subscript[array];
+    } else {
+        print text;
+    }
+}
+BEGIN { indent = -2; array = 0; }
+/^{/  { indent += 2; p(indent, "{", subscript, array); ++array; subscript[array] = 0; }
+/^\[/ { indent += 2; p(indent, "{", subscript, array); ++array; subscript[array] = 1; }
+/^]/  { p(indent, "}"); indent -= 2; --array; }
+/^}/  { p(indent, "}"); indent -= 2; --array; }
+/^[^{}[\]]/ { p(indent+2, $0, subscript, array); }
+'
+}
+
+yserver() {
+  case $# in
+  1) export XILLIUM_S=$1;;
+  2) export XILLIUM_S=$1; export XILLIUM_C=$2;;
+  *) echo 'Usage: $0 URL [ CREDENTIAL ]';;
+  esac
+}
+
+yrun() {
+echo SERVER=$XILLIUM_S
+_x_ $* _language_=zh $XILLIUM_C
+}
+
+yrun0() {
+echo SERVER=$XILLIUM_S
+_x_ $* _language_=zh
+}
+
+ylist() {
+echo SERVER:$XILLIUM_S
+_x_ 'x!/list'
+}
+
+ydesc() {
+echo SERVER:$XILLIUM_S
+_x_ 'x!/desc' name=$1
+}
+
+yping() {
+echo SERVER:$XILLIUM_S
+_x_ 'x!/ping' $*
+}
+
