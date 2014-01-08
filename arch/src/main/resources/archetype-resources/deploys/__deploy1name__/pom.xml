@@ -6,21 +6,21 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>${groupId}</groupId>
-  <artifactId>${rootArtifactId}-service</artifactId>
+  <artifactId>${rootArtifactId}-${deploy1name}</artifactId>
   <version>${version}</version>
   <name>${project.groupId}:${rootArtifactId} - ${project.artifactId}</name>
   <packaging>war</packaging>
 
   <parent>
     <groupId>${groupId}</groupId>
-    <artifactId>deploys</artifactId>
+    <artifactId>${rootArtifactId}-deploys</artifactId>
     <version>${version}</version>
   </parent>
 
   <dependencies>
     <dependency>
       <groupId>${groupId}</groupId>
-      <artifactId>${module1name}</artifactId>
+      <artifactId>${rootArtifactId}-${module1name}</artifactId>
       <version>${symbol_dollar}{project.version}</version>
     </dependency>
 

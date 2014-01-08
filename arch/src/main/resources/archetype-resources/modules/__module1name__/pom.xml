@@ -3,13 +3,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>${groupId}</groupId>
-  <artifactId>${module1name}</artifactId>
+  <artifactId>${rootArtifactId}-${module1name}</artifactId>
   <version>${version}</version>
   <name>${project.groupId}:${rootArtifactId} - ${project.parent.artifactId}:${project.artifactId}</name>
 
   <parent>
     <groupId>${groupId}</groupId>
-    <artifactId>modules</artifactId>
+    <artifactId>${rootArtifactId}-modules</artifactId>
     <version>${version}</version>
   </parent>
 
@@ -23,7 +23,7 @@
           <archive>
             <manifestEntries>
               <Xillium-Domain-Name>${project.groupId}</Xillium-Domain-Name>
-              <Xillium-Module-Name>${project.artifactId}</Xillium-Module-Name>
+              <Xillium-Module-Name>${xillium.module.name}</Xillium-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

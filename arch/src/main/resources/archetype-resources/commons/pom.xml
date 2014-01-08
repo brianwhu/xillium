@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>${groupId}</groupId>
-  <artifactId>${artifactId}</artifactId>
+  <artifactId>${rootArtifactId}-${artifactId}</artifactId>
   <version>${version}</version>
   <name>${project.groupId}:${rootArtifactId} - ${project.artifactId}</name>
 
@@ -23,7 +23,7 @@
           <archive>
             <manifestEntries>
               <Xillium-Domain-Name>${project.groupId}</Xillium-Domain-Name>
-              <Xillium-Module-Name>${project.artifactId}</Xillium-Module-Name>
+              <Xillium-Module-Name>${xillium.module.name}</Xillium-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

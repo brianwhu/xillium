@@ -10,7 +10,7 @@
   </prerequisites>
 
   <groupId>${groupId}</groupId>
-  <artifactId>deploys</artifactId>
+  <artifactId>${rootArtifactId}-deploys</artifactId>
   <version>${version}</version>
   <packaging>pom</packaging>
   <name>${project.groupId}:${rootArtifactId} - ${project.artifactId}</name>
@@ -22,7 +22,7 @@
   </parent>
 
   <modules>
-    <module>${rootArtifactId}-service</module>
+    <module>${deploy1name}</module>
   </modules>
 
   <properties>
@@ -97,7 +97,7 @@
 -->
     <dependency>
       <groupId>${groupId}</groupId>
-      <artifactId>commons</artifactId>
+      <artifactId>${rootArtifactId}-commons</artifactId>
       <version>${version}</version>
     </dependency>
   </dependencies>

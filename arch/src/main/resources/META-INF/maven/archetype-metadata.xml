@@ -6,6 +6,7 @@
   <requiredProperties>
     <requiredProperty key="persistence"><defaultValue>none</defaultValue></requiredProperty>
     <requiredProperty key="module1name"><defaultValue>core</defaultValue></requiredProperty>
+    <requiredProperty key="deploy1name"><defaultValue>service</defaultValue></requiredProperty>
   </requiredProperties>
 
   <fileSets>
@@ -16,7 +17,7 @@
       </includes>
     </fileSet>
     <fileSet filtered="true" encoding="UTF-8">
-      <directory>deploys/__artifactId__-service</directory>
+      <directory>deploys/__deploy1name__</directory>
       <includes>
         <!--include>**/*.xml</include-->
         <include>**/*.properties</include>

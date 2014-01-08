@@ -7,7 +7,7 @@
   </prerequisites>
 
   <groupId>${groupId}</groupId>
-  <artifactId>${artifactId}</artifactId>
+  <artifactId>${rootArtifactId}-${artifactId}</artifactId>
   <packaging>pom</packaging>
   <version>${version}</version>
   <name>${project.groupId}:${rootArtifactId} - ${project.artifactId}</name>
@@ -52,7 +52,7 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>commons</artifactId>
+      <artifactId>${rootArtifactId}-commons</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>
