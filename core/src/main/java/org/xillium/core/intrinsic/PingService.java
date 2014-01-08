@@ -3,9 +3,12 @@ package org.xillium.core.intrinsic;
 import java.io.*;
 import java.util.Properties;
 import java.util.regex.Pattern;
+import javax.script.*;
+import org.springframework.context.ApplicationContext;
 import org.xillium.data.*;
-import org.xillium.core.*;
 import org.xillium.data.validation.*;
+import org.xillium.core.*;
+import org.xillium.core.management.*;
 
 
 /**
@@ -13,19 +16,29 @@ import org.xillium.data.validation.*;
  */
 public class PingService extends SecuredService {
     private static final Pattern SYSTEM_PROPERTY_REALM = Pattern.compile("java\\..*|os\\..*|user\\..*|file\\..*|path\\..*|xillium.system\\..*");
+    private final ApplicationContext _context;
 
     public static enum Signal {
-        SystemProperties    // reloads Java system properties from a local properties file
+        SystemProperties,
+        SystemDiagnosis,
+        ObjectManagement,
     }
 
     public static class Request implements DataObject {
         public Signal signal;
+        public String parameter;
         public boolean verbose;
+    }
+
+    public PingService(ApplicationContext ac) {
+        _context = ac;
     }
 
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
         try {
             Request request = dict.collect(new Request(), binder);
+            binder.remove("signal");
+            binder.remove("parameter");
             if (request.signal != null) switch (request.signal) {
             case SystemProperties:
                 String path = System.getProperty("xillium.system.PropertiesFile");
@@ -58,6 +71,16 @@ public class PingService extends SecuredService {
                     for (String name: System.getProperties().stringPropertyNames()) {
                         binder.put(name, System.getProperty(name));
                     }
+                }
+                break;
+            case SystemDiagnosis:
+                break;
+            case ObjectManagement:
+                if (request.parameter != null) {
+                    ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
+                    engine.put("binder", binder);
+                    engine.put("jmx", new JMXCommander(binder));
+                    engine.eval(request.parameter);
                 }
                 break;
             default:

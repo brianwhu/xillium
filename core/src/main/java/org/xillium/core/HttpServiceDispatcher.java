@@ -125,8 +125,8 @@ public class HttpServiceDispatcher extends HttpServlet {
         if (hide == null || hide.length() == 0) {
             _services.put("x!/desc", new DescService(descriptions));
             _services.put("x!/list", new ListService(_services));
-            _services.put("x!/ping", new PingService());
         }
+        _services.put("x!/ping", new PingService(wac));
     }
 
     public void destroy() {
@@ -334,10 +334,11 @@ public class HttpServiceDispatcher extends HttpServlet {
 
             try {
                 // HTTP headers
-                Object headers = binder.getNamedObject(Service.SERVICE_HTTP_HEADER);
+                @SuppressWarnings("unchecked")
+                Map<String, String> headers = binder.getNamedObject(Service.SERVICE_HTTP_HEADER, Map.class);
                 if (headers != null) {
                     try {
-                        for (Map.Entry<String, String> e: ((Map<String, String>)headers).entrySet()) {
+                        for (Map.Entry<String, String> e: headers.entrySet()) {
                             res.setHeader(e.getKey(), e.getValue());
                         }
                     } catch (Exception x) {}
