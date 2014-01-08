@@ -6,10 +6,15 @@
     <maven>2.2.1</maven>
   </prerequisites>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <global.version>${version}</global.version>
+  </properties>
+
   <groupId>${groupId}</groupId>
   <artifactId>${artifactId}</artifactId>
   <packaging>pom</packaging>
-  <version>${version}</version>
+  <version>1.0</version>
   <name>${project.groupId}:${project.artifactId}</name>
 
   <modules>
@@ -17,10 +22,6 @@
     <module>modules</module>
     <module>deploys</module>
   </modules>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
 
   <build>
     <plugins>

@@ -5,20 +5,15 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <prerequisites>
-    <maven>2.2.1</maven>
-  </prerequisites>
-
   <groupId>${groupId}</groupId>
   <artifactId>${rootArtifactId}-deploys</artifactId>
-  <version>${version}</version>
   <packaging>pom</packaging>
   <name>${project.groupId}:${rootArtifactId} - ${project.artifactId}</name>
 
   <parent>
     <groupId>${groupId}</groupId>
     <artifactId>${rootArtifactId}</artifactId>
-    <version>${version}</version>
+    <version>1.0</version>
   </parent>
 
   <modules>
@@ -68,7 +63,6 @@
           </systemProperties>
           <webAppConfig>
             <contextPath>/${symbol_dollar}{project.artifactId}</contextPath>
-            <tempDirectory>c:/temp</tempDirectory>
           </webAppConfig>
         </configuration>
       </plugin>

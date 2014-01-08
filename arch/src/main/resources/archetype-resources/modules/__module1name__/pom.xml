@@ -4,13 +4,13 @@
 
   <groupId>${groupId}</groupId>
   <artifactId>${rootArtifactId}-${module1name}</artifactId>
-  <version>${version}</version>
+  <version>${global.version}</version>
   <name>${project.groupId}:${rootArtifactId} - ${project.parent.artifactId}:${project.artifactId}</name>
 
   <parent>
     <groupId>${groupId}</groupId>
     <artifactId>${rootArtifactId}-modules</artifactId>
-    <version>${version}</version>
+    <version>1.0</version>
   </parent>
 
   <build>
