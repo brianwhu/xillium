@@ -11,14 +11,13 @@ package org.xillium.base.beans;
 public class Throwables {
 	public static StringBuilder appendStackTrace(StringBuilder sb, Throwable t) {
 		for (StackTraceElement e: t.getStackTrace()) {
-			sb.append(e.toString()).append('\n');
+			sb.append("\tat ").append(e.toString()).append('\n');
 		}
 		return sb;
 	}
 
     public static Throwable getRootCause(Throwable x) {
-        Throwable t;
-        while ((t = x.getCause()) != null) x = t;
+        for (Throwable t; (t = x.getCause()) != null;  x = t);
         return x;
     }
 
@@ -32,6 +31,15 @@ public class Throwables {
         return message;
     }
 
+    public static String getExplanation(Throwable x) {
+        StringBuilder sb = new StringBuilder(x.getClass().getName()).append(": ").append(x.getMessage());
+        Throwable root = getRootCause(x);
+        if (x != root) {
+            sb.append(" caused by ").append(root.getClass().getName()).append(": ").append(root.getMessage());
+        }
+        return sb.toString();
+    }
+
     public static String getFullMessage(Throwable x) {
         StringBuilder sb = new StringBuilder(x.getClass().getName()).append(": ").append(x.getMessage());
         Throwable root = getRootCause(x);
@@ -39,6 +47,6 @@ public class Throwables {
             sb.append(" caused by ").append(root.getClass().getName()).append(": ").append(root.getMessage());
             x = root;
         }
-        return appendStackTrace(sb, x).toString();
+        return appendStackTrace(sb.append("\n"), x).toString();
     }
 }
