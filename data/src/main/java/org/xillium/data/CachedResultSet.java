@@ -42,7 +42,6 @@ public class CachedResultSet {
     
     /**
      * Retrieves the rows from a freshly obtained JDBC result set into a CachedResultSet.
-     *
      * Closes the JDBC result set after retrieval.
      */
     public CachedResultSet(ResultSet rset) throws SQLException {
@@ -73,14 +72,15 @@ public class CachedResultSet {
     }
 
     /**
-     * Retrieves the rows from a collection of Objects.
+     * Retrieves the rows from a collection of Objects, where the objects' (of type T) <i>instance fields</i> are taken as result set columns.
      */
     public <T> CachedResultSet(Collection<T> collection) throws Exception {
         this(collection, false);
     }
 
     /**
-     * Retrieves the rows from a collection of Objects, performing presentation transformations if any is defined on the objects.
+     * Retrieves the rows from a collection of Objects, where the objects' (of type T) <i>instance fields</i> are taken as result set columns.
+     * Also performs presentation transformations if any is defined on the fields.
      */
     public <T> CachedResultSet(Collection<T> collection, boolean forPresentation) throws Exception {
         FieldRetriever[] retrievers = null;
@@ -108,6 +108,34 @@ public class CachedResultSet {
     }
 
     /**
+     * Retrieves the rows from a collection of Objects, where the objects' (of type T) <i>bean properties</i> are taken as result set columns.
+     */
+    public <T> CachedResultSet(Collection<T> collection, String... columns) {
+        this.columns = columns;
+        this.rows = new ArrayList<Object[]>();
+        for (T object: collection) {
+            Object[] row = new Object[columns.length];
+            for (int i = 0; i < columns.length; ++i) {
+                try {
+                    Object value = columns[i].equals("-") ? object : Beans.invoke(object, "get"+Strings.capitalize(columns[i]));
+                    if (value != null) {
+                        if (value.getClass().isArray()) {
+                            row[i] = org.xillium.base.etc.Arrays.join(value, ';');
+                        } else {
+                            row[i] = value.toString();
+                        }
+                    } else {
+                        row[i] = null;
+                    }
+                } catch (Exception x) {
+                    row[i] = null;
+                }
+            }
+            rows.add(row);
+        }
+    }
+
+    /**
      * Explicitly creates a CachedResultSet.
      */
     public CachedResultSet(String[] columns, List<Object[]> rows) {
@@ -115,6 +143,9 @@ public class CachedResultSet {
         this.rows = rows;
     }
 
+    /**
+     * Builds a name-to-column index for quick access to data by columm names.
+     */
     public Map<String, Integer> buildIndex() {
         Map<String, Integer> index = new HashMap<String, Integer>();
         for (int i = 0; i < columns.length; ++i) {

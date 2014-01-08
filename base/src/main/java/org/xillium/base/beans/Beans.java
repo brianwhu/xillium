@@ -23,6 +23,22 @@ public class Beans {
     }
 
     /**
+     * Class lookup by name, which also accepts primitive type names.
+     */
+    public static Class<?> classForName(String name) throws ClassNotFoundException {
+        if ("void".equals(name)) return void.class;
+        if ("char".equals(name)) return char.class;
+        if ("boolean".equals(name)) return boolean.class;
+        if ("byte".equals(name)) return byte.class;
+        if ("short".equals(name)) return short.class;
+        if ("int".equals(name)) return int.class;
+        if ("long".equals(name)) return long.class;
+        if ("float".equals(name)) return float.class;
+        if ("double".equals(name)) return double.class;
+        return Class.forName(name);
+    }
+
+    /**
      * Tests whether a class is a primitive type. Different from Class.isPrimitive, this method consider
      * the following also as "primitive types".
      * <ul>
