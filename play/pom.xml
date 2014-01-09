@@ -14,7 +14,7 @@
     <name>Xillium Platform - Play: a stress test tool</name>
 
     <build>
-        <finalName>xillium-play-executable</finalName>
+        <finalName>xillium-play-${version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

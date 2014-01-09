@@ -8,7 +8,7 @@ import javax.script.*;
 
 public class TestDriver {
     private static void printUsageHelp () {
-        System.err.println("Usage: TestDriver TEST-SUITE TARGET-SPECIFIC-ARGUMENTS ...");
+        System.err.println("Usage: xillium-play TEST-SUITE TARGET-SPECIFIC-ARGUMENTS ...");
     }
 
     /**
