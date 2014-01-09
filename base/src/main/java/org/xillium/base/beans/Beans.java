@@ -436,7 +436,7 @@ public class Beans {
      */
     public static String toString(Object bean) {
         try {
-            return print(new StringBuilder(), bean, 0).toString();
+            return bean != null ? print(new StringBuilder(), bean, 0).toString() : null;
         } catch (IntrospectionException x) {
             return bean.toString() + "(***" + x.getMessage() + ')';
         }
@@ -448,6 +448,19 @@ public class Beans {
      * @return the original StringBuilder
      */
     public static StringBuilder print(StringBuilder sb, Object bean, int level) throws IntrospectionException {
+        return print(sb, new HashSet<Object>(), bean, level);
+    }
+
+    private static StringBuilder print(StringBuilder sb, Set<Object> objects, Object bean, int level) throws IntrospectionException {
+        // reference loop detection
+        if (objects.contains(bean)) {
+            indent(sb, level+1);
+            sb.append("<reference>: ").append(bean.getClass().getName()).append('@').append(Integer.toHexString(bean.hashCode())).append('\n');
+            return sb;
+        } else {
+            objects.add(bean);
+        }
+
         Class<?> type = bean.getClass();
 
         if (isPrimitive(type) || isDisplayable(type)) {
@@ -461,7 +474,7 @@ public class Beans {
                 if (!Modifier.isStatic(modifier) && !Modifier.isTransient(modifier)) {
                     try {
                         indent(sb, level);
-                        printNameValue(sb, field.getName(), field.get(bean), level+1);
+                        printNameValue(sb, objects, field.getName(), field.get(bean), level+1);
                     } catch (IllegalAccessException x) {}
                 }
             }
@@ -472,21 +485,21 @@ public class Beans {
                 while (it.hasNext()) {
                     Object key = it.next();
                     indent(sb, level);
-                    printNameValue(sb, key.toString(), ((Map<?, ?>)bean).get(key), level+1);
+                    printNameValue(sb, objects, key.toString(), ((Map<?, ?>)bean).get(key), level+1);
                 }
             } else if (Iterable.class.isInstance(bean)) {
                 Iterator<?> it = ((Iterable<?>)bean).iterator();
                 int index = 0;
                 while (it.hasNext()) {
                     indent(sb, level+1);
-                    printNameValue(sb, "[" + index + "]", it.next(), level+1);
+                    printNameValue(sb, objects, "[" + index + "]", it.next(), level+1);
                     ++index;
                 }
             } else if (type.isArray()) {
                 Object[] array = (Object[])bean;
                 for (int i = 0; i < array.length; ++i) {
                     indent(sb, level+1);
-                    printNameValue(sb, "[" + i+ "]", array[i], level+1);
+                    printNameValue(sb, objects, "[" + i+ "]", array[i], level+1);
                 }
             } else {
                 PropertyDescriptor[] properties = Introspector.getBeanInfo(type, Object.class).getPropertyDescriptors();
@@ -498,7 +511,7 @@ public class Beans {
                         value = x.getMessage();
                     }
                     indent(sb, level);
-                    printNameValue(sb, property.getDisplayName() + '[' + property.getPropertyType().getName() + ']', value, level);
+                    printNameValue(sb, objects, property.getDisplayName() + '[' + property.getPropertyType().getName() + ']', value, level);
                 }
             }
         }
@@ -506,31 +519,20 @@ public class Beans {
         return sb;
     }
 
-    private static void printNameValue(StringBuilder sb, String name, Object value, int level) {
+    private static void printNameValue(StringBuilder sb, Set<Object> objects, String name, Object value, int level) {
         if (value == null) {
             sb.append(name).append(":\n");
         } else if (isPrimitive(value.getClass()) || isDisplayable(value.getClass())) {
             sb.append(name).append(": ").append(value).append('\n');
         } else {
-            sb.append(name).append(": {\n");
-/*
-            if (value.getClass().isArray()) {
-                int length = Array.getLength(value);
-                for (int i = 0; i < length; ++i) {
-                    indent(sb, level+1);
-                    printNameValue(sb, "[" + i + "]", Array.get(value, i), level+1);
-                }
-            } else {
-*/
+            //sb.append(name).append(": {\n");
+            sb.append(name).append(": ").append(value.getClass().getName()).append('@').append(Integer.toHexString(value.hashCode())).append(" {\n");
                 try {
-                    print(sb, value, level+1);
+                    print(sb, objects, value, level+1);
                 } catch (IntrospectionException x) {
                     indent(sb, level+1);
                     sb.append("!error! ").append(x.getMessage());
                 }
-/*
-            }
-*/
             indent(sb, level);
             sb.append("}\n");
         }
