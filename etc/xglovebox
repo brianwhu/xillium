@@ -1,0 +1,83 @@
+# find a string in any java or service-configuration.xml source
+fjava() {
+find . \( -name '*.java' -o -name 'service-configuration.xml' \) -exec grep "$1" {} \; -print
+}
+
+# find a string in any java or service-configuration.xml source
+ljava() {
+find . \( -name '*.java' -o -name 'service-configuration.xml' \) -exec grep -l "$1" {} \;
+}
+
+# find a string in any xml source
+fxml() {
+find . -name '*.xml' -exec grep "$1" {} \; -print
+}
+
+# find a string in any xml source
+lxml() {
+find . -name '*.xml' -exec grep -l "$1" {} \;
+}
+
+# find all used parametric statements
+used() {
+case $# in 0) p=.;; *) p=$1;; esac
+find $p \( -name '*.java' -o -name service-configuration.xml \) -exec grep '[>"][a-z][a-z0-9]*/[A-Za-z][A-Za-z0-9]*["<]' {} \; | grep -v '^[ \t]*//' | awk '{split($0,a,"[a-z][a-z]*/");p=2;do {split(a[p],b,"[<\"]");print(b[1]);p=p+1;} while (p in a);}' | sort -u
+}
+
+# find all defined parametric statements
+defs() {
+case $# in 0) p=.;; *) p=$1;; esac
+find $p -name storage-*.xml -exec grep 'name=' {} \; | awk '{ split($0,a,"name=\"");split(a[2],b,"\"");print(b[1]);}' | sort -u
+}
+
+# find all named args in parametric statements
+args() {
+case $# in 0) p=.;; *) p=$1;; esac
+find $p -name storage-*.xml -exec grep ':[A-Za-z_-]*:[A-Z]*' {} \; | awk '{split($0,a,"[^A-Za-z_-]:");p=2;do{split(a[p],b,"[,) ]");print(b[1]);p=p+1;} while (p in a);}' | sort -u
+}
+
+# build the commons module then invoke mk()
+mc() {
+mvn -f commons/pom.xml install && mk $*
+}
+
+# build several modules in sequence
+mm() {
+case $# in
+0) ;;
+*) p=$1; shift; mvn -f modules/$p/pom.xml install && mm $*;;
+esac
+}
+
+# build several modules in sequence then a deployment unit
+mk() {
+case $# in
+0) ;;
+1) mvn -f deploys/$1/pom.xml install;;
+*) p=$1; shift; mvn -f modules/$p/pom.xml install && mk $*;;
+esac
+}
+
+# build and assemble a single runnable jar
+ma() {
+mvn package && mvn assembly:single
+}
+
+# git diff ignoring a given pattern
+git-diff-ignore() {
+case $# in
+2) ;;
+*) echo usage: $0 pattern file; return 0;;
+esac
+git diff $2 | grep '^[-+]' | grep -v "$1"
+}
+
+# compare modified files with those in another git clone
+git-diff-across() {
+case $# in
+2) o=;   a=$1; b=$2;;
+3) o=$1; a=$2; b=$3;;
+*) echo "Usage $0 [ diff-opts ] PROJECT-TOP-1 PROJECT-TOP-2"; exit 0;;
+esac
+for f in `cd $a && git status . | grep modified: | awk '{print $3}'`; do diff $o $a/$f $b/$f; done
+}
