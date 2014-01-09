@@ -17,7 +17,7 @@ fi
 
 if [ ! -d "$d" ]
 then
-    echo Error: destination not a directory
+    echo Error: "'$d'" is not a directory
     exit 1
 fi
 
@@ -27,12 +27,33 @@ then
     exit 1
 fi
 
-b=`basename "$1"`
-c=`expr $b : '\([^0-9][^0-9]*\)\(-[0-9].*\)*'`
+#
+# copy the jar to the destination directory
+#
 cp "$1" "$d"
-#ln -sf "$d"/"$b" "$d"/"$c".jar
-ln -sf "$b" "$d"/"$c".jar
-ln -sf jwrapper "$d"/"$c"
+
+#
+# command name = file stem name but without version info
+#
+filename=`basename -- "$1"`
+command=`expr "$filename" : '\(.*\)-[0-9].*\.jar'`
+
+if [ -z "$command" ]
+then
+#
+# no version info, use the file stem name
+#
+    command=`expr "$filename" : '\(.*\)\.jar'`
+else
+#
+# create a sym link for the version-free name
+#
+    ln -sf "$filename" "$d"/"$command".jar
+fi
+#
+# link the command to jwrapper
+#
+ln -sf jwrapper "$d"/"$command"
 
 ##############################################################################
 #
