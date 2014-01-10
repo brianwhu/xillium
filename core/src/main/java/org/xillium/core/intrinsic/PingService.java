@@ -76,7 +76,7 @@ public class PingService extends SecuredService {
             case SystemDiagnosis:
                 break;
             case ObjectManagement:
-                if (request.parameter != null) {
+                if (isLocal(binder) && request.parameter != null) {
                     ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
                     engine.put("binder", binder);
                     engine.put("jmx", new JMXCommander(binder));
