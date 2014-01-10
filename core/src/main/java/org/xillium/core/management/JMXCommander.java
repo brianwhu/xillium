@@ -13,7 +13,7 @@ import org.xillium.data.validation.*;
  * JMXCommander retrieves JMX bean information into a DataBinder.
  * <ul>
  * <li>l(list) - list domains and objects</li>
- * <li>v(view) - view details of an object</li>
+ * <li>t(tell) - tell details of an object</li>
  * <li>g(get)  - get an attribute value</li>
  * <li>s(set)  - set an attribute value</li>
  * <li>a(act)  - act upon an operation</li>
@@ -25,6 +25,7 @@ public class JMXCommander {
     private final MBeanServer mbs;
     private final Field fld;
     private final DataBinder bdr;
+    private boolean vbs;
 
     public JMXCommander(DataBinder binder) {
         try {
@@ -34,6 +35,11 @@ public class JMXCommander {
         } catch (Exception x) {
             throw new RuntimeException(x.getMessage(), x);
         }
+    }
+
+    public JMXCommander v(boolean verbose) {
+        vbs = verbose;
+        return this;
     }
 
     public JMXCommander l() {
@@ -50,12 +56,12 @@ public class JMXCommander {
             bdr.put("count", String.valueOf(names.size()));
             bdr.putResultSet("objects", new CachedResultSet(names, "domain", "canonicalName"));
         } catch (Exception x) {
-            bdr.put(MESSAGE, Throwables.getExplanation(x));
+            bdr.put(MESSAGE, vbs ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
         }
         return this;
     }
 
-    public JMXCommander v(String selector) {
+    public JMXCommander t(String selector) {
         try {
             MBeanInfo info = mbs.getMBeanInfo(new ObjectName(selector));
             bdr.put("className", info.getClassName());
@@ -65,7 +71,7 @@ public class JMXCommander {
             MBeanOperationInfo[] opers = info.getOperations();
             bdr.putResultSet("operations", new CachedResultSet(Arrays.asList(opers), "name", "description", "returnType", "signature"));
         } catch (Exception x) {
-            bdr.put(MESSAGE, Throwables.getExplanation(x));
+            bdr.put(MESSAGE, vbs ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
         }
         return this;
     }
@@ -74,7 +80,7 @@ public class JMXCommander {
         try {
             bdr.put("value", Beans.toString(mbs.getAttribute(new ObjectName(selector), attribute)));
         } catch (Exception x) {
-            bdr.put(MESSAGE, Throwables.getExplanation(x));
+            bdr.put(MESSAGE, vbs ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
         }
         return this;
     }
@@ -95,7 +101,7 @@ public class JMXCommander {
                 throw new AttributeNotFoundException(attribute);
             }
         } catch (Exception x) {
-            bdr.put(MESSAGE, Throwables.getExplanation(x));
+            bdr.put(MESSAGE, vbs ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
         }
         return this;
     }
@@ -126,7 +132,7 @@ public class JMXCommander {
                 throw new ServiceNotFoundException(operation);
             }
         } catch (Exception x) {
-            bdr.put(MESSAGE, Throwables.getExplanation(x));
+            bdr.put(MESSAGE, vbs ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
         }
         return this;
     }
