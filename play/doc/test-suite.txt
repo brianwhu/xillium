@@ -1,0 +1,93 @@
+Introduction
+
+	A test suite is specified in a standard Java properties file. The name of this properties file gives the name of the test suite.
+
+		<SUITE-NAME>.properties
+
+Global Properties
+
+	test.target		String		Implementation class name of TestTarget, which defines access interface to the target system to be tested
+	test.script		String		(optional) Implementation class name of TestScript, which defines the core scripting object
+	test.cases		String		Comma-delimited list of test case names
+	test.scale		Double		A global scale factor to be applied to the number of tester threads specified in each test case
+
+	test.ramp		Integer		(optional) Ramp-up delay after starting each tester thread
+	test.nice		Integer		(optional) Delay between iterations of test cases
+	test.wait		Integer		Base back-off time after each failed test request
+
+Properties for Test Cases
+
+	Configuration settings:
+
+		test.<CASE-NAME>.size						Integer		The number of tester threads in this test case
+		test.<CASE-NAME>.ramp						Integer		(optional) Ramp-up delay after starting each tester thread
+		test.<CASE-NAME>.nice						Integer		(optional) Delay between iterations of test cases
+		test.<CASE-NAME>.wait						Integer		(optional) Base back-off time after each failed test request
+
+		test.<CASE-NAME>.actions					String		(optional) Comma-delimited list of sequential actions in this test case
+
+	If test.<CASE-NAME>.actions is defined, defined actions are performed sequentially in a single thread. Any failure in actions fails the whole case.
+
+		test.<CASE-NAME>.<ACT-NAME>.args			String		Comma-delimited list of request argument names
+		test.<CASE-NAME>.<ACT-NAME>.args.<ARG-NAME>	String		Value for the named argument
+
+	If not, a single implicit action is performed.
+
+		test.<CASE-NAME>.args						String		Comma-delimited list of request argument names
+		test.<CASE-NAME>.args.<ARG-NAME>			String		Value for the named argument
+
+Scripting
+
+	A test suite bootstrap scripting file, if exists, is executed before the test suite starts.
+
+		<SUITE-NAME>.js
+
+	Test case bootstrap scripting file, if exists, is executed before the test case starts.
+
+		<SUITE-NAME>.<CASE-NAME>.js
+
+	Inside the test case bootstrap scripting file, action listeners can be defined to run before and after each test action. A test case scoped context object
+	is available for the listeners to share state and pass information from one action to the next.
+
+	Pre-request listener:
+
+		function prepare(testcase, request) { ... }
+
+		* 'testcase' is a JavaScript context object that persists through the whole test case
+		* 'request' is the Java request object to be sent to the test target
+
+	Post-response listener:
+
+		function process(testcase, response) { ... }
+
+		* 'testcase' is a JavaScript context object that persists through the whole test case
+		* 'request' is the Java response object just received from the test target
+
+
+	If the test case contains only the implicit action, define the listeners at the test case level as following.
+
+			var <CASE-NAME> = {
+				prepare: function(testcase, request) { ... },
+				process: function(testcase, response) { ... }
+			}
+
+	If the test case contains multiple actions, define the listeners for each action at the test action level as following.
+
+			var <CASE-NAME> = {
+				<ACTION-A>: {
+					prepare: function(testcase, request) { ... },
+					process: function(testcase, response) { ... }
+				},
+
+				<ACTION-B>: {
+					prepare: function(testcase, request) { ... },
+					process: function(testcase, response) { ... }
+				},
+
+				...
+			}
+
+	JavaScript expression in argument values
+
+		{{ <JAVA-SCRIPT-EXPRESSION> }}
+
