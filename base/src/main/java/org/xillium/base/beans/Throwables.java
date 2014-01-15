@@ -1,8 +1,7 @@
 package org.xillium.base.beans;
 
-//import java.beans.*;
-//import java.lang.reflect.*;
-//import java.util.*;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 
 /**
@@ -48,5 +47,19 @@ public class Throwables {
             x = root;
         }
         return appendStackTrace(sb.append("\n"), x).toString();
+    }
+
+    public static byte[] hash(Throwable x) throws Exception {
+        List<byte[]> list = new ArrayList<byte[]>();
+        for (Class<?> type = x.getClass(); type != RuntimeException.class; type = type.getSuperclass()) {
+            java.lang.reflect.Field f = type.getDeclaredField("serialVersionUID");
+            f.setAccessible(true);
+            list.add(ByteBuffer.allocate(8).putLong(f.getLong(null)).array());
+        }
+        byte[] bytes = new byte[list.size()*8+1];
+        for (int i = 0; i < list.size(); ++i) {
+            System.arraycopy(list.get(i), 0, bytes, i*8+1, 8);
+        }
+        return bytes;
     }
 }

@@ -38,7 +38,6 @@ import org.xillium.core.util.ModuleSorter;
  * When a request URI matches the above pattern, this servlet looks up a Service instance registered under the name 'module/service'.
  * <p/>
  */
-@SuppressWarnings("serial")
 //@WebServlet(urlPatterns="/", asyncSupported=true)
 public class HttpServiceDispatcher extends HttpServlet {
     private static final String DOMAIN_NAME = "Xillium-Domain-Name";
@@ -166,22 +165,23 @@ public class HttpServiceDispatcher extends HttpServlet {
      * Dispatcher entry point
      */
     protected void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
-        Service service;
         String id;
 
-        _logger.fine("Request URI = " + req.getRequestURI());
-        Matcher m = URI_REGEX.matcher(req.getRequestURI());
-        if (m.matches()) {
-            id = m.group(1);
-            _logger.fine("Request service id = " + id);
-
-            service = _services.get(id);
-            if (service == null) {
+        if (req.getParameterValues(Service.REQUEST_TARGET_PATH) != null) {
+            id = req.getParameterValues(Service.REQUEST_TARGET_PATH)[0];
+        } else {
+            Matcher m = URI_REGEX.matcher(req.getRequestURI());
+            if (m.matches()) {
+                id = m.group(1);
+            } else {
                 _logger.warning("Request not recognized: " + req.getRequestURI());
                 res.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
-        } else {
+        }
+
+        Service service = _services.get(id);
+        if (service == null) {
             _logger.warning("Request not recognized: " + req.getRequestURI());
             res.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
@@ -601,4 +601,6 @@ public class HttpServiceDispatcher extends HttpServlet {
             if (pst != null) _logger.warning(x.getClass().getSimpleName() + " caught in (" + id + "): " + message + '\n' + stack);
         }
     }
+
+    private static final long serialVersionUID = 1L;
 }

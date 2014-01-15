@@ -4,7 +4,6 @@ package org.xillium.data.validation;
 /**
  * Data validation exception.
  */
-@SuppressWarnings("serial")
 public class DataValidationException extends org.xillium.data.DataException {
     public DataValidationException() {
     }
@@ -20,4 +19,6 @@ public class DataValidationException extends org.xillium.data.DataException {
     public DataValidationException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    private static final long serialVersionUID = 7531119436056645564L;
 }

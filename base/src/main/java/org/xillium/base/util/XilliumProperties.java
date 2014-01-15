@@ -7,7 +7,6 @@ import java.io.*;
 /**
  * A slightly improved java.util.Properties that is also friendly to XML bean assembly mechanism.
  */
-@SuppressWarnings("serial")
 public class XilliumProperties extends Properties {
     /**
      * Constructs a XilliumProperties.
@@ -28,4 +27,6 @@ public class XilliumProperties extends Properties {
     public void setXilliumProperty(XilliumProperty property) {
         setProperty(property.key, property.value);
     }
+
+    private static final long serialVersionUID = 7985795077278228893L;
 }

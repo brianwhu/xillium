@@ -1,6 +1,5 @@
 package org.xillium.play;
 
-@SuppressWarnings("serial")
 public class TestFailureException extends Exception {
     private final int code;
 
@@ -27,4 +26,6 @@ public class TestFailureException extends Exception {
     public int getStatusCode() {
         return code;
     }
+
+    private static final long serialVersionUID = 1319125986003307207L;
 }

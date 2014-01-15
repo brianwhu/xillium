@@ -13,7 +13,6 @@ import org.xillium.data.persistence.ResultSetWorker;
 /**
  * A data binder
  */
-@SuppressWarnings("serial")
 public class DataBinder extends HashMap<String, String> implements ResultSetWorker<DataBinder> {
     private final Map<String, CachedResultSet> _rsets = new HashMap<String, CachedResultSet>();
     private final Map<String, Object> _named = new HashMap<String, Object>();
@@ -255,4 +254,6 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
 
         return jb;
     }
+
+    private static final long serialVersionUID = -4575511652015221913L;
 }

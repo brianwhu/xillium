@@ -4,7 +4,6 @@ package org.xillium.data;
 /**
  * Common data exception.
  */
-@SuppressWarnings("serial")
 public class DataException extends Exception {
     public DataException() {
     }
@@ -20,4 +19,6 @@ public class DataException extends Exception {
     public DataException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    private static final long serialVersionUID = -2108493108912848283L;
 }

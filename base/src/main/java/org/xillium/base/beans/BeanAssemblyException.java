@@ -4,7 +4,6 @@ package org.xillium.base.beans;
 /**
  * Common data exception.
  */
-@SuppressWarnings("serial")
 public class BeanAssemblyException extends RuntimeException {
     public BeanAssemblyException() {
     }
@@ -20,4 +19,6 @@ public class BeanAssemblyException extends RuntimeException {
     public BeanAssemblyException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    private static final long serialVersionUID = 8208763758349113075L;
 }

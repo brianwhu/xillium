@@ -4,7 +4,6 @@ package org.xillium.core;
 /**
  * Thrown when authorization fails
  */
-@SuppressWarnings("serial")
 public class AuthorizationException extends RuntimeException {
     public AuthorizationException() {
     }
@@ -20,4 +19,6 @@ public class AuthorizationException extends RuntimeException {
     public AuthorizationException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    private static final long serialVersionUID = -2082479184425267793L;
 }

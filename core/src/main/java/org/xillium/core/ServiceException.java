@@ -4,7 +4,6 @@ package org.xillium.core;
 /**
  * Use of HTTP status code
  */
-@SuppressWarnings("serial")
 public class ServiceException extends RuntimeException {
     public ServiceException() {
     }
@@ -20,4 +19,6 @@ public class ServiceException extends RuntimeException {
     public ServiceException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    private static final long serialVersionUID = -6544596638507709427L;
 }

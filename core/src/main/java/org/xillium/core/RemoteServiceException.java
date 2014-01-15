@@ -4,7 +4,6 @@ package org.xillium.core;
 /**
  * Exception to represent a remote ServiceException.
  */
-@SuppressWarnings("serial")
 public class RemoteServiceException extends ServiceException {
     public RemoteServiceException() {
     }
@@ -20,4 +19,6 @@ public class RemoteServiceException extends ServiceException {
     public RemoteServiceException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    private static final long serialVersionUID = 2101207206858011158L;
 }

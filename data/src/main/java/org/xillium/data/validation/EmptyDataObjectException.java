@@ -4,7 +4,6 @@ package org.xillium.data.validation;
 /**
  * Data validation exception: the whole data object is empty.
  */
-@SuppressWarnings("serial")
 public class EmptyDataObjectException extends MissingParameterException {
     public EmptyDataObjectException() {
     }
@@ -20,4 +19,6 @@ public class EmptyDataObjectException extends MissingParameterException {
     public EmptyDataObjectException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    private static final long serialVersionUID = 4318641522545221014L;
 }
