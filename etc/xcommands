@@ -89,6 +89,6 @@ _x_ 'x!/desc' name=$1
 
 yping() {
 echo SERVER:$XILLIUM_S
-_x_ 'x!/ping' $*
+_x_ $* '#target_path#=x!/ping'
 }
 

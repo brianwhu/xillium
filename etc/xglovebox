@@ -36,6 +36,18 @@ case $# in 0) p=.;; *) p=$1;; esac
 find $p -name storage-*.xml -exec grep ':[A-Za-z_-]*:[A-Z]*' {} \; | awk '{split($0,a,"[^A-Za-z_-]:");p=2;do{split(a[p],b,"[,) ]");print(b[1]);p=p+1;} while (p in a);}' | sort -u
 }
 
+# find all beans in service-configuration.xml
+list-beans() {
+if [ -d modules ]; then
+  for d in modules/*; do
+    m=`expr $d : '[^/]*/\(.*\)'`
+    find $d -name service-configuration.xml -exec grep 'bean id="' {} \; | awk '{print $2}' | sed '/^ *$/d' | awk 'BEGIN{FS="\""}{print "'$m'" "/" $2}'
+  done | sort -u
+else
+  echo "expecting 'modules' as a directory" 1>&2
+fi
+}
+
 # build the commons module then invoke mk()
 mc() {
 mvn -f commons/pom.xml install && mk $*
