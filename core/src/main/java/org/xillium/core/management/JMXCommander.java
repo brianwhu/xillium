@@ -33,7 +33,7 @@ public class JMXCommander {
             fld = JMXCommander.class.getDeclaredField("mbs");
             bdr = binder;
         } catch (Exception x) {
-            throw new RuntimeException(x.getMessage(), x);
+            throw new ManagementException(x.getMessage(), x);
         }
     }
 
@@ -43,10 +43,14 @@ public class JMXCommander {
     }
 
     public JMXCommander l() {
-        String domains[] = mbs.getDomains();
-        Arrays.sort(domains);
-        bdr.put("default", mbs.getDefaultDomain());
-        bdr.putResultSet("domains", new CachedResultSet(Arrays.asList(domains), "-"));
+        try {
+            String domains[] = mbs.getDomains();
+            Arrays.sort(domains);
+            bdr.put("default", mbs.getDefaultDomain());
+            bdr.putResultSet("domains", new CachedResultSet(Arrays.asList(domains), "-"));
+        } catch (Exception x) {
+            bdr.put(MESSAGE, vbs ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
+        }
         return this;
     }
 
@@ -129,7 +133,7 @@ public class JMXCommander {
                 }
                 bdr.put("value", Beans.toString(mbs.invoke(name, operation, arguments, signature)));
             } else {
-                throw new ServiceNotFoundException(operation);
+                throw new ManagementRealmNotFoundException(operation);
             }
         } catch (Exception x) {
             bdr.put(MESSAGE, vbs ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));

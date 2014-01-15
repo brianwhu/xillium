@@ -82,7 +82,7 @@ public class RemoteService {
         List<String> params = new ArrayList<String>();
         for (Map.Entry<String, String> entry: binder.entrySet()) {
             String name = entry.getKey();
-            if (name.charAt(0) == '_' || name.charAt(0) == '#') continue;
+            if (name.charAt(0) == '_') continue;
             params.add(name + '=' + entry.getValue());
         }
         return call(server, service, suppress, params.toArray(new String[params.size()]));
