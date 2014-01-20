@@ -23,7 +23,6 @@ public class CrudService extends SecuredService implements Service.Extended, Dyn
 
     private final CrudCommand _command;
     private boolean _isUnique;
-    private boolean _debugging;
     private String _missing;
     private Service.Filter _filter;
 
@@ -112,10 +111,6 @@ public class CrudService extends SecuredService implements Service.Extended, Dyn
         _isUnique = unique;
     }
 
-    public void setDebugging(boolean debugging) {
-        _debugging = debugging;
-    }
-
     /**
      * Sets a message to throw when an expected row is missing.
      */
@@ -158,10 +153,10 @@ public class CrudService extends SecuredService implements Service.Extended, Dyn
         int count = 0;
         try {
             DataObject request = dict.collect(_command.getRequestType().newInstance(), binder);
-            if (_debugging) {
-                _logger.info("CrudService.run: request = " + DataObject.Util.describe(request.getClass()));
+            if (_logger.isLoggable(Level.FINE)) {
+                _logger.fine("CrudService.run: request = " + DataObject.Util.describe(request.getClass()));
                 for (int i = 0; i < _command.getStatements().length; ++i) {
-                    _logger.info(_command.getStatements()[i].getSQL());
+                    _logger.fine(_command.getStatements()[i].getSQL());
                 }
             }
 
