@@ -126,6 +126,11 @@ public class HttpServiceDispatcher extends HttpServlet {
             _services.put("x!/list", new ListService(_services));
         }
         _services.put("x!/ping", new PingService(wac));
+
+        // Tomcat/Catalina special
+        try { ManagementFactory.getPlatformMBeanServer().setAttribute(
+            new ObjectName("Catalina:host=localhost,name=AccessLogValve,type=Valve"), new Attribute("condition", "intrinsic")
+        ); } catch (Exception x) {}
     }
 
     public void destroy() {
@@ -246,7 +251,9 @@ public class HttpServiceDispatcher extends HttpServlet {
             binder.putNamedObject(Service.REQUEST_HTTP_COOKIE, req.getCookies());
             if (req.isSecure()) binder.put(Service.REQUEST_HTTP_SECURE, Service.REQUEST_HTTP_SECURE);
 
-            if (id.endsWith(".html")) {
+            if (id.startsWith("x!/")) {
+                req.setAttribute("intrinsic", "intrinsic");
+            } else if (id.endsWith(".html")) {
                 // TODO provide a default, error reporting page template
             }
 
