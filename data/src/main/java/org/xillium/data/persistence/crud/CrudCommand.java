@@ -7,6 +7,7 @@ import javassist.bytecode.*;
 import javassist.bytecode.annotation.MemberValue;
 import javassist.bytecode.annotation.IntegerMemberValue;
 import org.xillium.base.beans.Strings;
+import org.xillium.base.etc.Pair;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
 
@@ -15,17 +16,21 @@ import org.xillium.data.persistence.*;
  * A CRUD operation generated from database schema.
  *
  * The following features are supported:
- * - multiple tables associated with ISA relations; dominant tables can be specified in this case so that only their columns are selected.
+ * - multiple tables associated with ISA relations; dominant tables can be specified in this case so that only their columns are selected (RETRIEVE, SEARCH).
  * - restrictions on values for specific columns; a value starting with '!' indicate negative comparison.
+ *
+ * A SEARCH command with n optional arguments will generate 2^n statements to match the incoming request arguments.
  */
 public class CrudCommand {
     private static final String STATEMENT_FIELD_NAME = "_STMT";
     private static final char REQUIRED_INDICATOR = '*';
+    private static final char DOMINANT_INDICATOR = '*';
     private static final char NEGATIVE_INDICATOR = '!';
     private static final Map<String, Class<? extends DataObject>> _classes = new HashMap<String, Class<? extends DataObject>>();
 
     private final Operation _oper;
     private final String _name;
+    private final String[] _opts;
     private final Class<? extends DataObject> _type;
 
     public static enum Operation {
@@ -41,24 +46,29 @@ public class CrudCommand {
         final String[] args;
         final boolean[] reqd;
         final Map<String, String> restriction;
+        final String[] opts;
 
         public Action(Operation op) {
             this.op = op;
             this.args = null;
             this.reqd = null;
             this.restriction = null;
+            this.opts = null;
         }
 
         public Action(Operation op, Map<String, String> restriction) {
             this.op = op;
+            this.restriction = restriction;
             if (op == Operation.SEARCH) {
                 this.args = restriction.keySet().toArray(new String[restriction.size()]);
                 this.reqd = new boolean[this.args.length];
+                List<String> opts = analyzeRequiredArgs();
+                this.opts = opts.toArray(new String[opts.size()]);
             } else {
                 this.args = null;
                 this.reqd = null;
+                this.opts = null;
             }
-            this.restriction = restriction;
         }
 
         /**
@@ -66,10 +76,11 @@ public class CrudCommand {
          */
         public Action(Operation op, String[] args) {
             this.op = op;
+            this.restriction = null;
             this.args = args;
             this.reqd = new boolean[this.args.length];
-            this.restriction = null;
-            analyzeRequiredArgs();
+            List<String> opts = analyzeRequiredArgs();
+            this.opts = opts.toArray(new String[opts.size()]);
         }
 
         /**
@@ -81,15 +92,17 @@ public class CrudCommand {
          */
         public Action(Operation op, String[] args, Map<String, String> restriction) {
             this.op = op;
+            this.restriction = restriction;
             if (op == Operation.SEARCH) {
-                this.args = restriction.keySet().toArray(new String[restriction.size() + args.length]);
-                System.arraycopy(args, 0, this.args, restriction.size(), args.length);
+                Set<String> set = new HashSet<String>(restriction.keySet());
+                for (int i = 0; i < args.length; ++i) set.add(args[i]);
+                this.args = set.toArray(new String[set.size()]);
             } else {
                 this.args = args;
             }
             this.reqd = new boolean[this.args.length];
-            this.restriction = restriction;
-            analyzeRequiredArgs();
+            List<String> opts = analyzeRequiredArgs();
+            this.opts = opts.toArray(new String[opts.size()]);
         }
 
 /*
@@ -102,13 +115,20 @@ public class CrudCommand {
             return op.toString() + '[' + Arrays.toString(args) + ']' + restriction;
         }
 
-        private void analyzeRequiredArgs() {
+        private List<String> analyzeRequiredArgs() {
+            List<String> optionals = new ArrayList<String>();
             for (int i = 0; i < args.length; ++i) {
                 if (args[i].charAt(0) == REQUIRED_INDICATOR) {
                     args[i] = args[i].substring(1);
                     reqd[i] = true;
+                } else {
+                    String restr = restriction != null ? restriction.get(args[i]) : null;
+                    if (restr == null || restr.charAt(0) == NEGATIVE_INDICATOR) {
+                        optionals.add(args[i]);
+                    }
                 }
             }
+            return optionals;
         }
     }
 
@@ -134,6 +154,7 @@ public class CrudCommand {
             }
             _type = type;
         }
+        _opts = action.opts;
     }
 
     public Class<? extends DataObject> getRequestType() {
@@ -146,6 +167,18 @@ public class CrudCommand {
 
     public String getName() {
         return _name;
+    }
+
+    /**
+     * For SEARCH operation only, chooses the appropriate statement based on query parameters provided in the binder.
+     */
+    public int choose(DataBinder binder) {
+        int index = 0;
+        if (_opts != null) for (int i = 0; i < _opts.length; ++i) {
+            String v = binder.get(_opts[i]);
+            if (v != null && v.length() > 0) index |= 1 << i;
+        }
+        return index;
     }
 
     /**
@@ -188,12 +221,17 @@ public class CrudCommand {
             vals = new StringBuilder(),    // CREATE: VALUES,  RETRIEVE: COND'S, UPDATE: COND'S,      DELETE: COND'S,     SEARCH: COND'S
             flds = new StringBuilder();
 
+        // for SEARCH only
+        Map<String, List<Pair<Integer, Integer>>> voptional = new HashMap<String, List<Pair<Integer, Integer>>>();
+        Map<String, List<Pair<Integer, Integer>>> foptional = new HashMap<String, List<Pair<Integer, Integer>>>();
+        Map<String, String> nametrans = new HashMap<String, String>();
+
         DatabaseMetaData meta = connection.getMetaData();
         String schema = meta.getUserName();
         List<String> dominant = new ArrayList<String>();
 
         for (int i = 0; i < tablenames.length; ++i) {
-            if (tablenames[i].charAt(0) == '*') {
+            if (tablenames[i].charAt(0) == DOMINANT_INDICATOR) {
                 tablenames[i] = tablenames[i].substring(1);
                 dominant.add(tablenames[i]);
             }
@@ -232,8 +270,7 @@ public class CrudCommand {
                         String column = keys.getString(FKEY_REFERENCING_COLUMN);
                         isaKeys.add(column);
                         if (action.op == Operation.RETRIEVE || action.op == Operation.SEARCH) {
-    /*SQL*/                 if (vals.length() > 0) vals.append(" AND ");
-    /*SQL*/                 vals.append(tablenames[i]).append('.').append(column).append('=').append(jointable).append('.').append(column);
+    /*SQL*/                 vals.append(tablenames[i]).append('.').append(column).append('=').append(jointable).append('.').append(column).append(" AND ");
                         }
                     }
                 }
@@ -273,27 +310,27 @@ public class CrudCommand {
                 for (int c = 0; c < action.args.length; ++c) {
                     Integer idx = colref.get(action.args[c]);
                     if (idx != null) {
-    /*SQL*/             if (vals.length() > 0) vals.append(" AND ");
-    /*SQL*/             vals.append(tablenames[i]).append('.').append(action.args[c]);
     /*SQL*/             String restriction = action.restriction == null ? null : action.restriction.get(action.args[c]);
     /*SQL*/             if (restriction == null) {
-    /*SQL*/                 //vals.append('?');
-    /*SQL*/                 vals.append('=').append("COALESCE(?,").append(tablenames[i]).append('.').append(action.args[c]).append(')');
-    /*SQL*/                 if (flds.length() > 0) flds.append(',');
-                            flds.append(fieldName(tablenames[i], action.args[c])).append(':').append(rsmeta.getColumnType(idx.intValue()));
-                        } else {
-                            if (restriction.charAt(0) == NEGATIVE_INDICATOR) {
-    /*SQL*/                     vals.append("<>").append(restriction.substring(1))
-                                    // the column should also accept an input value
-    /*SQL*/                         .append(" AND ")
-    /*SQL*/                         .append(tablenames[i]).append('.').append(action.args[c])
-    /*SQL*/                         .append('=').append("COALESCE(?,").append(tablenames[i]).append('.').append(action.args[c]).append(')');
-    /*SQL*/                     if (flds.length() > 0) flds.append(',');
-                                flds.append(fieldName(tablenames[i], action.args[c])).append(':').append(rsmeta.getColumnType(idx.intValue()));
-                            } else {
-    /*SQL*/                     vals.append('=').append(restriction);
+                            int vstart = vals.length(), fstart = flds.length();
+    /*SQL*/                 vals.append(tablenames[i]).append('.').append(action.args[c]).append("=? AND ");
+                            flds.append(fieldName(tablenames[i], action.args[c])).append(':').append(rsmeta.getColumnType(idx.intValue())).append(',');
+                            if (!action.reqd[c]) {
+                                traceOptional(voptional, action.args[c], vstart, vals.length());
+                                traceOptional(foptional, action.args[c], fstart, flds.length());
                             }
- 
+                        } else if (restriction.charAt(0) == NEGATIVE_INDICATOR) {
+    /*SQL*/                 vals.append(tablenames[i]).append('.').append(action.args[c]).append("<>").append(restriction.substring(1)).append(" AND ");
+                            // the column should also accept an input value
+                            int vstart = vals.length(), fstart = flds.length();
+    /*SQL*/                 vals.append(tablenames[i]).append('.').append(action.args[c]).append("=? AND ");
+                            flds.append(fieldName(tablenames[i], action.args[c])).append(':').append(rsmeta.getColumnType(idx.intValue())).append(',');
+                            if (!action.reqd[c]) {
+                                traceOptional(voptional, action.args[c], vstart, vals.length());
+                                traceOptional(foptional, action.args[c], fstart, flds.length());
+                            }
+                        } else {
+    /*SQL*/                 vals.append(tablenames[i]).append('.').append(action.args[c]).append('=').append(restriction).append(" AND ");
                         }
                         requested.add(action.args[c]);
                         if (action.reqd[c]) required.add(action.args[c]);
@@ -339,7 +376,6 @@ public class CrudCommand {
                     // fall through for the super-table
                 case DELETE:
                     // only primary key columns
-    /*SQL*/         if (vals.length() > 0) vals.append(" AND ");
     /*SQL*/         vals.append(alias).append(name);
     /*SQL*/         if (restriction == null) {
     /*SQL*/             vals.append('=').append('?');
@@ -351,13 +387,12 @@ public class CrudCommand {
                         } else {
     /*SQL*/                 vals.append('=').append(restriction);
                         }
- 
                     }
+                    vals.append(" AND ");
                     break;
                 case UPDATE:
                     // only primary key & updating columns
                     if (primaryKeys.contains(name)) {
-    /*SQL*/             if (vals.length() > 0) vals.append(" AND ");
     /*SQL*/             vals.append(name);
     /*SQL*/             if (restriction == null) {
     /*SQL*/                 vals.append('=').append('?');
@@ -370,9 +405,14 @@ public class CrudCommand {
     /*SQL*/                     vals.append('=').append(restriction);
                             }
                         }
+                        vals.append(" AND ");
                     }
                     break;
                 case SEARCH:
+                    // file optionals lists under field names
+                    nametrans.put(name, fname);
+                    voptional.put(fname, voptional.get(name));
+                    foptional.put(fname, foptional.get(name));
                     break;
                 }
 
@@ -418,14 +458,14 @@ public class CrudCommand {
                 if (cols.length() > 0) {
                     fragments.add("org.xillium.data.persistence.ParametricStatement");
                     fragments.add(flds.toString());
-                    fragments.add("UPDATE " + tablenames[i] + " SET " + cols.toString() + " WHERE " + vals.toString());
+                    fragments.add("UPDATE " + tablenames[i] + " SET " + cols.toString() + " WHERE " + vals.toString().replaceAll(" AND *$", ""));
                     fragments.add(Strings.toCamelCase(tablenames[i], '_'));
                 }
                 break;
             case DELETE:
                 fragments.add("org.xillium.data.persistence.ParametricStatement");
                 fragments.add(flds.toString());
-                fragments.add("DELETE FROM " + tablenames[i] + " WHERE " + vals.toString());
+                fragments.add("DELETE FROM " + tablenames[i] + " WHERE " + vals.toString().replaceAll(" AND *$", ""));
                 fragments.add(Strings.toCamelCase(tablenames[i], '_'));
                 break;
             case RETRIEVE:
@@ -437,17 +477,50 @@ public class CrudCommand {
         if (action.op == Operation.RETRIEVE) {
             fragments.add("org.xillium.data.persistence.ParametricQuery");
             fragments.add(flds.toString());
-            fragments.add("SELECT " + selectTarget(dominant) + " FROM " + cols + " WHERE " + vals);
+            fragments.add("SELECT " + selectTarget(dominant) + " FROM " + cols + " WHERE " + vals.toString().replaceAll(" AND *$", ""));
             fragments.add("");
         } else if (action.op == Operation.SEARCH) {
-            fragments.add("org.xillium.data.persistence.ParametricQuery");
-            fragments.add(flds.toString());
-            if (vals.length() > 0) {
-                fragments.add("SELECT " + selectTarget(dominant) + " FROM " + cols + " WHERE " + vals);
+            if (action.opts != null) {
+                for (int i = 0; i < action.opts.length; ++i) {
+                    action.opts[i] = nametrans.get(action.opts[i]);
+                }
+                int count = 1 << action.opts.length;
+
+                String vtext = vals.toString(), ftext = flds.toString();
+                for (int i = 0; i < count; ++i) {
+                    char[] vchars = vtext.toCharArray(), fchars = ftext.toCharArray();
+                    for (int j = 0; j < action.opts.length; ++j) {
+                        List<Pair<Integer, Integer>> vlist = voptional.get(action.opts[j]);
+                        List<Pair<Integer, Integer>> flist = foptional.get(action.opts[j]);
+                        if (vlist == null || flist == null) {
+                            throw new RuntimeException("Column{"+action.opts[j]+"}NotInRelevantTables");
+                        }
+                        if ((i & (1 << j)) == 0) {
+                            for (Pair<Integer, Integer> part: vlist) Arrays.fill(vchars, part.first, part.second, ' ');
+                            for (Pair<Integer, Integer> part: flist) Arrays.fill(fchars, part.first, part.second, ' ');
+                        }
+                    }
+
+                    fragments.add("org.xillium.data.persistence.ParametricQuery");
+                    fragments.add(new String(fchars).replaceAll("\\s+", " "));
+                    String vals0 = new String(vchars).replaceAll("\\s+", " ").replaceAll(" AND *$", "").trim();
+                    if (vals0.length() > 0) {
+                        fragments.add("SELECT " + selectTarget(dominant) + " FROM " + cols + " WHERE " + vals0);
+                    } else {
+                        fragments.add("SELECT " + selectTarget(dominant) + " FROM " + cols);
+                    }
+                    fragments.add("");
+                }
             } else {
-                fragments.add("SELECT " + selectTarget(dominant) + " FROM " + cols);
+                fragments.add("org.xillium.data.persistence.ParametricQuery");
+                fragments.add(flds.toString());
+                if (vals.length() > 0) {
+                    fragments.add("SELECT " + selectTarget(dominant) + " FROM " + cols + " WHERE " + vals.toString().replaceAll(" AND *$", ""));
+                } else {
+                    fragments.add("SELECT " + selectTarget(dominant) + " FROM " + cols);
+                }
+                fragments.add("");
             }
-            fragments.add("");
         }
 
         CtField field = new CtField(pool.getCtClass("org.xillium.data.persistence.ParametricStatement[]"), STATEMENT_FIELD_NAME, cc);
@@ -572,6 +645,14 @@ public class CrudCommand {
             sb.setLength(sb.length() - 1);
             return sb.toString();
         }
+    }
+
+    private static void traceOptional(Map<String, List<Pair<Integer, Integer>>> optional, String column, int start, int end) {
+        List<Pair<Integer, Integer>> list = optional.get(column);
+        if (list == null) {
+            optional.put(column, list = new ArrayList<Pair<Integer, Integer>>());
+        }
+        list.add(new Pair<Integer, Integer>(start, end));
     }
 }
 

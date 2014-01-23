@@ -183,10 +183,10 @@ public class CrudService extends SecuredService implements Service.Extended, Dyn
             case RETRIEVE:
             case SEARCH:
                 if (_isUnique) {
-                    ((ParametricQuery)_command.getStatements()[0]).executeSelect(connection, request, binder);
+                    ((ParametricQuery)_command.getStatements()[_command.choose(binder)]).executeSelect(connection, request, binder);
                 } else {
                     binder.putResultSet(_command.getName(),
-                        ((ParametricQuery)_command.getStatements()[0]).executeSelect(connection, request, CachedResultSet.BUILDER)
+                        ((ParametricQuery)_command.getStatements()[_command.choose(binder)]).executeSelect(connection, request, CachedResultSet.BUILDER)
                     );
                 }
                 break;

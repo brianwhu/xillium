@@ -70,7 +70,7 @@ public class ParametricStatement {
     }
 
     public ParametricStatement(String parameters) throws IllegalArgumentException {
-        if (parameters != null && parameters.length() > 0) {
+        if (parameters != null && parameters.trim().length() > 0) {
             String[] params = parameters.trim().split("\\s*,\\s*");
             _params = new Param[params.length];
             for (int i = 0; i < params.length; ++i) {
@@ -88,7 +88,7 @@ public class ParametricStatement {
                         }
                     }
                 } else {
-                    throw new IllegalArgumentException("Parameter specification: missing type in " + params[i]);
+                    throw new IllegalArgumentException("Parameter specification: missing type in " + params[i] + ", parameters = " + parameters);
                 }
             }
         } else {
