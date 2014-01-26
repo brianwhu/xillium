@@ -75,6 +75,14 @@ ma() {
 mvn package && mvn assembly:single
 }
 
+# execute a jar-with-dependencies
+mx() {
+case $# in
+0) echo mx PATH ARGUMENTS ...;;
+*) p=$1; shift; java -jar `find $p -name '*-jar-with-dependencies.jar'` $*;;
+esac
+}
+
 # git diff ignoring a given pattern
 git-diff-ignore() {
 case $# in
