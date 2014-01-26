@@ -5,7 +5,6 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
-import org.xillium.base.etc.Arrays;
 import org.xillium.data.DataObject;
 import org.xillium.data.DataBinder;
 import org.xillium.data.CachedResultSet;
@@ -69,23 +68,27 @@ public class RemoteService {
     }
 
     /**
-     * Calls a remote service with parameters in the given DataBinder as arguments.
+     * Calls a remote service with parameters in the given DataBinder as well as in an String list.
+     *
+     * Note: parameters in the data binder whose names start with '_' or '#' are NOT passed to the remote service.
      */
-    public static Response call(String server, String service, DataBinder binder) {
-        return call(server, service, false, binder);
+    public static Response call(String server, String service, DataBinder binder, String... params) {
+        return call(server, service, false, binder, params);
     }
 
     /**
-     * Calls a remote service with parameters in the given DataBinder as arguments.
+     * Calls a remote service with parameters in the given DataBinder as well as in an String list.
+     *
+     * Note: parameters in the data binder whose names start with '_' or '#' are NOT passed to the remote service.
      */
-    public static Response call(String server, String service, boolean suppress, DataBinder binder) {
-        List<String> params = new ArrayList<String>();
+    public static Response call(String server, String service, boolean suppress, DataBinder binder, String... params) {
+        List<String> list = new ArrayList<String>(Arrays.asList(params));
         for (Map.Entry<String, String> entry: binder.entrySet()) {
             String name = entry.getKey();
-            if (name.charAt(0) == '_') continue;
-            params.add(name + '=' + entry.getValue());
+            if (name.charAt(0) == '_' || name.charAt(0) == '#') continue;
+            list.add(name + '=' + entry.getValue());
         }
-        return call(server, service, suppress, params.toArray(new String[params.size()]));
+        return call(server, service, suppress, list.toArray(new String[list.size()]));
     }
 
     /**
@@ -112,7 +115,7 @@ public class RemoteService {
             pw.close();
             InputStream in = connection.getInputStream();
             try {
-                byte[] bytes = Arrays.read(in);
+                byte[] bytes = org.xillium.base.etc.Arrays.read(in);
                 try {
                     Response response = _mapper.readValue(bytes, Response.class).setResponseBody(bytes);
                     if (response.params == null) {

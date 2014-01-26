@@ -45,7 +45,9 @@ public class PingService extends ManagementService {
             if ((server = binder.get("server")) != null && (service = binder.get("service")) != null) {
                 binder.remove("server");
                 binder.remove("service");
-                RemoteService.Response response = RemoteService.call(server, service, binder);
+                RemoteService.Response response = RemoteService.call(
+                    server, service, binder, REQUEST_TARGET_PATH+'='+binder.get(REQUEST_TARGET_PATH), REQUEST_CLIENT_PHYS+'='+binder.get(REQUEST_CLIENT_PHYS)
+                );
                 for (Map.Entry<String, Object> entry: response.params.entrySet()) {
                     binder.put(entry.getKey(), String.valueOf(entry.getValue()));
                 }
