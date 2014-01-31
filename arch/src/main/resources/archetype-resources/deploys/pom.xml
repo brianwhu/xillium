@@ -92,7 +92,7 @@
     <dependency>
       <groupId>${groupId}</groupId>
       <artifactId>${rootArtifactId}-commons</artifactId>
-      <version>${version}</version>
+      <version>${global.version}</version>
     </dependency>
   </dependencies>
 
