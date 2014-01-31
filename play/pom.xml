@@ -11,10 +11,10 @@
     <groupId>org.xillium</groupId>
     <artifactId>xillium-play</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>Xillium Platform - Play: a stress test tool</name>
+    <name>Xillium Platform - Play</name>
 
     <build>
-        <finalName>xillium-play-${version}</finalName>
+        <finalName>xillium-play-${project.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
