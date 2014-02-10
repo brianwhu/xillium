@@ -4,7 +4,7 @@
 _x_() {
 s=$1
 shift
-d='curl -k --data-urlencode "#stack_trace#=1"'
+d='curl $XILLIUM_P -k --data-urlencode "#stack_trace#=1"'
 while true; do
     case $# in
     0) break;;
