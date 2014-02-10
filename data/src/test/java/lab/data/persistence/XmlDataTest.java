@@ -30,6 +30,10 @@ public class XmlDataTest {
     public String status;
     }
 
+    public static class WithBigDecimal extends Reconciliation {
+        public java.math.BigDecimal rate;
+    }
+
     public static class Proc implements Collector<Reconciliation> {
         public boolean add(Reconciliation data) {
             System.err.println(Beans.toString(data));
@@ -41,7 +45,7 @@ public class XmlDataTest {
         }
     }
 
-    @Test(groups={"function"})
+    @Test(groups={"function", "xml"})
     public void testUpdator() throws Exception {
         System.err.println("start xml data processing");
 
@@ -54,18 +58,27 @@ public class XmlDataTest {
         results.getCollector().hello();
     }
 
-    @Test(groups={"function"})
+    @Test(groups={"function", "xml"})
     public void testCoalescing() throws Exception {
         System.err.println("start xml data coalescing");
         Proc p = Data.coalesce(getClass().getResourceAsStream("/FT05.xml"), Reconciliation.class, new Proc());
         p.hello();
     }
 
-    @Test(groups={"function"})
+    @Test(groups={"function", "xml"})
     public void testSimplified() throws Exception {
         System.err.println("start simplified xml data processing");
         List<Reconciliation> list = Data.coalesce(getClass().getResourceAsStream("/FT05.xml"), Reconciliation.class);
         for (Reconciliation r: list) {
+            System.out.println(Beans.toString(r));
+        }
+    }
+
+    @Test(groups={"function", "xml"})
+    public void testBigDecimal() throws Exception {
+        System.err.println("start simplified xml data processing with BigDecimal");
+        List<WithBigDecimal> list = Data.coalesce(getClass().getResourceAsStream("/FT05withBigDecimal.xml"), WithBigDecimal.class);
+        for (WithBigDecimal r: list) {
             System.out.println(Beans.toString(r));
         }
     }

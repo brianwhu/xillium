@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<sql-rs:data name="accounts" xmlns:sql-rs="java://org.xillium.data.persistence.xml">
+<row>
+    <column name="accountNumber">0517000159</column>
+    <column name="currency">CNY</column>
+    <column name="transactionId">201305190517000159</column>
+    <column name="merchantId">0517000159</column>
+    <column name="secured">0</column>
+    <column name="released">0</column>
+    <column name="profit">0</column>
+    <column name="loss">0</column>
+    <column name="receivable">0</column>
+    <column name="payable">0</column>
+    <column name="fees">300200</column>
+    <column name="tax">0</column>
+    <column name="transactions">1</column>
+    <column name="currentBalance">499699800</column>
+    <column name="available">499699800</column>
+    <column name="withdrawable">499699800</column>
+    <column name="value">7226499800</column>
+    <column name="cashValue">499699800</column>
+    <column name="goodsValue">6726800000</column>
+    <column name="rate">0.00015</column>
+</row>
+</sql-rs:data>

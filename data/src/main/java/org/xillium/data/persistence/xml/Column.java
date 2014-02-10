@@ -42,7 +42,15 @@ public class Column<T extends DataObject> {
             }
 
             if (valueOf == null) {
-                data = text;
+                if (String.class.equals(ftype)) {
+                    data = text;
+                } else {
+                    try {
+                        data = ftype.getConstructor(String.class).newInstance(text);
+                    } catch (Exception x) {
+                        // give up
+                    }
+                }
             } else {
                 data = valueOf.getParameterTypes().length == 1 ? valueOf.invoke(null, text) : valueOf.invoke(null, valueOf.getReturnType(), text);
             }
