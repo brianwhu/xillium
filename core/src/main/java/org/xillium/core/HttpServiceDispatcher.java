@@ -125,7 +125,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             _services.put("x!/desc", new DescService(descriptions));
             _services.put("x!/list", new ListService(_services));
         }
-        _services.put("x!/ping", new PingService(wac));
+        _services.put("x!/ping", new PingService(wac, _persistence.getStatementMap()));
 
         // Tomcat/Catalina special
         try { ManagementFactory.getPlatformMBeanServer().setAttribute(
