@@ -10,6 +10,7 @@ import javax.script.*;
 import org.springframework.context.ApplicationContext;
 import org.xillium.base.beans.Throwables;
 import org.xillium.data.*;
+import org.xillium.data.persistence.*;
 import org.xillium.data.validation.*;
 import org.xillium.core.*;
 import org.xillium.core.util.RemoteService;
@@ -22,11 +23,13 @@ import org.xillium.core.management.*;
 public class PingService extends ManagementService {
     private static final Pattern SYSTEM_PROPERTY_REALM = Pattern.compile("java\\..*|os\\..*|user\\..*|file\\..*|path\\..*|xillium.system\\..*");
     private final ApplicationContext _context;
+    private final Map<String, ParametricStatement> _statements;
 
     public static enum Signal {
         SystemProperties,
         SystemDiagnosis,
         ObjectManagement,
+        PersistenceCheck,
     }
 
     public static class Request implements DataObject {
@@ -35,8 +38,9 @@ public class PingService extends ManagementService {
         public boolean verbose;
     }
 
-    public PingService(ApplicationContext ac) {
+    public PingService(ApplicationContext ac, Map<String, ParametricStatement> statements) {
         _context = ac;
+        _statements = statements;
     }
 
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
@@ -108,6 +112,13 @@ public class PingService extends ManagementService {
                         engine.eval(request.parameter);
                     }
                     break;
+                case PersistenceCheck:
+                    if (request.parameter != null) {
+                        ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
+                        engine.put("db", new PersistenceManager(binder, _statements, persist.getDataSource()));
+                        engine.eval(request.parameter);
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -123,7 +134,8 @@ public class PingService extends ManagementService {
     }
 
     private boolean isLocal(DataBinder binder) {
-        if ("127.0.0.1".equals(binder.get(REQUEST_CLIENT_ADDR))) {
+        String addr = binder.get(REQUEST_CLIENT_ADDR);
+        if ("127.0.0.1".equals(addr) || "0:0:0:0:0:0:0:1".equals(addr)) {
             return true;
         } else {
             String realm = binder.get(REQUEST_CLIENT_PHYS);
