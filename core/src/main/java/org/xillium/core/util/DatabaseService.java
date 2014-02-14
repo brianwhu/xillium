@@ -8,34 +8,40 @@ import org.xillium.base.etc.Pair;
 import org.xillium.core.*;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
+import org.xillium.data.persistence.ParametricQuery;
 
 
 /**
- * This class wraps a callable ParametricStatement into a Service. A Service.Filter can be installed to support extended behaviors.
+ * This class wraps a ParametricStatement into a Service. A Service.Filter can be installed to support extended behaviors.
  *
  * Any specified DataBinder parameter renaming (mapping) is also performed before the ParametricStatement is called.
  */
-public class DatabaseCallableService extends SecuredService implements Service.Extended, DynamicService {
-    private static final Logger _logger = Logger.getLogger(DatabaseCallableService.class.getName());
+public class DatabaseService extends SecuredService implements Service.Extended, DynamicService {
+    private static final Logger _logger = Logger.getLogger(DatabaseService.class.getName());
+    private static final String RSET = "results";
 
     private final Persistence _persistence;
-    private final String _name;
-    private final String _callable;
+    private final String _statement;
+
     private Pair<String, String>[] _renames;
     private Service.Filter _filter;
+    private String _rset;
+
 
     public Class<? extends DataObject> getRequestType() {
         try {
-            return _persistence.getParametricStatement(_callable).getDataObjectClass("com.yizheng.yep.data." + _name.replace('/', '.'));
+            return _persistence.getParametricStatement(_statement).getDataObjectClass("org.xillium.core.util.dynamic.data." + _statement.replace('/', '.'));
         } catch (Exception x) {
-            throw new RuntimeException("Failed to generate callable request class", x);
+            throw new RuntimeException("Failed to obtain database service request class", x);
         }
     }
 
-    public DatabaseCallableService(Persistence persistence, String name, String callable) throws Exception {
+    /**
+     * Constructs a DatabaseService that uses the Persistence and wraps the named ParametricStatement into a service.
+     */
+    public DatabaseService(Persistence persistence, String statement) throws Exception {
         _persistence = persistence;
-        _name = name;
-        _callable = callable;
+        _statement = statement;
     }
 
     /**
@@ -52,19 +58,34 @@ public class DatabaseCallableService extends SecuredService implements Service.E
         }
     }
 
+    /**
+     * Installs a service filter.
+     */
     public void setFilter(Service.Filter filter) {
         _filter = filter;
+    }
+
+    /**
+     * Specifies the name of the result set if the ParametricStatement is a query. If not specified, the name of the result set
+     * is DatabaseService.RSET;
+     */
+    public void setResultSetName(String name) {
+        _rset = name;
     }
 
     @Override
     @Transactional
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
 		try {
-            for (Pair<String, String> pair: _renames) {
+            if (_renames != null) for (Pair<String, String> pair: _renames) {
                 binder.put(pair.second, binder.get(pair.first));
             }
             DataObject request = dict.collect(getRequestType().newInstance(), binder);
-            persist.executeProcedure(_callable, request);
+            if (persist.getParametricStatement(_statement) instanceof ParametricQuery) {
+                binder.putResultSet(_rset != null ? _rset : RSET, persist.executeSelect(_statement, request, CachedResultSet.BUILDER));
+            } else {
+                persist.executeProcedure(_statement, request);
+            }
 		} catch (SQLException x) {
             throw new org.springframework.transaction.TransactionSystemException(x.getMessage(), x);
 		} catch (ServiceException x) {
