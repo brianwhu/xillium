@@ -26,6 +26,7 @@ public class DatabaseService extends SecuredService implements Service.Extended,
     private Pair<String, String>[] _renames;
     private Service.Filter _filter;
     private String _rset;
+    private String _missing;
 
 
     public Class<? extends DataObject> getRequestType() {
@@ -73,6 +74,15 @@ public class DatabaseService extends SecuredService implements Service.Extended,
         _rset = name;
     }
 
+    /**
+     * Indicates that the query is expected to return exactly 1 row, whose columns are to be placed into the data binder as simple params.
+     *
+     * @param missing - the error message to use when the expected row is missing
+     */
+    public void setMissing(String missing) {
+        _missing = missing;
+    }
+
     @Override
     @Transactional
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
@@ -82,7 +92,15 @@ public class DatabaseService extends SecuredService implements Service.Extended,
             }
             DataObject request = dict.collect(getRequestType().newInstance(), binder);
             if (persist.getParametricStatement(_statement) instanceof ParametricQuery) {
-                binder.putResultSet(_rset != null ? _rset : RSET, persist.executeSelect(_statement, request, CachedResultSet.BUILDER));
+                if (_missing != null) {
+                    try {
+                        persist.executeSelect(_statement, request, binder);
+                    } catch (java.util.NoSuchElementException x) {
+                        throw new ServiceException(_missing);
+                    }
+                } else {
+                    binder.putResultSet(_rset != null ? _rset : RSET, persist.executeSelect(_statement, request, CachedResultSet.BUILDER));
+                }
             } else {
                 persist.executeProcedure(_statement, request);
             }
