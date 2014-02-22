@@ -138,13 +138,13 @@ public class ParametricStatement {
     }
 
     /**
-     * Returns a DataObject class appropriate for this statement. If this statement defines no in/out parameters, this method returns null.
+     * Returns a DataObject class appropriate for this statement. If this statement defines no in/out parameters, this method returns DataObject.Empty.class.
      *
      * @param cname - the class name to be associated with this class
      */
     @SuppressWarnings("unchecked")
     public Class<? extends DataObject> getDataObjectClass(String cname) throws Exception {
-        Class<? extends DataObject> c = null;
+        Class<? extends DataObject> c = DataObject.Empty.class;
 
         try {
             c = (Class<? extends DataObject>)Class.forName(cname);

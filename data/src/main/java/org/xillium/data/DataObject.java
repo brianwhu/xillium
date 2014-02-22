@@ -8,6 +8,12 @@ import org.xillium.data.validation.*;
  * A data object.
  */
 public interface DataObject {
+    /**
+     * An implementation of DataObject that defines no members.
+     */
+    public static class Empty implements DataObject {
+    }
+
     public static class Util {
         /**
          * Formulates a JSON representation of the structure of a DataObject.

@@ -8,7 +8,7 @@ import org.xillium.data.*;
  */
 public interface DynamicService extends Service {
 	/**
-	 * Returns the request object type of this service.
+	 * Returns the request object type of this service. This method should never return null.
 	 */
 	public Class<? extends DataObject> getRequestType();
 }
