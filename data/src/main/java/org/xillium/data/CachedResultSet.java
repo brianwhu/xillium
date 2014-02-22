@@ -101,8 +101,9 @@ public class CachedResultSet {
             rows.add(row);
         }
 
-        this.columns = new String[retrievers.length];
-        for (int i = 0; i < retrievers.length; ++i) {
+        int width = retrievers != null ? retrievers.length : 0;
+        this.columns = new String[width];
+        for (int i = 0; i < width; ++i) {
             columns[i] = retrievers[i].field.getName();
         }
     }
@@ -133,6 +134,35 @@ public class CachedResultSet {
             }
             rows.add(row);
         }
+    }
+
+    /**
+     * Retrieves the rows from a collection of Objects, where a subset of the objects' (of type T) <i>public fields</i> are taken as result set columns.
+     */
+    public static <T> CachedResultSet chooseFields(Collection<T> collection, String... columns) {
+        CachedResultSet rs = new CachedResultSet(columns, new ArrayList<Object[]>());
+        for (T object: collection) {
+            Object[] row = new Object[columns.length];
+            for (int i = 0; i < columns.length; ++i) {
+                try {
+                    Object value = Beans.getKnownField(object.getClass(), columns[i]).get(object);
+                    if (value != null) {
+                        if (value.getClass().isArray()) {
+                            row[i] = org.xillium.base.etc.Arrays.join(value, ';');
+                        } else {
+                            row[i] = value.toString();
+                        }
+                    } else {
+                        row[i] = null;
+                    }
+                } catch (Exception x) {
+                    row[i] = null;
+                }
+            }
+            rs.rows.add(row);
+        }
+
+        return rs;
     }
 
     /**
