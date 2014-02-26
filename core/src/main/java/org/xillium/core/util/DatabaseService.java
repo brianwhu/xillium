@@ -1,6 +1,8 @@
 package org.xillium.core.util;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.logging.*;
 import java.sql.SQLException;
 import org.springframework.transaction.annotation.*;
@@ -27,6 +29,7 @@ public class DatabaseService extends SecuredService implements Service.Extended,
     private Service.Filter _filter;
     private String _rset;
     private String _missing;
+    private String _page;
 
 
     public Class<? extends DataObject> getRequestType() {
@@ -83,6 +86,15 @@ public class DatabaseService extends SecuredService implements Service.Extended,
         _missing = missing;
     }
 
+    /**
+     * Specifies a page template to forward to after the service is complete.
+     *
+     * @param page - the location of the page template
+     */
+    public void setPage(String page) {
+        _page = page;
+    }
+
     @Override
     @Transactional
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
@@ -110,7 +122,14 @@ public class DatabaseService extends SecuredService implements Service.Extended,
 			throw x;
 		} catch (Exception x) {
 			throw new ServiceException(x.getMessage(), x);
-		}
+		} finally {
+            if (_page != null) {
+                //Map<String, String> headers = new HashMap<String, String>();
+                binder.useHashMap(Service.SERVICE_HTTP_HEADER, String.class, String.class).put("Content-Type", "text/html; charset=utf-8");
+                //binder.putNamedObject(Service.SERVICE_HTTP_HEADER, headers);
+                binder.put(Service.SERVICE_PAGE_TARGET, _page);
+            }
+        }
         return binder;
     }
 

@@ -67,6 +67,15 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     }
 
     /**
+     * Retrieves a HashMap but if fails creates a new one.
+     */
+    public <K, V> Map<K, V> useHashMap(String name, Class<K> ktype, Class<V> vtype) {
+        Map<K, V> map = getNamedObject(name, Map.class);
+        if (map == null) putNamedObject(name, map = new HashMap<K, V>());
+        return map;
+    }
+
+    /**
      * Fills the data binder with columns in the current row of a result set.
      */
     @Override
