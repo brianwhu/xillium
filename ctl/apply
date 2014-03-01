@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# ctrl() should be a function that works on 2 parameters: ARGUMENT SERVER
+
+#
+# Usage: apply ARGUMENT { @ENV | SERVER } { '-' | '+' }
+#   where the 3rd argument: '-' for only the physical servers, '+' for all application servers
+#
+apply() {
+    case $# in
+    3)  case $2 in
+        @*) if e=`expr "$2" : '@\([a-z][a-z]*\)$'` > /dev/null; then
+                echo "Applying '$0 $1' to environment '$e' ..."
+                if [ "$3" == "+" ]; then
+                    p='\([^+]*\)+\{0,1\}$'
+                else
+                    p='\([^+]*[^+]\)$'
+                fi
+                for d in `eval echo '$'$e`; do
+                    if h=`expr $d : "$p"` > /dev/null; then
+                        echo "$0 $1 '$h' ..."
+                        ctrl "$1" $h $e
+                    fi
+                done
+            else
+                echo "Unknown environment: $2"
+            fi
+            ;;
+        *)  echo "$0 $1 '$2' ..."
+            ctrl "$1" $2
+            ;;
+        esac
+        ;;
+    *)  echo Usage: "$0 ARGUMENT { SERVER | @ENV }"
+        exit 0
+        ;;
+    esac
+}
+
+#
+# servers in each environment
+#
+cd `dirname $0`/.. && . etc/environment

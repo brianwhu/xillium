@@ -1,0 +1,33 @@
+#!/bin/sh
+
+case $# in
+1) ;;
+*) echo "$0 { SERVER | @ENV }"; exit 0;;
+esac
+
+echo -n Checking ssh ...
+if type ssh > /dev/null 2>&1
+then
+    echo found
+else
+    echo not found
+    exit 0
+fi
+
+ctrl() {
+    rm -f /tmp/essenex.rt.zip
+    #cd `dirname $0`/.. && zip -r9 /tmp/essenex.rt.zip rt > /dev/null 2>&1
+    cd `dirname $0` && zip -r9 /tmp/essenex.rt.zip rt > /dev/null 2>&1
+    ssh root@$2 mkdir -p deployment
+    echo "put /tmp/essenex.rt.zip deployment" | sftp -oBatchMode=yes -b - root@$2 > /dev/null 2>&1
+    echo "Unzipping..."
+    ssh root@$2 "rm -rf deployment/rt && unzip -d deployment deployment/essenex.rt.zip > /dev/null 2>&1"
+    echo "Cleaning up..."
+    ssh root@$2 rm -f deployment/essenex.rt.zip
+    rm -f /tmp/essenex.rt.zip
+    echo "Updating .bashrc..."
+    ssh root@$2 "sh deployment/rt/bin/inst $3"
+}
+
+. $(dirname $0)/apply
+apply '' $1 +

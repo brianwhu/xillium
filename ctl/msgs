@@ -1,0 +1,11 @@
+#!/bin/sh
+
+m() {
+find $1 -name '*.java' -exec grep 'throw .*"' {} \; | sed 's/[^"]*"//;s/{[^{}]*}/{}/g;s/" *).*$//;s/'"'"' *).*$//' | sort -u
+}
+
+case $# in
+0) m .;;
+*) p=$1; while shift; do echo "# $p"; m $p; p=$1; done;;
+esac
+

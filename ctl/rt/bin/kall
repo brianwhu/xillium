@@ -1,0 +1,8 @@
+#!/bin/sh
+
+case $# in
+1) ;;
+*) echo Usage: $0 PROG; exit 0;;
+esac
+
+ps -e | grep "$1" | awk '{print $1}' | xargs kill

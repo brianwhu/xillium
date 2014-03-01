@@ -1,0 +1,8 @@
+#!/bin/sh
+
+case $# in
+1) ;;
+*) echo "$0 [ @ENVIRONMENT | SERVER ]"; exit;;
+esac
+
+`dirname $0`/xctl stop $1 && `dirname $0`/xctl clean $1 && `dirname $0`/xctl start $1

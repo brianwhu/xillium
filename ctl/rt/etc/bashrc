@@ -1,0 +1,27 @@
+# .bashrc
+
+# User specific aliases and functions
+
+ulimit -n 40960
+export MEM='-Xmx6g -Xms6g -XX:+UseConcMarkSweepGC'
+export JMX='-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=8689 -Dcom.sun.management.jmxremote.rmi.port=8689 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false' # -Djava.rmi.server.hostname=58.215.219.166'
+export XLM="-Dxillium.service.HideDescription=$YEP_HIDE"
+#export XLM="-Dxillium.service.HideDescription=true"
+
+export JAVA_OPTS="$MEM $JMX $XLM $JDB -Dcom.yizheng.yep.environ=$YEP_ENVIRON -Dcom.yizheng.yep.instance=$YEP_INST -Dcom.yizheng.yep.location=$YEP_LOCATION"
+
+alias start=${CATALINA_HOME:-/usr/tomcat}/bin/startup.sh
+alias stop=${ESSENEX_HOME:-/misc/essenhub}/bin/stop
+alias clean=${ESSENEX_HOME:-/misc/essenhub}/bin/clean
+alias shut=${ESSENEX_HOME:-/misc/essenhub}/bin/shut
+alias restart="${ESSENEX_HOME:-/misc/essenhub}/bin/stop;sleep 5;${ESSENEX_HOME:-/misc/essenhub}/bin/clean;${CATALINA_HOME:-/usr/tomcat}/bin/startup.sh"
+alias dir='ls -l'
+alias k="ps -e | grep java | awk '{print $1}' | xargs -n 1 kill"
+alias p='ps -aef | grep java'
+alias t='tail -100f ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out'
+alias v='view ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out'
+alias c='cat ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out'
+alias zap='> ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out;find ${CATALINA_HOME:-/usr/tomcat}/webapps -maxdepth 1 -mindepth 1 -not -name '*.war' -exec rm -rf {} \;;ls -l ${CATALINA_HOME:-/usr/tomcat}/webapps'
+g() {
+grep $* ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out
+}

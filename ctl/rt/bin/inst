@@ -1,0 +1,18 @@
+#!/bin/sh
+
+if ! grep ESSENEX ~/.bashrc > /dev/null 2>&1
+then
+    if [ -n $1 ]
+    then
+        echo "export YEP_LOCATION=$1-" >> ~/.bashrc
+    fi
+
+cat >> ~/.bashrc <<"EOF"
+
+export ESSENEX_HOME=/root/deployment/rt
+if [ -f $ESSENEX_HOME/etc/bashrc ]; then
+  . $ESSENEX_HOME/etc/bashrc
+fi
+EOF
+fi
+

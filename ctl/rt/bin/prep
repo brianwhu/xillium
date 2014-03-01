@@ -1,0 +1,5 @@
+cd ${CATALINA_HOME:-/usr/tomcat}
+chmod +x ${CATALINA_HOME:-/usr/tomcat}/bin/*.sh
+mkdir webapps-not-deployed
+mv webapps/docs webapps/examples webapps/host-manager webapps/manager webapps-not-deployed
+for d in `ls -1 ~/deployment`; do ln -sf ~/deployment/$d webapps/`expr $d : '\([^-]*\)-.*'`.war; done

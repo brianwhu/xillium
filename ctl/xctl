@@ -1,0 +1,20 @@
+#!/bin/sh
+
+case $# in
+2) ;;
+*) echo "Usage: $0 COMMAND { SERVER | @ENV }"; exit 0;;
+esac
+
+_R_=$(cd $(dirname $0)/.. && grep '<global.version>' pom.xml|awk 'BEGIN{FS="[<>]"}{print $3}')
+
+ctrl() {
+  case $1 in
+  log) ssh root@$2 '/usr/bin/tail -100f ${CATALINA_HOME:-/usr/tomcat}/logs/localhost.`date +"%Y-%m-%d"`.log 2> /dev/null';;
+  out) ssh root@$2 '/usr/bin/tail -100f ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out 2> /dev/null';;
+  rov) ssh root@$2 '/bin/rm -f $(ls -1 deployment/*.war 2>/dev/null | grep -v '$_R_')';;
+  *)   echo "Sending command '$1' to '$2'..." && ssh root@$2 /bin/bash -l '${ESSENEX_HOME:-/deployment/rt}/bin/'$1;;
+  esac
+}
+
+. $(dirname $0)/apply
+apply "$1" $2 -

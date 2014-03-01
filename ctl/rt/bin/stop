@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# $1 = process name
+# $2 = number of seconds to wait
+wait4process() {
+  w=$2
+  while expr $w \> 0 > /dev/null && ps -e | grep $1 > /dev/null; do
+    echo -n '.'
+    w=`expr $w - 1`
+    sleep 1
+  done
+  unset w
+}
+
+# wait for at most these seconds
+WAIT=16
+
+graceful() {
+    JAVA_OPTS= ${CATALINA_HOME:-/usr/tomcat}/bin/shutdown.sh > /dev/null 2>&1
+    wait4process java $WAIT
+}
+
+case $# in
+0) graceful
+   ;;
+1) if [ "$1" == "now" ]
+   then
+      echo -n immediately
+   else
+      echo "What ?"
+      exit
+   fi
+   ;;
+*) echo "What ?"
+   exit
+   ;;
+esac
+if ps -e | grep java > /dev/null; then
+	echo -n " killing "
+	ps -e | grep java | awk '{print $1}' | xargs -n 1 kill
+    wait4process java 1024
+fi
+echo
