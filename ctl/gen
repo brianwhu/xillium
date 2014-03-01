@@ -1,0 +1,31 @@
+#!/bin/sh
+
+case $# in
+4) mvn archetype:generate -DarchetypeCatalog=local -DarchetypeRepository=https://oss.sonatype.org/content/repositories/snapshots \
+    -DarchetypeGroupId=org.xillium \
+    -DarchetypeArtifactId=xillium-arch \
+    -DarchetypeVersion=1.0-SNAPSHOT \
+    -DgroupId=$1 \
+    -DartifactId=$2 \
+    -Dmodule1name=$3 \
+    -Ddeploy1name=$4
+   ;;
+5) if [ "$1" == "--local" ]
+   then
+      shift
+      mvn archetype:generate -DarchetypeCatalog=local \
+        -DarchetypeGroupId=org.xillium \
+        -DarchetypeArtifactId=xillium-arch \
+        -DarchetypeVersion=1.0-SNAPSHOT \
+        -DgroupId=$1 \
+        -DartifactId=$2 \
+        -Dmodule1name=$3 \
+        -Ddeploy1name=$4
+   else
+      echo Usage: $0 GroupId ArtifactId Module1Name Deployment1Name; exit 0
+   fi
+   ;;
+*) echo Usage: $0 GroupId ArtifactId Module1Name Deployment1Name; exit 0
+   ;;
+esac
+
