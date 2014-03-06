@@ -1,18 +1,35 @@
 #!/bin/sh
 
-if ! grep ESSENEX ~/.bashrc > /dev/null 2>&1
-then
-    if [ -n $1 ]
-    then
-        echo "export YEP_LOCATION=$1-" >> ~/.bashrc
+case $# in
+1) ;;
+*) echo "Usage: $0 environmentId";
+   ;;
+esac
+
+if ! grep CATALINA_HOME ~/.bashrc > /dev/null 2>&1; then
+    catalina=`find /usr -name catalina.sh|awk 'BEGIN{FS="/bin/"}{print $1}'`
+    if [ -n $catalina ]; then
+        echo "export CATALINA_HOME=$catalina" >> ~/.bashrc
     fi
-
-cat >> ~/.bashrc <<"EOF"
-
-export ESSENEX_HOME=/root/deployment/rt
-if [ -f $ESSENEX_HOME/etc/bashrc ]; then
-  . $ESSENEX_HOME/etc/bashrc
 fi
-EOF
+
+if ! grep XILLIUM_ENV ~/.bashrc > /dev/null 2>&1; then
+    e=`echo $1|tr [:lower:] [:upper:]`;
+    echo "export XILLIUM_ENV=$e"  >> ~/.bashrc
+fi
+if ! grep XILLIUM_LOC ~/.bashrc > /dev/null 2>&1; then
+    echo "export XILLIUM_LOC=$1-" >> ~/.bashrc
+fi
+if ! grep XILLIUM_INS ~/.bashrc > /dev/null 2>&1; then
+    echo "export XILLIUM_INS=0"   >> ~/.bashrc
+fi
+
+if ! grep XILLIUM_HOME ~/.bashrc > /dev/null 2>&1; then
+    cat >> ~/.bashrc <<"EOF_XILLIUM_HOME"
+export XILLIUM_HOME=/root/deployment/rt
+if [ -f $XILLIUM_HOME/etc/bashrc ]; then
+    . $XILLIUM_HOME/etc/bashrc
+fi
+EOF_XILLIUM_HOME
 fi
 

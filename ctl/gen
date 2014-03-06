@@ -1,7 +1,11 @@
 #!/bin/sh
 
+usage() {
+  echo Usage: $0 [ --released ] GroupId ArtifactId Module1Name Deployment1Name
+}
+
 case $# in
-4) mvn archetype:generate -DarchetypeCatalog=local -DarchetypeRepository=https://oss.sonatype.org/content/repositories/snapshots \
+4) mvn archetype:generate -DarchetypeCatalog=local \
     -DarchetypeGroupId=org.xillium \
     -DarchetypeArtifactId=xillium-arch \
     -DarchetypeVersion=1.0-SNAPSHOT \
@@ -10,10 +14,10 @@ case $# in
     -Dmodule1name=$3 \
     -Ddeploy1name=$4
    ;;
-5) if [ "$1" == "--local" ]
+5) if [ "$1" == "--released" ]
    then
       shift
-      mvn archetype:generate -DarchetypeCatalog=local \
+      mvn archetype:generate -DarchetypeCatalog=local -DarchetypeRepository=https://oss.sonatype.org/content/repositories/snapshots \
         -DarchetypeGroupId=org.xillium \
         -DarchetypeArtifactId=xillium-arch \
         -DarchetypeVersion=1.0-SNAPSHOT \
@@ -22,10 +26,10 @@ case $# in
         -Dmodule1name=$3 \
         -Ddeploy1name=$4
    else
-      echo Usage: $0 GroupId ArtifactId Module1Name Deployment1Name; exit 0
+      usage; exit 0
    fi
    ;;
-*) echo Usage: $0 GroupId ArtifactId Module1Name Deployment1Name; exit 0
+*) usage; exit 0
    ;;
 esac
 

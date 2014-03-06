@@ -5,16 +5,17 @@
 ulimit -n 40960
 export MEM='-Xmx6g -Xms6g -XX:+UseConcMarkSweepGC'
 export JMX='-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=8689 -Dcom.sun.management.jmxremote.rmi.port=8689 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false' # -Djava.rmi.server.hostname=58.215.219.166'
-export XLM="-Dxillium.service.HideDescription=$YEP_HIDE"
+export XLM="-Dxillium.service.HideDescription=$XILLIUM_HIDE"
 #export XLM="-Dxillium.service.HideDescription=true"
+export ENV="-Dxillium.deployment.environ=$XILLIUM_ENV -Dxillium.deployment.instance=$XILLIUM_INS -Dxillium.deployment.location=$XILLIUM_LOC -Dxillium.deployment.profile=/root/deployment/conf"
 
-export JAVA_OPTS="$MEM $JMX $XLM $JDB -Dcom.yizheng.yep.environ=$YEP_ENVIRON -Dcom.yizheng.yep.instance=$YEP_INST -Dcom.yizheng.yep.location=$YEP_LOCATION"
+export JAVA_OPTS="$MEM $JMX $XLM $JDB $ENV -Dcom.yizheng.yep.location=dev-"
 
 alias start=${CATALINA_HOME:-/usr/tomcat}/bin/startup.sh
-alias stop=${ESSENEX_HOME:-/misc/essenhub}/bin/stop
-alias clean=${ESSENEX_HOME:-/misc/essenhub}/bin/clean
-alias shut=${ESSENEX_HOME:-/misc/essenhub}/bin/shut
-alias restart="${ESSENEX_HOME:-/misc/essenhub}/bin/stop;sleep 5;${ESSENEX_HOME:-/misc/essenhub}/bin/clean;${CATALINA_HOME:-/usr/tomcat}/bin/startup.sh"
+alias stop=${XILLIUM_HOME:-/root/deployment/rt}/bin/stop
+alias clean=${XILLIUM_HOME:-/root/deployment/rt}/bin/clean
+alias shut=${XILLIUM_HOME:-/root/deployment/rt}/bin/shut
+alias restart="${XILLIUM_HOME:-/root/deployment/rt}/bin/stop;sleep 5;${XILLIUM_HOME:-/root/deployment/rt}/bin/clean;${CATALINA_HOME:-/usr/tomcat}/bin/startup.sh"
 alias dir='ls -l'
 alias k="ps -e | grep java | awk '{print $1}' | xargs -n 1 kill"
 alias p='ps -aef | grep java'

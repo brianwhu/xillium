@@ -40,4 +40,4 @@ apply() {
 #
 # servers in each environment
 #
-cd `dirname $0`/.. && . etc/environment
+cd `dirname $0`/.. && if [ -f etc/environment ]; then . etc/environment; fi

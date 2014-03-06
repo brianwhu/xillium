@@ -2,7 +2,7 @@
 
 case $# in
 1) ;;
-*) echo "$0 { SERVER | @ENV }"; exit 0;;
+*) echo "Usage: $0 @ENV"; exit 0;;
 esac
 
 echo -n Checking ssh ...
@@ -15,19 +15,22 @@ else
 fi
 
 ctrl() {
-    rm -f /tmp/essenex.rt.zip
-    #cd `dirname $0`/.. && zip -r9 /tmp/essenex.rt.zip rt > /dev/null 2>&1
-    cd `dirname $0` && zip -r9 /tmp/essenex.rt.zip rt > /dev/null 2>&1
+    rm -f /tmp/xillium.rt.zip
+    cd `dirname $0` && zip -r9 /tmp/xillium.rt.zip rt > /dev/null 2>&1
     ssh root@$2 mkdir -p deployment
-    echo "put /tmp/essenex.rt.zip deployment" | sftp -oBatchMode=yes -b - root@$2 > /dev/null 2>&1
+    echo "put /tmp/xillium.rt.zip deployment" | sftp -oBatchMode=yes -b - root@$2 > /dev/null 2>&1
     echo "Unzipping..."
-    ssh root@$2 "rm -rf deployment/rt && unzip -d deployment deployment/essenex.rt.zip > /dev/null 2>&1"
+    ssh root@$2 "rm -rf deployment/rt && unzip -d deployment deployment/xillium.rt.zip > /dev/null 2>&1"
     echo "Cleaning up..."
-    ssh root@$2 rm -f deployment/essenex.rt.zip
-    rm -f /tmp/essenex.rt.zip
+    ssh root@$2 rm -f deployment/xillium.rt.zip
+    rm -f /tmp/xillium.rt.zip
     echo "Updating .bashrc..."
     ssh root@$2 "sh deployment/rt/bin/inst $3"
 }
 
 . $(dirname $0)/apply
-apply '' $1 +
+if expr "$1" : '@.*$' > /dev/null; then
+    apply '' $1 +
+else
+    apply '' @$1 +
+fi
