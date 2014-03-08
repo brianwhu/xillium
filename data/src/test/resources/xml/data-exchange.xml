@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<dts:m xmlns:dts="http://www.xillium.org/data/xml/data-transfer-structure">
+  <p name="p1">value1</p>
+  <p name="name">value2</p>
+  <t name="accounts">
+    <h>
+      <c>bankId</c>
+      <c>state</c>
+      <c>currency</c>
+      <c>balance</c>
+    </h>
+    <r>
+      <c>Front00004004</c>
+      <c>20131203</c>
+      <c>001</c>
+      <c>244448745</c>
+    </r>
+    <r>
+      <c>Front00004004</c>
+      <c>20131203</c>
+      <c>001</c>
+      <c>0</c>
+    </r>
+    <r>
+      <c>Front00004004</c>
+      <c>20131203</c>
+      <c>001</c>
+      <c>0</c>
+    </r>
+    <r>
+      <c>Front00004004</c>
+      <c>20131203</c>
+      <c>001</c>
+      <c>0</c>
+    </r>
+  </t>
+  <t name="other">
+    <h>
+      <c>bankId</c>
+      <c>state</c>
+      <c>currency</c>
+      <c>balance</c>
+    </h>
+    <r>
+      <c>Front00004004</c>
+      <c>20131203</c>
+      <c>001</c>
+      <c>244448745</c>
+    </r>
+    <r>
+      <c>Front00004004</c>
+      <c>20131203</c>
+      <c>001</c>
+      <c>1603851</c>
+    </r>
+  </t>
+</dts:m>

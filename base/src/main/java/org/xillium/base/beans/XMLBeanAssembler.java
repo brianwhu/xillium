@@ -13,6 +13,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xillium.base.etc.S;
+import org.xillium.base.util.XML;
 
 
 /**
@@ -20,7 +21,6 @@ import org.xillium.base.etc.S;
  */
 public class XMLBeanAssembler extends DefaultHandler {
     private static final Logger _logger = Logger.getLogger(XMLBeanAssembler.class.getName());
-    private static final String SAX_NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes";
     SAXParser _parser;
     ObjectFactory _factory;
     String _jpkg;
@@ -31,11 +31,7 @@ public class XMLBeanAssembler extends DefaultHandler {
      */
     public XMLBeanAssembler(ObjectFactory factory) throws ParserConfigurationException, SAXException {
         _factory = factory;
-        SAXParserFactory pfactory = SAXParserFactory.newInstance();
-        pfactory.setFeature(SAX_NAMESPACE_PREFIXES, true);
-        pfactory.setNamespaceAware(true);
-        //pfactory.setValidating(true);
-        _parser = pfactory.newSAXParser();
+        _parser = XML.newSAXParser();
     }
 
     /**

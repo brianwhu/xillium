@@ -20,14 +20,17 @@
   -->
 
   <bean name="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"
-      p:ignoreUnresolvablePlaceholders="true"
-      p:ignoreResourceNotFound="true">
+        p:ignoreUnresolvablePlaceholders="true"
+        p:ignoreResourceNotFound="true">
     <property name="locations">
       <list>
-        <value>classpath:${symbol_dollar}{${package}.location}db.properties</value>
+        <value>classpath:${symbol_dollar}{xillium.deployment.location}db.properties</value>
+        <value>file:${symbol_dollar}{xillium.deployment.profile}/db.properties</value>
+        <value>file:${symbol_dollar}{xillium.deployment.profile}/${deploy1name}.db.properties</value>
       </list>
     </property>
   </bean>
+
   <bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource" destroy-method="close">
     <property name="driverClassName" value="${symbol_dollar}{jdbc.driver}"/>
     <property name="url" value="${symbol_dollar}{jdbc.url}"/>
@@ -37,7 +40,7 @@
     <property name="maxIdle" value="${symbol_dollar}{jdbc.max}"/>
     <property name="maxActive" value="${symbol_dollar}{jdbc.max}"/>
     <property name="testWhileIdle" value="true"/>
-    <property name="validationQuery" value="${symbol_dollar}{jdbc.query}"/>
+    <property name="validationQuery" value="${symbol_dollar}{jdbc.test}"/>
     <property name="timeBetweenEvictionRunsMillis" value="${symbol_dollar}{jdbc.idle}"/>
     <property name="connectionProperties" value="oracle.jdbc.J2EE13Compliant=true"/>
   </bean>

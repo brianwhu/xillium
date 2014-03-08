@@ -27,6 +27,7 @@ public interface Service {
     public static final String SERVICE_HTTP_HEADER = "#http_header#";
     public static final String SERVICE_HTTP_STATUS = "#http_status#";
     public static final String SERVICE_STACK_TRACE = "#stack_trace#";
+    public static final String SERVICE_XML_CONTENT = "#xml_content#";
 
     /**
      * A failure message is a string suitable for display to an end user. This value is only present when the service fails.

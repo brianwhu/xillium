@@ -22,6 +22,7 @@ import org.xillium.base.etc.Arrays;
 import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.persistence.crud.CrudConfiguration;
+import org.xillium.data.xml.*;
 import org.xillium.core.conf.*;
 import org.xillium.core.management.*;
 import org.xillium.core.intrinsic.*;
@@ -125,7 +126,8 @@ public class HttpServiceDispatcher extends HttpServlet {
             _services.put("x!/desc", new DescService(descriptions));
             _services.put("x!/list", new ListService(_services));
         }
-        _services.put("x!/ping", new PingService(wac, _persistence.getStatementMap()));
+        _services.put("x!/ping", new PingService(wac, _persistence != null ? _persistence.getStatementMap() : null));
+        context.getServletRegistration("dispatcher").addMapping("/x!/*");
 
         // Tomcat/Catalina special
         try { ManagementFactory.getPlatformMBeanServer().setAttribute(
@@ -225,6 +227,11 @@ public class HttpServiceDispatcher extends HttpServlet {
                     throw new RuntimeException("Failed to parse multipart content", x);
                 }
             } else {
+                String content = req.getContentType();
+                if (content != null && isPostedXML(req.getMethod().toLowerCase(), content.toLowerCase())) {
+                    XDBCodec.decode(binder, req.getInputStream()).close();
+                    binder.put(Service.SERVICE_XML_CONTENT, Service.SERVICE_XML_CONTENT);
+                }
                 Enumeration<String> en = req.getParameterNames();
                 while (en.hasMoreElements()) {
                     String name = en.nextElement();
@@ -359,49 +366,23 @@ public class HttpServiceDispatcher extends HttpServlet {
                     String page = binder.get(Service.SERVICE_PAGE_TARGET);
 
                     if (page == null) {
-                        binder.clearAutoValues();
-                        res.setContentType("application/json;charset=utf-8");
-                        String json = binder.get(Service.SERVICE_JSON_TUNNEL);
+                        if (binder.find(Service.SERVICE_XML_CONTENT) != null) {
+                            binder.clearAutoValues();
+                            res.setContentType("application/xml;charset=utf-8");
+                            try {
+                                XDBCodec.encode(res.getWriter(), binder).flush();
+                            } catch (Exception x) {}
+                        } else {
+                            binder.clearAutoValues();
+                            res.setContentType("application/json;charset=utf-8");
+                            String json = binder.get(Service.SERVICE_JSON_TUNNEL);
 
-                        if (json == null) {
-    /*
-                            JSONBuilder jb = new JSONBuilder(binder.estimateMaximumBytes()).append('{');
-
-                            jb.quote("params").append(":{ ");
-                            Iterator<String> it = binder.keySet().iterator();
-                            while (it.hasNext()) {
-                                String key = it.next();
-                                String val = binder.get(key);
-                                if (val == null) {
-                                    jb.quote(key).append(":null");
-                                } else if (val.startsWith("json:")) {
-                                    jb.quote(key).append(':').append(val.substring(5));
-                                } else {
-                                    jb.serialize(key, val);
-                                }
-                                jb.append(',');
+                            if (json == null) {
+                                json = binder.toJSON();
                             }
-                            jb.replaceLast('}').append(',');
 
-                            jb.quote("tables").append(":{ ");
-                            Set<String> rsets = binder.getResultSetNames();
-                            it = rsets.iterator();
-                            while (it.hasNext()) {
-                                String name = it.next();
-                                jb.quote(name).append(":");
-                                binder.getResultSet(name).toJSON(jb);
-                                jb.append(',');
-                            }
-                            jb.replaceLast('}');
-
-                            jb.append('}');
-
-                            json = jb.toString();
-    */
-                            json = binder.toJSON();
+                            res.getWriter().append(json).flush();
                         }
-
-                        res.getWriter().append(json).flush();
                     } else {
                         _logger.fine("\t=> " + getServletContext().getResource(page));
                         req.setAttribute(Service.SERVICE_DATA_BINDER, binder);
@@ -515,6 +496,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                         _plca.push(plcas);
                         plcas = new ArrayList<PlatformLifeCycleAwareDef>();
                     }
+                    context.getServletRegistration("dispatcher").addMapping("/" + module.name + "/*");
                 } catch (IOException x) {
                     // ignore this jar
                     _logger.log(Level.WARNING, "Error during jar inspection, ignored", x);
@@ -588,6 +570,10 @@ public class HttpServiceDispatcher extends HttpServlet {
 
         _logger.config("Done with service modules in ApplicationContext " + gac.getId());
         return gac;
+    }
+
+    private static boolean isPostedXML(String method, String content) {
+        return "post".equals(method) && (content.endsWith("xml") || content.contains("xml;"));
     }
 
     private static void serviceAborted(DataBinder binder, String id, Service service, Throwable x, String message) {
