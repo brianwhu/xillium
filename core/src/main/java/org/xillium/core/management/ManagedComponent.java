@@ -1,5 +1,6 @@
 package org.xillium.core.management;
 
+import java.util.concurrent.Executor;
 import java.util.logging.*;
 import javax.management.*;
 import org.xillium.base.beans.Throwables;
@@ -31,6 +32,10 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
     protected ManagedComponent setActive(boolean active) {
         _active = active;
         return this;
+    }
+
+    protected Executor getExecutor() {
+        return _broadcaster != null ? _broadcaster.getExecutor() : null;
     }
 
     /**
@@ -82,7 +87,11 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
         return _active;
     }
 
-    public void sendAlert(Manageable.Severity severity, String message, long sequence) {
+    /**
+     * Emits a notification through this manageable.
+     */
+    @Override
+    public void emit(Manageable.Severity severity, String message, long sequence) {
         if (_broadcaster != null) _broadcaster.sendNotification(new Notification(
             severity.toString(),
             _name != null ? _name : this,
@@ -91,16 +100,46 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
         ));
     }
 
+    /**
+     * Emits an alert through this manageable in response to a caught throwable.
+     */
+    public <T extends Throwable> T alert(Logger logger, String message, T throwable, long sequence) {
+        if (message == null) {
+            message = Throwables.getFullMessage(throwable);
+        } else if (throwable != null) {
+            message = message + ": " + Throwables.getFullMessage(throwable);
+        }
+        if (logger != null) logger.log(Level.WARNING, message);
+        emit(Manageable.Severity.ALERT, message, sequence);
+        return throwable;
+    }
+
+    /**
+     * @deprecated
+     */
+    public void sendAlert(Manageable.Severity severity, String message, long sequence) {
+        emit(severity, message, sequence);
+    }
+
+    /**
+     * @deprecated
+     */
     public void sendAlert(Logger logger, String message, long sequence) {
         logger.log(Level.WARNING, message);
         sendAlert(Manageable.Severity.ALERT, message, sequence);
     }
 
+    /**
+     * @deprecated
+     */
     public <T extends Throwable> T sendAlert(T throwable, long sequence) {
         sendAlert(Manageable.Severity.ALERT, Throwables.getFullMessage(throwable), sequence);
         return throwable;
     }
 
+    /**
+     * @deprecated
+     */
     public <T extends Throwable> T sendAlert(Logger logger, String message, T throwable) {
         logger.log(Level.WARNING, message, throwable);
         sendAlert(Manageable.Severity.ALERT, message + ": " + Throwables.getFullMessage(throwable), 0);

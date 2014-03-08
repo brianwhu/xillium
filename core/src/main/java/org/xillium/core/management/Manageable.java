@@ -30,4 +30,9 @@ public interface Manageable {
      * @return the same ObjectName passed to this method.
      */
     public ObjectName assignObjectName(ObjectName name);
+
+    /**
+     * Emits a notification through this manageable.
+     */
+    public void emit(Severity severity, String message, long sequence);
 }
