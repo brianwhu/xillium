@@ -16,6 +16,28 @@ import org.xillium.data.persistence.ResultSetWorker;
 public class DataBinder extends HashMap<String, String> implements ResultSetWorker<DataBinder> {
     private final Map<String, CachedResultSet> _rsets = new HashMap<String, CachedResultSet>();
     private final Map<String, Object> _named = new HashMap<String, Object>();
+    private final DataBinder _lower;
+
+    public DataBinder() {
+        _lower = null;
+    }
+
+    public DataBinder(DataBinder binder) {
+        _lower = binder;
+    }
+
+    public DataBinder getLower() {
+        return _lower;
+    }
+
+    /**
+     * Finds a string value from all data binders, starting from the top.
+     */
+    public String find(String name) {
+        String value = null;
+        for (DataBinder top = this; top != null && (value = top.get(name)) == null; top = top.getLower());
+        return value;
+    }
 
     /**
      * Puts a new string value into this binder, but using an alternative value if the given one is null.
@@ -67,7 +89,7 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     }
 
     /**
-     * Retrieves a HashMap but if fails creates a new one.
+     * Introduces a HashMap under the given name if one does not exist yet.
      */
     public <K, V> Map<K, V> useHashMap(String name, Class<K> ktype, Class<V> vtype) {
         Map<K, V> map = getNamedObject(name, Map.class);
@@ -187,42 +209,10 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
      */
     public String toJSON() {
         JSONBuilder jb = new JSONBuilder(estimateMaximumBytes()).append('{');
-
-/*
-        jb.quote("params").append(":{ ");
-        Iterator<String> it = binder.keySet().iterator();
-        while (it.hasNext()) {
-            String key = it.next();
-            String val = binder.get(key);
-            if (val == null) {
-                jb.quote(key).append(":null");
-            } else if (val.startsWith("json:")) {
-                jb.quote(key).append(':').append(val.substring(5));
-            } else {
-                jb.serialize(key, val);
-            }
-            jb.append(',');
-        }
-        jb.replaceLast('}').append(',');
-*/
         jb.quote("params").append(':');
         appendParams(jb).append(',');
-
-/*
-        jb.quote("tables").append(":{ ");
-        Set<String> rsets = binder.getResultSetNames();
-        it = rsets.iterator();
-        while (it.hasNext()) {
-            String name = it.next();
-            jb.quote(name).append(":");
-            binder.getResultSet(name).toJSON(jb);
-            jb.append(',');
-        }
-        jb.replaceLast('}');
-*/
         jb.quote("tables").append(':');
         appendTables(jb);
-
         jb.append('}');
 
         return jb.toString();

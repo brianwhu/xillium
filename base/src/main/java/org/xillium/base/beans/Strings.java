@@ -2,6 +2,9 @@ package org.xillium.base.beans;
 
 import java.util.*;
 import java.util.regex.*;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 
 /**
@@ -12,6 +15,10 @@ public class Strings {
         (byte)'0', (byte)'1', (byte)'2', (byte)'3', (byte)'4', (byte)'5', (byte)'6', (byte)'7',
         (byte)'8', (byte)'9', (byte)'a', (byte)'b', (byte)'c', (byte)'d', (byte)'e', (byte)'f'
     };
+
+    public static String toString(Object object) {
+        return object != null ? object.toString() : "";
+    }
 
     public static String toHexString(byte[] raw) throws java.io.UnsupportedEncodingException {
         byte[] hex = new byte[2 * raw.length];
@@ -105,6 +112,13 @@ public class Strings {
         char[] chars = text.toCharArray();
         chars[0] = Character.toUpperCase(chars[0]);
         return new String(chars);
+    }
+
+    /**
+     * Generates a secure hash from a given text.
+     */
+    public static String hash(String text) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        return Strings.toHexString(MessageDigest.getInstance("SHA").digest(text.getBytes("UTF-8")));
     }
 
     /**
