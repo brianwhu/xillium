@@ -70,6 +70,15 @@ case $# in
 esac
 }
 
+# build several modules in sequence then jetty:run-war a deployment unit
+mt() {
+case $# in
+0) ;;
+1) mvn -f deploys/$1/pom.xml install jetty:run-war -Djava.util.logging.config.file=etc/logging.properties -Dxillium.service.PrintStackTrace=true -Dxillium.deployment.location=dev- -Dxillium.deployment.profile=$PWD/etc;;
+*) p=$1; shift; mvn -f modules/$p/pom.xml install && mt $*;;
+esac
+}
+
 # build and assemble a single runnable jar
 ma() {
 mvn package && mvn assembly:single
