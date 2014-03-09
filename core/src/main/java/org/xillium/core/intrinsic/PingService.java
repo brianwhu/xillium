@@ -52,7 +52,7 @@ public class PingService extends ManagementService {
                 RemoteService.Response response = RemoteService.call(
                     server, service, binder, REQUEST_TARGET_PATH+'='+binder.get(REQUEST_TARGET_PATH), REQUEST_CLIENT_PHYS+'='+binder.get(REQUEST_CLIENT_PHYS)
                 );
-                for (Map.Entry<String, Object> entry: response.params.entrySet()) {
+                for (Map.Entry<String, String> entry: response.params.entrySet()) {
                     binder.put(entry.getKey(), String.valueOf(entry.getValue()));
                 }
                 for (Map.Entry<String, CachedResultSet> entry: response.tables.entrySet()) {

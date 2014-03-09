@@ -209,9 +209,7 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
      */
     public String toJSON() {
         JSONBuilder jb = new JSONBuilder(estimateMaximumBytes()).append('{');
-        jb.quote("params").append(':');
         appendParams(jb).append(',');
-        jb.quote("tables").append(':');
         appendTables(jb);
         jb.append('}');
 
@@ -219,16 +217,18 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     }
 
     public JSONBuilder appendParams(JSONBuilder jb) {
-        jb.append("{ ");
+        boolean json = false;
+
+        jb.append("\"params\":{ ");
         Iterator<String> it = keySet().iterator();
         while (it.hasNext()) {
             String key = it.next();
-            if (key.charAt(0) == '#' && key.charAt(key.length()-1) == '#') continue;
             String val = get(key);
             if (val == null) {
                 jb.quote(key).append(":null");
             } else if (val.startsWith("json:")) {
-                jb.quote(key).append(':').append(val.substring(5));
+                json = true;
+                continue;
             } else {
                 jb.serialize(key, val);
             }
@@ -236,11 +236,24 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
         }
         jb.replaceLast('}');
 
+    if (json) {
+        jb.append(",\"values\":{ ");
+        it = keySet().iterator();
+        while (it.hasNext()) {
+            String key = it.next();
+            String val = get(key);
+            if (val != null && val.startsWith("json:")) {
+                jb.quote(key).append(':').append(val.substring(5)).append(',');
+            }
+        }
+        jb.replaceLast('}');
+    }
+
         return jb;
     }
 
     public JSONBuilder appendTables(JSONBuilder jb) {
-        jb.append("{ ");
+        jb.append("\"tables\":{ ");
         Set<String> rsets = getResultSetNames();
         Iterator<String> it = rsets.iterator();
         while (it.hasNext()) {

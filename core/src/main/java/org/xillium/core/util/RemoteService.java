@@ -25,7 +25,8 @@ public class RemoteService {
      * This class represents a response from a remote Xillium service.
      */
     public static class Response {
-        public Map<String, Object> params;
+        public Map<String, String> params;
+        public Map<String, Object> values;
         public Map<String, CachedResultSet> tables;
         public transient byte[] body;
 
@@ -35,9 +36,9 @@ public class RemoteService {
         }
 
         public Response store(DataBinder binder, String target, String original) {
-            Object value = params.get(original);
+            String value = params.get(original);
             if (value != null) {
-                binder.put(target, value.toString());
+                binder.put(target, value);
             }
             return this;
         }
