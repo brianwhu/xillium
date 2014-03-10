@@ -2,6 +2,7 @@ package org.xillium.core;
 
 import java.sql.*;
 import java.util.*;
+import java.math.BigDecimal;
 import javax.sql.DataSource;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
