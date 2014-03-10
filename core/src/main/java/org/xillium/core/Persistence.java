@@ -9,6 +9,7 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 
 
 public class Persistence {
+    public static final SingleValueRetriever<BigDecimal> DecimalRetriever = new SingleValueRetriever<BigDecimal>();
     public static final SingleValueRetriever<Number> NumberRetriever = new SingleValueRetriever<Number>();
     public static final SingleValueRetriever<String> StringRetriever = new SingleValueRetriever<String>();
 
