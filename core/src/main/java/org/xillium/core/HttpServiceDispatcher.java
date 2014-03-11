@@ -249,6 +249,8 @@ public class HttpServiceDispatcher extends HttpServlet {
             }
 
             // auto-parameters
+            binder.putNamedObject(Service.REQUEST_SERVLET_REQ, req);
+
             binder.put(Service.REQUEST_CLIENT_ADDR, req.getRemoteAddr());
             binder.put(Service.REQUEST_CLIENT_PORT, String.valueOf(req.getRemotePort()));
             binder.put(Service.REQUEST_SERVER_PORT, String.valueOf(req.getServerPort()));

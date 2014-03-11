@@ -12,6 +12,7 @@ public interface Service {
     public static final String REQUEST_CLIENT_ADDR = "#client_addr#";
     public static final String REQUEST_CLIENT_PORT = "#client_port#";
     public static final String REQUEST_CLIENT_PHYS = "#client_phys#";
+    public static final String REQUEST_SERVLET_REQ = "#servlet_req#";
     public static final String REQUEST_SERVER_PORT = "#server_port#";
     public static final String REQUEST_SERVER_PATH = "#server_path#";
     public static final String REQUEST_TARGET_PATH = "#target_path#";
