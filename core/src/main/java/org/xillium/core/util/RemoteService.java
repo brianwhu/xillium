@@ -37,9 +37,9 @@ public class RemoteService {
         }
 
         public Response store(DataBinder binder, String target, String original) {
-            String value = params.get(original);
+            Object value = params.get(original);
             if (value != null) {
-                binder.put(target, value);
+                binder.put(target, value.toString());
             }
             return this;
         }
