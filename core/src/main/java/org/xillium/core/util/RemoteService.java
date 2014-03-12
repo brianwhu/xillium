@@ -25,8 +25,9 @@ public class RemoteService {
      * This class represents a response from a remote Xillium service.
      */
     public static class Response {
-        public Map<String, String> params;
-        public Map<String, Object> values;
+        public Map<String, Object> params;
+        //public Map<String, String> params;
+        //public Map<String, Object> values;
         public Map<String, CachedResultSet> tables;
         public transient byte[] body;
 
@@ -47,25 +48,25 @@ public class RemoteService {
     /**
      * Calls a remote service with non-static member values in the given DataObject as arguments.
      */
-    public static Response call(String server, String service, DataObject data) {
-        return call(server, service, false, data);
+    public static Response call(String server, String service, DataObject data, String... params) {
+        return call(server, service, false, data, params);
     }
 
     /**
      * Calls a remote service with non-static member values in the given DataObject as arguments.
      */
-    public static Response call(String server, String service, boolean suppress, DataObject data) {
-        List<String> params = new ArrayList<String>();
+    public static Response call(String server, String service, boolean suppress, DataObject data, String... params) {
+        List<String> list = new ArrayList<String>(Arrays.asList(params));
         for (Field field: data.getClass().getFields()) {
             if (Modifier.isStatic(field.getModifiers())) continue;
             field.setAccessible(true);
             try {
                 Object value = field.get(data);
                 if (value == null) value = "";
-                params.add(field.getName() + '=' + value);
+                list.add(field.getName() + '=' + value);
             } catch (IllegalAccessException x) {}
         }
-        return call(server, service, suppress, params.toArray(new String[params.size()]));
+        return call(server, service, suppress, list.toArray(new String[list.size()]));
     }
 
     /**

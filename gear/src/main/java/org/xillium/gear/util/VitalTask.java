@@ -14,15 +14,19 @@ import org.xillium.core.management.Manageable;
  */
 public abstract class VitalTask<T extends Manageable> implements Runnable {
     protected static final Logger _logger = Logger.getLogger(VitalTask.class.getName());
-    protected final T _manageable;
 
     private static final long INI_BACKOFF =  1000;
     private static final long MAX_BACKOFF = 32000;
     private static final Random _random = new Random();
+    private final T _manageable;
     private int _times;
 
     protected VitalTask(T manageable) {
         _manageable = manageable;
+    }
+
+    protected T getManageable() {
+        return _manageable;
     }
 
     /**
