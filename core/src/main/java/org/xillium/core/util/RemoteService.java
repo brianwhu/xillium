@@ -9,9 +9,11 @@ import org.xillium.data.DataObject;
 import org.xillium.data.DataBinder;
 import org.xillium.data.CachedResultSet;
 import org.xillium.core.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.deser.std.*;
+import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
 
 
 /**
@@ -19,15 +21,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class RemoteService {
     private static final Logger _logger = Logger.getLogger(RemoteService.class.getName());
-    private static final ObjectMapper _mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    private static final ObjectMapper _mapper = new ObjectMapper()
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        .registerModule(new SimpleModule("PureStringDeserializerModule").addDeserializer(String.class, new PureStringDeserializer()));
 
     /**
      * This class represents a response from a remote Xillium service.
      */
     public static class Response {
-        public Map<String, Object> params;
-        //public Map<String, String> params;
-        //public Map<String, Object> values;
+        public Map<String, String> params;
+        public Map<String, Object> values;
         public Map<String, CachedResultSet> tables;
         public transient byte[] body;
 
@@ -37,9 +40,9 @@ public class RemoteService {
         }
 
         public Response store(DataBinder binder, String target, String original) {
-            Object value = params.get(original);
+            String value = params.get(original);
             if (value != null) {
-                binder.put(target, value.toString());
+                binder.put(target, value);
             }
             return this;
         }
@@ -140,6 +143,30 @@ public class RemoteService {
             throw x;
         } catch (Exception x) {
             throw new ServiceException("***RemoteServiceCallFailure", x);
+        }
+    }
+
+    /*#
+     * A PureStringDeserializer is a Jackson string deserializer that ignores and skips any non-string JSON specifications.
+     */
+    private static class PureStringDeserializer extends StdScalarDeserializer<String> {
+        PureStringDeserializer() {
+            super(String.class);
+        }
+
+        @Override
+        public String deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+            try {
+                return StringDeserializer.instance.deserialize(parser, context);
+            } catch (JsonMappingException x) {
+                UntypedObjectDeserializer.instance.deserialize(parser, context);
+                return null;
+            }
+        }
+
+        @Override
+        public String deserializeWithType(JsonParser parser, DeserializationContext context, TypeDeserializer deserializer) throws IOException {
+            return deserialize(parser, context);
         }
     }
 }

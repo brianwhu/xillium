@@ -25,6 +25,17 @@ public interface DataObject {
             return describe(new StringBuilder(), type).toString();
         }
 
+        /**
+         * Formulates a JSON representation of the structure of a DataObject.
+         *
+         * @param type - a DataObject class
+         * @param prefix - a prefix to be placed before the JSON string
+         * @return a string that contains the JSON representation of the structure of the DataObject
+         */
+        public static String describe(Class<? extends DataObject> type, String prefix) {
+            return describe(new StringBuilder(prefix), type).toString();
+        }
+
         public static StringBuilder describe(StringBuilder sb, Class<? extends DataObject> type) {
             sb.append("[");
             print(sb, null, type);
