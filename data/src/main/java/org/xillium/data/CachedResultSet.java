@@ -2,6 +2,7 @@ package org.xillium.data;
 
 import java.sql.*;
 import java.util.*;
+import java.lang.reflect.Field;
 import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.Strings;
 import org.xillium.base.beans.JSONBuilder;
@@ -163,6 +164,28 @@ public class CachedResultSet {
         }
 
         return rs;
+    }
+
+    /**
+     * Retrieves the contents of this result set as a List of DataObjects.
+     */
+    public <T extends DataObject> List<T> asList(Class<T> type) throws InstantiationException, IllegalAccessException {
+        Map<String, Field> fields = new HashMap<String, Field>();
+        for (String column: columns) try { fields.put(column, Beans.getKnownField(type, column)); } catch (Exception x) {}
+
+        List<T> list = new ArrayList<T>();
+        for (Object[] row: rows) {
+            T object = type.newInstance();
+            for (int i = 0; i < row.length; ++i) {
+                Field field = fields.get(columns[i]);
+                if (field != null) {
+                    Beans.setValue(object, field, row[i]);
+                }
+            }
+            list.add(object);
+        }
+
+        return list;
     }
 
     /**
