@@ -15,8 +15,9 @@ public class ClientAddressAuthTest {
         "234.66.*.10",
         "234.66.**.10",
         "234.66.a.10",
-        "1:2:3:4:5:6:7:8",
-        "0:0:0:0:0:0:0:1"
+        "1:A3C2:3:4:5:6:7:*",
+        "0:0:0:0:0:0:0:1",
+        "1:good:3:4:5:6:7:*",
     };
 
     private static final String[] GOOD = {
@@ -24,7 +25,8 @@ public class ClientAddressAuthTest {
         "172.21.3.55",
         "234.66.77.10",
         "234.66.78.10",
-        "::1"
+        "::1",
+        "1:a3c2:3:4:5:6:7:8"
     };
 
     private static final String[] BAD = {
@@ -34,9 +36,22 @@ public class ClientAddressAuthTest {
         "172.21.3.*",
     };
 
+    private static final String MORE_PATTERNS = "10.0.*.*, 10.1.10.*, 10.2.*.*";
+
+    private static final String[] MORE_GOOD = {
+        "192.168.1.5",
+        "172.21.10.77",
+        "10.0.112.30",
+        "10.0.112.40",
+        "10.1.10.211",
+        "10.1.10.212",
+        "10.2.10.211",
+    };
+
+
     @Test(groups={"ipauth"})
     public void test() throws Exception {
-        ClientAddressAuthorizer pa = new ClientAddressAuthorizer(Arrays.asList(PATTERN));
+        ClientAddressAuthorizer pa = new ClientAddressAuthorizer(PATTERN);
 
         DataBinder parameters = new DataBinder();
 
@@ -52,6 +67,12 @@ public class ClientAddressAuthTest {
                 throw new RuntimeException("Failed to catch illegitimate address " + ip);
             } catch (AuthorizationException x) {
             }
+        }
+
+        pa.setAuthorizedPatterns(MORE_PATTERNS);
+        for (String ip: MORE_GOOD) {
+            parameters.put(Service.REQUEST_CLIENT_ADDR, ip);
+            pa.authorize(null, null, parameters, null);
         }
     }
 }

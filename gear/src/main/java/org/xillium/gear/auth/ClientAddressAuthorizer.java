@@ -27,14 +27,8 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
         "([0-9*]{1,3})\\.([0-9*]{1,3})\\.([0-9*]{1,3})\\.([0-9*]{1,3})"
     );
     private static final Pattern IPv6_ADDRESS_PATTERN = Pattern.compile(
-        "([0-9a-fA-F*]{1,4}):" +
-        "([0-9a-fA-F*]{1,4}):" +
-        "([0-9a-fA-F*]{1,4}):" +
-        "([0-9a-fA-F*]{1,4}):" +
-        "([0-9a-fA-F*]{1,4}):" +
-        "([0-9a-fA-F*]{1,4}):" +
-        "([0-9a-fA-F*]{1,4}):" +
-        "([0-9a-fA-F*]{1,4})"
+        "([0-9a-f*]{1,4}):([0-9a-f*]{1,4}):([0-9a-f*]{1,4}):([0-9a-f*]{1,4}):([0-9a-f*]{1,4}):([0-9a-f*]{1,4}):([0-9a-f*]{1,4}):([0-9a-f*]{1,4})",
+        Pattern.CASE_INSENSITIVE
     );
 
     private final List<short[]> _ipv4patterns = new ArrayList<short[]>();
@@ -50,13 +44,23 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
     /**
      * Constructs a ClientAddressAuthorizer.
      *
-     * @param patterns - a list of address patterns
+     * @param patterns - an array of address patterns
      */
-	public ClientAddressAuthorizer(List<String> patterns) {
-		setAuthorizedAddresses(patterns);
+	public ClientAddressAuthorizer(String[] patterns) {
+		setAuthorizedPatternArray(patterns);
 	}
 
-    public void setAuthorizedAddresses(List<String> patterns) {
+    /**
+     * Adds authorized address patterns as a comma-separated list.
+     */
+    public void setAuthorizedPatterns(String patterns) {
+        setAuthorizedPatternArray(patterns.split(" *, *"));
+    }
+
+    /**
+     * Adds authorized address patterns as a String array.
+     */
+    public void setAuthorizedPatternArray(String[] patterns) {
         Matcher matcher;
 
         patterns: for (String pattern: patterns) {
@@ -111,7 +115,7 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
         try {
             byte[] bytes = InetAddress.getByName(address).getAddress();
 
-            patterns: for (short[] pattern: bytes.length == 4 ? _ipv4patterns : _ipv6patterns) {
+  patterns: for (short[] pattern: bytes.length == 4 ? _ipv4patterns : _ipv6patterns) {
                 for (int i = 0; i < pattern.length; ++i) {
                     if (pattern[i] < 256 && pattern[i] != (bytes[i] & 0xff)) {
                         continue patterns;
