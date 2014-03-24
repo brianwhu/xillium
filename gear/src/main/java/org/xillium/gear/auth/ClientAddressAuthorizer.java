@@ -70,6 +70,10 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
                     String p = matcher.group(i+1);
                     try {
                         address[i] = Short.parseShort(p);
+                        if (address[i] > 255) {
+                            _logger.warning("Invalid pattern ignored: " + pattern);
+                            continue patterns;
+                        }
                     } catch (Exception x) {
                         if ("*".equals(p)) {
                             address[i] = 256;
@@ -103,7 +107,6 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
                 _ipv6patterns.add(address);
             } else {
                 _logger.warning("Invalid pattern ignored: " + pattern);
-                continue;
             }
         }
     }
