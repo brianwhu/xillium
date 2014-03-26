@@ -7,22 +7,30 @@ import org.xillium.core.management.Manageable;
 
 
 /**
- * A VitalTask is a Runnable that detects task failure and undertaks retries automatically.
- * Failure and recovery reports are send to an associated Manageable.
+ * A VitalTask is a Runnable that detects execution failure and undertakes retries automatically.
+ * Failure and recovery notifications are reported via an associated Manageable.
  *
- * It uses randomized exponetial backoff to avoid retrying the task too eagerly.
+ * By default, a VitalTask uses randomized exponetial backoff to avoid retrying the task too eagerly. Other TrialStrategy can be used as well.
+ *
+ * A VitalTask is interruptible. If a VitalTask is submitted to a separate thread, a negative age reveals execution interruption. When running a
+ * VitalTask on the local thread, call runAsInterruptible() instead of run() to get execution interruption reported as an InterruptedException.
  */
 public abstract class VitalTask<T extends Manageable> implements Runnable {
     protected static final Logger _logger = Logger.getLogger(VitalTask.class.getName());
 
-    private static final long INI_BACKOFF =  1000;
-    private static final long MAX_BACKOFF = 32000;
-    private static final Random _random = new Random();
     private final T _manageable;
-    private int _times;
+    private final TrialStrategy _strategy;
+    private InterruptedException _interrupted;
+    private int _age;
 
     protected VitalTask(T manageable) {
         _manageable = manageable;
+        _strategy = ExponentialBackoff.instance;
+    }
+
+    protected VitalTask(T manageable, TrialStrategy strategy) {
+        _manageable = manageable;
+        _strategy = strategy;
     }
 
     protected T getManageable() {
@@ -38,29 +46,57 @@ public abstract class VitalTask<T extends Manageable> implements Runnable {
      * Returns the number of retries this VitalTask has undertaken so far.
      */
     public final int getAge() {
-        return _times;
+        return _age;
     }
 
+    /**
+     * Returns the InterruptedException if an interruption occured, null otherwise;
+     */
+    public final InterruptedException getInterruptedException() {
+        return _interrupted;
+    }
+
+    /**
+     * Task entry point.
+     */
     public final void run() {
+        _interrupted = null;
+        _age = 0;
         while (true) {
             try {
+                _strategy.observe(_age);
                 execute();
-                if (_times > 0) {
+                if (_age > 0) {
                     String t = "Failure recovered: " + toString();
                     _logger.info(t);
-                    _manageable.emit(Manageable.Severity.NOTICE, t, _times);
+                    _manageable.emit(Manageable.Severity.NOTICE, t, _age);
                 }
-                return;
+                break;
+            } catch (InterruptedException x) {
+                _logger.log(Level.WARNING, "Interrupted, age = " + _age, x);
+                _interrupted = x;
+                break;
             } catch (Exception x) {
-                _logger.log(Level.WARNING, "Failure detected, age = " + _times, x);
-                _manageable.emit(Manageable.Severity.ALERT, Throwables.getFullMessage(x), _times);
-
-                // exponential back off
+                _logger.log(Level.WARNING, "Failure detected, age = " + _age, x);
+                _manageable.emit(Manageable.Severity.ALERT, Throwables.getFullMessage(x), _age);
                 try {
-                    Thread.sleep(Math.min(MAX_BACKOFF, INI_BACKOFF + (int)Math.round(_random.nextDouble() * INI_BACKOFF * (1L << _times))));
-                } catch (Throwable t) {}
-                ++_times;
+                    _strategy.backoff(_age);
+                } catch (InterruptedException i) {
+                    _logger.log(Level.WARNING, "Interrupted, age = " + _age, x);
+                    _interrupted = i;
+                    break;
+                }
+                ++_age;
             }
         }
+    }
+
+    /**
+     * Calls run() and returns "this". Throws an InterruptedException if thread interruption is detected during run().
+     */
+    public final VitalTask runAsInterruptible() throws InterruptedException {
+        run();
+        if (_interrupted != null) throw _interrupted;
+        return this;
     }
 }
