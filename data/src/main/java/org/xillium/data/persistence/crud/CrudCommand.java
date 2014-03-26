@@ -236,7 +236,7 @@ public class CrudCommand {
             ResultSetMetaData rsmeta = stmt.getMetaData();
             Map<String, Integer> colref = new HashMap<String, Integer>();
             for (int j = 1, jj = rsmeta.getColumnCount(); j <= jj; ++j) {
-                colref.put(rsmeta.getColumnName(j), new Integer(j));
+                colref.put(rsmeta.getColumnLabel(j), new Integer(j));
             }
 
             Set<String> primaryKeys = new HashSet<String>();

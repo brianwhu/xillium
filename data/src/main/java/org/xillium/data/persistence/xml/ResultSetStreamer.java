@@ -65,7 +65,7 @@ public class ResultSetStreamer implements ResultSetWorker<Writer> {
         while (rs.next()) {
             Element row = doc.createElement(ROW);
             for (int i = 0; i < count; ++i) {
-                String name = Strings.toLowerCamelCase(meta.getColumnName(i+1), '_');
+                String name = Strings.toLowerCamelCase(meta.getColumnLabel(i+1), '_');
 
                 Element col = doc.createElement(COLUMN);
                 attr = doc.createAttribute(NAME);

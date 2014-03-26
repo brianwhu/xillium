@@ -42,7 +42,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
                             ResultSetMetaData meta = rs.getMetaData();
                             for (int i = 1, ii = meta.getColumnCount()+1; i < ii; ++i) {
                                 try {
-                                    String name = Strings.toLowerCamelCase(meta.getColumnName(i), '_');
+                                    String name = Strings.toLowerCamelCase(meta.getColumnLabel(i), '_');
                                     list.add(new Column2Field(i, Beans.getKnownField(_type, name)));
                                 } catch (NoSuchFieldException x) {
                                     // ignored

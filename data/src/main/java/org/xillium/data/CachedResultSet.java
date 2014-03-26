@@ -52,7 +52,7 @@ public class CachedResultSet {
 
             this.columns = new String[width];
             for (int i = 0; i < width; ++i) {
-                columns[i] = Strings.toLowerCamelCase(metaData.getColumnName(i+1), '_');
+                columns[i] = Strings.toLowerCamelCase(metaData.getColumnLabel(i+1), '_');
             }
 
             if (rset.next()) {

@@ -109,7 +109,7 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
                 for (int i = 1; i <= width; ++i) {
                     Object value = rset.getObject(i);
                     if (value != null) {
-                        put(Strings.toLowerCamelCase(meta.getColumnName(i), '_'), value.toString());
+                        put(Strings.toLowerCamelCase(meta.getColumnLabel(i), '_'), value.toString());
                     }
                 }
             } else {
