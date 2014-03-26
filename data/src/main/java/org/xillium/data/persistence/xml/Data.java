@@ -84,6 +84,7 @@ public class Data<T extends DataObject, C extends Collector<T>> {
         return _collector;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends DataObject, C extends Collector<T>> C coalesce(InputStream in, Class<T> rtype, C collector) throws Exception {
         BurnedInArgumentsObjectFactory factory = new BurnedInArgumentsObjectFactory();
         factory.setBurnedIn(Data.class, collector);

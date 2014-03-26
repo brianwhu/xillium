@@ -68,17 +68,19 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     }
 
     /**
-     * Puts a named object into this binder.
+     * Puts a named object into this binder returning the original object under the name, if any.
      */
-    public Object putNamedObject(String name, Object object) {
-        return _named.put(name, object);
+    @SuppressWarnings("unchecked")
+    public <T, V> T putNamedObject(String name, V object) {
+        return (T)_named.put(name, object);
     }
 
     /**
      * Retrieves a named object from this binder.
      */
-    public Object getNamedObject(String name) {
-        return _named.get(name);
+    @SuppressWarnings("unchecked")
+    public <T> T getNamedObject(String name) {
+        return (T)_named.get(name);
     }
 
     /**
@@ -92,7 +94,7 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
      * Introduces a HashMap under the given name if one does not exist yet.
      */
     public <K, V> Map<K, V> useHashMap(String name, Class<K> ktype, Class<V> vtype) {
-        Map<K, V> map = getNamedObject(name, Map.class);
+        Map<K, V> map = getNamedObject(name);
         if (map == null) putNamedObject(name, map = new HashMap<K, V>());
         return map;
     }

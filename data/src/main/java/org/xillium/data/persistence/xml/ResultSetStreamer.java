@@ -34,6 +34,7 @@ public class ResultSetStreamer implements ResultSetWorker<Writer> {
     public static final String NAME      = "name";
     public static final String TYPE      = "type";
 
+    @SuppressWarnings("unchecked")
     private Map<String, Assertion> _assertions = Collections.EMPTY_MAP;
     private final String _name;
     private final Writer _sink;

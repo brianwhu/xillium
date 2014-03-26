@@ -198,7 +198,7 @@ public class CrudCommand {
     /**
      * Creates a new Java model class for carrying out the CRUD action on the entity represented by the list of tables.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "fallthrough"})
     public static Class<? extends DataObject> modelFromTables(Connection connection, String classname, Action action, String... tablenames) throws Exception {
         ClassPool pool = ClassPool.getDefault();
         // this line is necessary for web applications (web container class loader in play)

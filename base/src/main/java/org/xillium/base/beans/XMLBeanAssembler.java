@@ -45,17 +45,19 @@ public class XMLBeanAssembler extends DefaultHandler {
     /**
      * Assembles a bean from an XML file.
      */
-    public Object build(String file) throws ParserConfigurationException, SAXException, IOException {
+    @SuppressWarnings("unchecked")
+    public <T> T build(String file) throws ParserConfigurationException, SAXException, IOException {
         _parser.parse(new File(file), this);
-        return getBean();
+        return (T)getBean();
     }
 
     /**
      * Assembles a bean from an XML stream.
      */
-    public Object build(InputStream stream) throws ParserConfigurationException, SAXException, IOException {
+    @SuppressWarnings("unchecked")
+    public <T> T build(InputStream stream) throws ParserConfigurationException, SAXException, IOException {
         _parser.parse(stream, this);
-        return getBean();
+        return (T)getBean();
     }
 
     public boolean isLenient() {
