@@ -1,11 +1,8 @@
 #set( $symbol_pound = '#' )
 #set( $symbol_dollar = '$' )
 #set( $symbol_escape = '\' )
-<beans xmlns="http://www.springframework.org/schema/beans"
-     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-     xmlns:p="http://www.springframework.org/schema/p"
-     xsi:schemaLocation="http://www.springframework.org/schema/beans
-               http://www.springframework.org/schema/beans/spring-beans.xsd">
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
 #if ($persistence == "none")
 
@@ -19,9 +16,7 @@
   ** jdbc data source, based on "db.properties" defined in a root module
   -->
 
-  <bean name="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"
-        p:ignoreUnresolvablePlaceholders="true"
-        p:ignoreResourceNotFound="true">
+  <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
     <property name="locations">
       <list>
         <value>classpath:${symbol_dollar}{xillium.deployment.location}db.properties</value>
@@ -29,6 +24,7 @@
         <value>file:${symbol_dollar}{xillium.deployment.profile}/${deploy1name}.db.properties</value>
       </list>
     </property>
+    <property name="ignoreResourceNotFound" value="true"/>
   </bean>
 
   <bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource" destroy-method="close">
