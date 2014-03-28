@@ -1,5 +1,6 @@
 package org.xillium.core.util;
 
+import java.lang.reflect.Array;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -51,14 +52,14 @@ public class DatabaseService extends SecuredService implements Service.Extended,
     /**
      * Defines parameter mappings. One parameter can be mapped to multiple new names, so a list is used instead of a map as the input to this method.
      */
-    @SuppressWarnings("unchecked")
     public void setMappings(List<String> mappings) {
         if (mappings.size() > 0) {
-            _renames = (Pair<String, String>[])new Pair[mappings.size()];
+            @SuppressWarnings("unchecked") Pair<String, String>[] renames = (Pair<String, String>[])Array.newInstance(Pair.class, mappings.size());
             for (int i = 0; i < _renames.length; ++i) {
                 String[] names = mappings.get(i).split("[ ,]+");
-                _renames[i] = new Pair<String, String>(names[0], names[1]);
+                renames[i] = new Pair<String, String>(names[0], names[1]);
             }
+            _renames = renames;
         }
     }
 

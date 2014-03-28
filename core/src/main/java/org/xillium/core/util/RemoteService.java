@@ -126,7 +126,7 @@ public class RemoteService {
                     if (response.params == null) {
                         throw new ServiceException("***ProtocolErrorMissingParams");
                     } else if (!suppress) {
-                        String message = (String)response.params.get(Service.FAILURE_MESSAGE);
+                        String message = response.params.get(Service.FAILURE_MESSAGE);
                         if (message != null && message.length() > 0) {
                             throw new RemoteServiceException(message);
                         }
@@ -150,6 +150,8 @@ public class RemoteService {
      * A PureStringDeserializer is a Jackson string deserializer that ignores and skips any non-string JSON specifications.
      */
     private static class PureStringDeserializer extends StdScalarDeserializer<String> {
+        private static final UntypedObjectDeserializer _utod = new UntypedObjectDeserializer();
+
         PureStringDeserializer() {
             super(String.class);
         }
@@ -159,7 +161,7 @@ public class RemoteService {
             try {
                 return StringDeserializer.instance.deserialize(parser, context);
             } catch (JsonMappingException x) {
-                UntypedObjectDeserializer.instance.deserialize(parser, context);
+                _utod.deserialize(parser, context);
                 return null;
             }
         }
@@ -168,5 +170,7 @@ public class RemoteService {
         public String deserializeWithType(JsonParser parser, DeserializationContext context, TypeDeserializer deserializer) throws IOException {
             return deserialize(parser, context);
         }
+
+        private static final long serialVersionUID = 5045214689420593104L;
     }
 }

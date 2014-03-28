@@ -7,9 +7,10 @@ import javax.sql.DataSource;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
 import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 
-public class Persistence {
+public class Persistence implements Persistent {
     public static final SingleValueRetriever<BigDecimal> DecimalRetriever = new SingleValueRetriever<BigDecimal>();
     public static final SingleValueRetriever<Number> NumberRetriever = new SingleValueRetriever<Number>();
     public static final SingleValueRetriever<String> StringRetriever = new SingleValueRetriever<String>();
@@ -17,6 +18,31 @@ public class Persistence {
     private final DataSource _dataSource;
     private final Map<String, ParametricStatement> _statements;
 
+    @Override @Transactional(readOnly=true)
+    public <T, F> T doReadOnly(F facility, Task<T, F> task) {
+        try {
+            return task.run(facility, this);
+        } catch (RuntimeException x) {
+            throw x;
+        } catch (Exception x) {
+            throw new RuntimeException(x.getMessage(), x);
+        }
+    }
+
+    @Override @Transactional
+    public <T, F> T doReadWrite(F facility, Task<T, F> task) {
+        try {
+            return task.run(facility, this);
+        } catch (RuntimeException x) {
+            throw x;
+        } catch (Exception x) {
+            throw new RuntimeException(x.getMessage(), x);
+        }
+    }
+
+    /**
+     * Constructs a Persistence that operates over the given data source.
+     */
     public Persistence(DataSource source) {
         _dataSource = source;
         _statements = new HashMap<String, ParametricStatement>();

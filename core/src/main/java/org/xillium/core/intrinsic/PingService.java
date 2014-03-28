@@ -45,12 +45,11 @@ public class PingService extends ManagementService {
 
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
         if (isLocal(binder)) {
-            String server, service;
-            if ((server = binder.get("server")) != null && (service = binder.get("service")) != null) {
-                binder.remove("server");
-                binder.remove("service");
+            String redirect = binder.get("redirect");
+            if (redirect != null) {
+                binder.remove("redirect"); // stop loops!!
                 RemoteService.Response response = RemoteService.call(
-                    server, service, binder, REQUEST_TARGET_PATH+'='+binder.get(REQUEST_TARGET_PATH), REQUEST_CLIENT_PHYS+'='+binder.get(REQUEST_CLIENT_PHYS)
+                    redirect, binder.get(REQUEST_TARGET_PATH), binder, REQUEST_CLIENT_PHYS+'='+binder.get(REQUEST_CLIENT_PHYS)
                 );
                 for (Map.Entry<String, String> entry: response.params.entrySet()) {
                     binder.put(entry.getKey(), entry.getValue());
@@ -59,7 +58,7 @@ public class PingService extends ManagementService {
                     binder.putResultSet(entry.getKey(), entry.getValue());
                 }
             } else try {
-                Request request = dict.collect(new Request(), binder);
+                final Request request = dict.collect(new Request(), binder);
                 if (request.parameter != null) request.parameter = URLDecoder.decode(request.parameter, "UTF-8");
                 binder.remove("signal");
                 binder.remove("parameter");
@@ -114,9 +113,14 @@ public class PingService extends ManagementService {
                     break;
                 case PersistenceCheck:
                     if (request.parameter != null) {
-                        ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
+                        final ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
                         engine.put("db", new PersistenceManager(binder, _statements, persist.getDataSource()));
-                        engine.eval(request.parameter);
+                        persist.doReadWrite(null, new Persistent.Task<Void, Void>() {
+                            public Void run(Void v, Persistence p) throws Exception {
+                                engine.eval(request.parameter);
+                                return null;
+                            }
+                        });
                     }
                     break;
                 default:
