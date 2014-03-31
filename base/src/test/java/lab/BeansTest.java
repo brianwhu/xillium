@@ -10,13 +10,13 @@ import org.testng.annotations.*;
 public class BeansTest {
     @Test(groups={"ObjectConstruction"})
     public void testCreate2() throws Exception {
-        A a = (A)Beans.create(A.class, "Good", 95);
+        A a = Beans.create(A.class, "Good", 95);
         assert a != null && a.name.equals("Good") && a.score == 95 : "Failed to create A by calling the 2-parameter constructor";
     }
 
     @Test(groups={"ObjectConstruction"})
     public void testCreate1() throws Exception {
-        A a = (A)Beans.create(A.class, "Cool");
+        A a = Beans.create(A.class, "Cool");
         assert a != null && a.name.equals("Cool") && a.score == 0 : "Failed to create A by calling the 1-parameter constructor";
     }
 
@@ -25,6 +25,10 @@ public class BeansTest {
         Object a = Beans.create(A.class, "Nice", 64);
         Object output = Beans.invoke(a, "print", "yells", "Hello World");
         assert output != null : "Failed to invoke A's print method";
+
+        Object[] args = { "dummy", "dummy", "yells", "Hello World" };
+        Object result = Beans.invoke(a, "print", args, 2, 2);
+        assert result.equals(output) : "Failed to handle range of args array";
     }
 
     private static final String ORIGINAL_TEXT = "introduction-to-the-standard-directory-layout";

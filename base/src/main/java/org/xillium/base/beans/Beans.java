@@ -189,30 +189,22 @@ public class Beans {
     /**
      * Creates an instance of a given type by choosing the best constructor that matches the given list of arguments.
      */
-    public static Object create(Class<?> type, Object... args) throws
+    public static <T> T create(Class<T> type, Object... args) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        // get the type of each parameter argument
         Class<?>[] argumentTypes = new Class<?>[args.length];
         for (int i = 0; i < args.length; i++) {
             argumentTypes[i] = args[i].getClass();
         }
-
-        // get the constructors available for the bean class
-        Constructor<?>[] constructors = type.getConstructors();
-
-        return choose(constructors, new ConstructorParameterExtractor<Object>(), null, argumentTypes).newInstance(args);
+        return type.cast(choose(type.getConstructors(), new ConstructorParameterExtractor<T>(), null, argumentTypes).newInstance(args));
     }
 
     /**
      * Creates an instance of a given type by choosing the best constructor that matches the given list of arguments.
      */
-    public static Object create(Class<?> type, Object[] args, int offset, int count) throws
+    public static <T> T create(Class<T> type, Object[] args, int offset, int count) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         if (offset != 0 || count != args.length) {
-            // copy the specified subset of arguments into a new array first
-            Object[] actual = new Object[count];
-            for (int i = 0; i < count; ++i) actual[i] = args[offset + i];
-            return create(type, actual);
+            return create(type, Arrays.copyOfRange(args, offset, offset + count));
         } else {
             return create(type, args);
         }
@@ -224,10 +216,7 @@ public class Beans {
     public static Object invoke(Object bean, String name, Object[] args, int offset, int count) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if (offset != 0 || count != args.length) {
-            // copy the specified subset of arguments into a new array first
-            Object[] actual = new Object[count];
-            for (int i = 0; i < count; ++i) actual[i] = args[offset + i];
-            return invoke(bean, name, actual);
+            return invoke(bean, name, Arrays.copyOfRange(args, offset, offset + count));
         } else {
             return invoke(bean, name, args);
         }
@@ -238,17 +227,11 @@ public class Beans {
      */
     public static Object invoke(Object bean, String name, Object... args) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        // get the type of each parameter argument
         Class<?>[] argumentTypes = new Class<?>[args.length];
         for (int i = 0; i < args.length; i++) {
             argumentTypes[i] = args[i].getClass();
         }
-
-        // get the methods available for the bean class
-        Method[] methods = bean.getClass().getMethods();
-//System.err.println("Beans.invoke: " + methods.length + " methods");
-
-        return choose(methods, new MethodParameterExtractor(), name, argumentTypes).invoke(bean, args);
+        return choose(bean.getClass().getMethods(), new MethodParameterExtractor(), name, argumentTypes).invoke(bean, args);
     }
 
     /**
@@ -321,7 +304,7 @@ public class Beans {
         public Class<?>[] getParameterTypes(Object object);
     }
 
-    private static class ConstructorParameterExtractor <T> implements ParameterExtractor {
+    private static class ConstructorParameterExtractor<T> implements ParameterExtractor {
         @SuppressWarnings("unchecked")
         public Class<?>[] getParameterTypes(Object object) {
             return ((Constructor<T>)object).getParameterTypes();
@@ -396,7 +379,7 @@ public class Beans {
     /**
      * Fills empty, identically named public fields with values from another object.
      */
-    public static Object fill(Object destination, Object source) {
+    public static <T> T fill(T destination, Object source) {
         if (destination != source) {
             Class<?> stype = source.getClass();
             for (Field field: destination.getClass().getFields()) {
@@ -415,7 +398,7 @@ public class Beans {
     /**
      * Overrides identically named public fields with non-empty values from another object.
      */
-    public static Object override(Object destination, Object source) {
+    public static <T> T override(T destination, Object source) {
         if (destination != source) {
             Class<?> dtype = destination.getClass();
             for (Field field: source.getClass().getFields()) {
