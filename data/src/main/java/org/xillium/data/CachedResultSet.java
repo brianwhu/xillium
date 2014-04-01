@@ -197,6 +197,16 @@ public class CachedResultSet {
     }
 
     /**
+     * Renames the columns of a CachedResultSet.
+     */
+    public CachedResultSet rename(String... names) {
+        for (int i = 0; i < names.length; ++i) {
+            this.columns[i] = names[i];
+        }
+        return this;
+    }
+
+    /**
      * Builds a name-to-column index for quick access to data by columm names.
      */
     public Map<String, Integer> buildIndex() {
