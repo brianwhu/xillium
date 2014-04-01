@@ -187,6 +187,14 @@ public class Beans {
     }
 
     /**
+     * Overrides access control of an AccessibleObject, facilitating fluent coding style.
+     */
+    public static <T extends AccessibleObject> T accessible(T object) throws SecurityException {
+        object.setAccessible(true);
+        return object;
+    }
+
+    /**
      * Creates an instance of a given type by choosing the best constructor that matches the given list of arguments.
      */
     public static <T> T create(Class<T> type, Object... args) throws
@@ -242,7 +250,7 @@ public class Beans {
      * @param name - the name of the method/constructor
      * @param argumentTypes - the argument types
      */
-    public static <T extends Member> T choose(T[] candidates, ParameterExtractor pe, String name, Class<?>[] argumentTypes)
+    public static <T extends AccessibleObject & Member> T choose(T[] candidates, ParameterExtractor pe, String name, Class<?>[] argumentTypes)
     throws NoSuchMethodException {
         T chosenCandidate = null;
         Class<?>[] chosenParamTypes = null;
@@ -297,7 +305,7 @@ public class Beans {
 //System.err.println("Chosen candidate is " + chosenCandidate);
 
         // return the covariant candidate
-        return chosenCandidate;
+        return accessible(chosenCandidate); // Java bug #4071957 - have to call setAccessible even on public methods
     }
 
     private static interface ParameterExtractor {
@@ -489,7 +497,7 @@ public class Beans {
                 for (PropertyDescriptor property : properties) {
                     Object value = null;
                     try {
-                        value = property.getReadMethod().invoke(bean);
+                        value = accessible(property.getReadMethod()).invoke(bean); // Java bug #4071957 - have to use the following 3 lines instead
                     } catch (Exception x) {
                         value = x.getMessage();
                     }
