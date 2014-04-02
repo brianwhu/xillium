@@ -26,13 +26,13 @@
     <fileSet encoding="UTF-8">
       <directory>doc</directory>
       <includes>
-        <include>**/*.</include>
+        <include>**/*</include>
       </includes>
     </fileSet>
     <fileSet encoding="UTF-8">
       <directory>bin</directory>
       <includes>
-        <include>**/*.</include>
+        <include>**/*</include>
       </includes>
     </fileSet>
     <fileSet encoding="UTF-8">
@@ -89,7 +89,7 @@
         <fileSet encoding="UTF-8">
           <directory>__module1name__/doc</directory>
           <includes>
-            <include>**/*.</include>
+            <include>**/*</include>
           </includes>
         </fileSet>
       </fileSets>
