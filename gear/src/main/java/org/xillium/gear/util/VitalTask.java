@@ -67,9 +67,7 @@ public abstract class VitalTask<T extends Manageable> implements Runnable {
                 _strategy.observe(_age);
                 execute();
                 if (_age > 0) {
-                    String t = "Failure recovered: " + toString();
-                    _logger.info(t);
-                    _manageable.emit(Manageable.Severity.NOTICE, t, _age);
+                    _manageable.emit(Manageable.Severity.NOTICE, "Failure recovered: " + toString(), _age, _logger);
                 }
                 break;
             } catch (InterruptedException x) {
@@ -77,8 +75,7 @@ public abstract class VitalTask<T extends Manageable> implements Runnable {
                 _interrupted = x;
                 break;
             } catch (Exception x) {
-                _logger.log(Level.WARNING, "Failure detected, age = " + _age, x);
-                _manageable.emit(Manageable.Severity.ALERT, Throwables.getFullMessage(x), _age);
+                _manageable.emit(x, "Failure detected, age = " + _age, _age, _logger);
                 try {
                     _strategy.backoff(_age);
                 } catch (InterruptedException i) {

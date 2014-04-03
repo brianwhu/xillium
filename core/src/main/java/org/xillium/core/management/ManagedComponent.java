@@ -91,32 +91,41 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
      * Emits a notification through this manageable.
      */
     @Override
-    public void emit(Manageable.Severity severity, String message, long sequence) {
+    public void emit(Severity severity, String message, long sequence, Logger logger) {
         if (_broadcaster != null) _broadcaster.sendNotification(new Notification(
             severity.toString(),
             _name != null ? _name : this,
             sequence,
             message
         ));
+        if (logger != null) logger.log(severity == Severity.NOTICE ? Level.INFO : Level.WARNING, message);
     }
+
+    /**
+     * Emits a notification through this manageable, placing it into the log at the same time.
+     */
+    //@Override
+    //public void emit(Logger logger, Manageable.Severity severity, String message, long sequence) {
+        //emit(severity, message, sequence);
+    //}
 
     /**
      * Emits an alert through this manageable in response to a caught throwable.
      */
-    public <T extends Throwable> T alert(Logger logger, String message, T throwable, long sequence) {
+    @Override
+    public <T extends Throwable> T emit(T throwable, String message, long sequence, Logger logger) {
         if (message == null) {
             message = Throwables.getFullMessage(throwable);
-        } else if (throwable != null) {
+        } else {
             message = message + ": " + Throwables.getFullMessage(throwable);
         }
-        if (logger != null) logger.log(Level.WARNING, message);
-        emit(Manageable.Severity.ALERT, message, sequence);
+        emit(Severity.ALERT, message, sequence, logger);
         return throwable;
     }
 
     @Deprecated
     public void sendAlert(Manageable.Severity severity, String message, long sequence) {
-        emit(severity, message, sequence);
+        emit(severity, message, sequence, null);
     }
 
     @Deprecated
