@@ -36,6 +36,12 @@
       </includes>
     </fileSet>
     <fileSet encoding="UTF-8">
+      <directory>etc</directory>
+      <includes>
+        <include>**/*</include>
+      </includes>
+    </fileSet>
+    <fileSet encoding="UTF-8">
       <directory></directory>
       <includes>
         <include>README</include>

@@ -14,7 +14,7 @@ if ! grep CATALINA_HOME ~/.bashrc > /dev/null 2>&1; then
 fi
 
 if ! grep XILLIUM_ENV ~/.bashrc > /dev/null 2>&1; then
-    e=`echo $1|tr [:lower:] [:upper:]`;
+    e=`echo $1|tr '[:lower:]' '[:upper:]'`;
     echo "export XILLIUM_ENV=$e"  >> ~/.bashrc
 fi
 if ! grep XILLIUM_LOC ~/.bashrc > /dev/null 2>&1; then
@@ -22,6 +22,9 @@ if ! grep XILLIUM_LOC ~/.bashrc > /dev/null 2>&1; then
 fi
 if ! grep XILLIUM_INS ~/.bashrc > /dev/null 2>&1; then
     echo "export XILLIUM_INS=0"   >> ~/.bashrc
+fi
+if ! grep XILLIUM_MEM ~/.bashrc > /dev/null 2>&1; then
+    echo "#export XILLIUM_MEM=6g" >> ~/.bashrc
 fi
 
 if ! grep XILLIUM_HOME ~/.bashrc > /dev/null 2>&1; then

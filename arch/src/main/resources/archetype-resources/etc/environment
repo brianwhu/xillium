@@ -1,0 +1,12 @@
+#
+# logical servers in each environment, names separated by spaces
+#
+# When multiple logical servers share a single physical server, all logical server names except for the
+# first one must include a suffix "+".
+#
+# e.g.
+#
+# dev='portal.dev market1.dev management.dev accounting.dev+ quotation.dev+ archive.dev+'
+# sit='portal.sit market1.sit management.sit accounting.sit+ quotation.sit+ archive.sit+'
+# pre='portal.pre market1.pre market2.pre management.pre accounting.pre+ quotation.pre+ archive.pre+'
+

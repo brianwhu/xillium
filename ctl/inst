@@ -14,16 +14,16 @@ else
     exit 0
 fi
 
+rm -f /tmp/xillium.rt.zip
+(cd `dirname $0` && zip -r9 /tmp/xillium.rt.zip rt > /dev/null 2>&1)
+
 ctrl() {
-    rm -f /tmp/xillium.rt.zip
-    cd `dirname $0` && zip -r9 /tmp/xillium.rt.zip rt > /dev/null 2>&1
-    ssh root@$2 mkdir -p deployment
+    ssh root@$2 "mkdir -p deployment"
     echo "put /tmp/xillium.rt.zip deployment" | sftp -oBatchMode=yes -b - root@$2 > /dev/null 2>&1
     echo "Unzipping..."
     ssh root@$2 "rm -rf deployment/rt && unzip -d deployment deployment/xillium.rt.zip > /dev/null 2>&1"
     echo "Cleaning up..."
-    ssh root@$2 rm -f deployment/xillium.rt.zip
-    rm -f /tmp/xillium.rt.zip
+    ssh root@$2 "rm -f deployment/xillium.rt.zip"
     echo "Updating .bashrc..."
     ssh root@$2 "sh deployment/rt/bin/inst $3"
 }
@@ -34,3 +34,5 @@ if expr "$1" : '@.*$' > /dev/null; then
 else
     apply '' @$1 +
 fi
+
+rm -f /tmp/xillium.rt.zip
