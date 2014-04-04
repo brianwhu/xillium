@@ -113,14 +113,13 @@ public abstract class ManagedComponent implements Manageable, NotificationEmitte
      * Emits an alert through this manageable in response to a caught throwable.
      */
     @Override
-    public <T extends Throwable> T emit(T throwable, String message, long sequence, Object logger) {
+    public void emit(Throwable throwable, String message, long sequence, Object logger) {
         if (message == null) {
             message = Throwables.getFullMessage(throwable);
         } else {
             message = message + ": " + Throwables.getFullMessage(throwable);
         }
         emit(Severity.ALERT, message, sequence, logger);
-        return throwable;
     }
 
     @Deprecated

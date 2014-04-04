@@ -41,7 +41,7 @@ public interface Manageable {
      *
      * @return the same throwable that was passed to this method.
      */
-    public <T extends Throwable> T emit(T throwable, String message, long sequence, Object logger);
+    public void emit(Throwable throwable, String message, long sequence, Object logger);
 
     /**
      * Emits an ALERT through this manageable in response to a caught throwable.
