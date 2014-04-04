@@ -67,7 +67,7 @@ public abstract class VitalTask<T extends Manageable> implements Runnable {
                 _strategy.observe(_age);
                 execute();
                 if (_age > 0) {
-                    _manageable.emit(Manageable.Severity.NOTICE, "Failure recovered: " + toString(), _age, _logger);
+                    _manageable.emit(Manageable.Severity.NOTICE, "Failure recovered: " + toString(), _age);
                 }
                 break;
             } catch (InterruptedException x) {
@@ -75,7 +75,7 @@ public abstract class VitalTask<T extends Manageable> implements Runnable {
                 _interrupted = x;
                 break;
             } catch (Exception x) {
-                _manageable.emit(x, "Failure detected, age = " + _age, _age, _logger);
+                _manageable.emit(Manageable.Severity.ALERT, "Failure detected, age = " + _age + ": " + Throwables.getFullMessage(x), _age);
                 try {
                     _strategy.backoff(_age);
                 } catch (InterruptedException i) {
@@ -91,7 +91,7 @@ public abstract class VitalTask<T extends Manageable> implements Runnable {
     /**
      * Calls run() and returns "this". Throws an InterruptedException if thread interruption is detected during run().
      */
-    public final VitalTask runAsInterruptible() throws InterruptedException {
+    public final VitalTask<T> runAsInterruptible() throws InterruptedException {
         run();
         if (_interrupted != null) throw _interrupted;
         return this;

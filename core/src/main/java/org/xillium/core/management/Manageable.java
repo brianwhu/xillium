@@ -34,14 +34,14 @@ public interface Manageable {
     /**
      * Emits a NOTICE/ALERT through this manageable, logging it at the same time if a logger is provided.
      */
-    public void emit(Severity severity, String message, long sequence, Object logger);
+    public void emit(Severity severity, String message, long sequence);
 
     /**
      * Emits an ALERT through this manageable upon an Throwable, logging it at the same time if a logger is provided.
      *
      * @return the same throwable that was passed to this method.
      */
-    public void emit(Throwable throwable, String message, long sequence, Object logger);
+    //public <T extends Throwable> T emit(T throwable, String message, long sequence);
 
     /**
      * Emits an ALERT through this manageable in response to a caught throwable.
