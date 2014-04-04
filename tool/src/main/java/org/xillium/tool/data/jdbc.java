@@ -18,11 +18,11 @@ import org.xillium.data.persistence.*;
 import org.xillium.core.conf.StorageConfiguration;
 
 
-public class CallBlock {
+public class jdbc {
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            System.err.println("Usage: CallBlock data-source.xml anonymous-sql-block.sql [ arguments ... ]");
-            System.err.println("Usage: CallBlock data-source.xml anonymous-sql-block.xml:name [ arguments ... ]");
+            System.err.println("Usage: jdbc data-source.xml anonymous-sql-block.sql [ arguments ... ]");
+            System.err.println("Usage: jdbc data-source.xml anonymous-sql-block.xml:name [ arguments ... ]");
             System.exit(0);
         }
 
