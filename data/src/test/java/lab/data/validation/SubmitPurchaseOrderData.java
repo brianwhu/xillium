@@ -3,6 +3,7 @@ package lab.data.validation;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
 import java.sql.Date;
+import java.math.BigDecimal;
 import lab.data.*;
 
 
@@ -22,6 +23,9 @@ public class SubmitPurchaseOrderData implements DataObject {
 
     @range(min="0.00", max="1.00")
     public Double taxRate;
+
+    @range(min="0.00", max="1.00")
+    public BigDecimal rebate;
 
     @required @subtype("DollarAmount") @range(min="0.00", max="10000.00")
     public Double totalAmount;

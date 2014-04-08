@@ -25,6 +25,7 @@ public class Validator {
 
     String _name;
     Method _valueOf;
+    Constructor<?> _init;
     Range<?>[] _ranges;
     Pattern _pattern;
     int _size;
@@ -89,7 +90,13 @@ public class Validator {
                 throw new IllegalArgumentException("'valueOf()' is non-static or returns wrong type");
             }
         } catch (NoSuchMethodException x) {
-            throw new IllegalArgumentException("Type has no static method 'valueOf()'");
+            try {
+                _init = type.getConstructor(String.class);
+            } catch (NoSuchMethodException y) {
+                throw new IllegalArgumentException("Type has no static method 'valueOf(String)' or <init>(String)");
+            }
+        } catch (Exception x) {
+            throw new IllegalArgumentException(x.getMessage(), x);
         }
     }
 
@@ -105,7 +112,7 @@ public class Validator {
     public Object parse(String text) throws DataValidationException {
         try {
             preValidate(text);
-            Object object = _valueOf != null ? valueOf(text) : text;
+            Object object = (_valueOf != null || _init != null) ? valueOf(text) : text;
             postValidate(object);
             return object;
         } catch (DataValidationException x) {
@@ -178,8 +185,8 @@ public class Validator {
      * <li>null, otherwise
      * </li>
      */
-    private final Object convert(String text) throws IllegalAccessException, InvocationTargetException {
-        return _valueOf != null ? (text.length() > 0 ? valueOf(text) : null) : text;
+    private final Object convert(String text) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+        return (_valueOf != null || _init != null) ? (text.length() > 0 ? valueOf(text) : null) : text;
     }
 
     /*!
@@ -191,8 +198,8 @@ public class Validator {
      * <li>null, otherwise
      * </li>
      */
-    private final Object[] convert(String[] text) throws IllegalAccessException, InvocationTargetException {
-        if (_valueOf != null) {
+    private final Object[] convert(String[] text) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+        if (_valueOf != null || _init != null) {
             Object[] values = new Object[text.length];
             for (int i = 0; i < values.length; ++i) {
                 values[i] = text[i].length() > 0 ? valueOf(text[i]) : null;
@@ -211,7 +218,11 @@ public class Validator {
         }
     }
 
-    private final Object valueOf(String text) throws IllegalAccessException, InvocationTargetException {
-    return _valueOf.getParameterTypes().length == 1 ? _valueOf.invoke(null, text) : _valueOf.invoke(null, _valueOf.getReturnType(), text);
+    private final Object valueOf(String text) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+        return _valueOf != null ?
+            (_valueOf.getParameterTypes().length == 1 ? _valueOf.invoke(null, text) : _valueOf.invoke(null, _valueOf.getReturnType(), text))
+            :
+            _init.newInstance(text)
+        ;
     }
 }
