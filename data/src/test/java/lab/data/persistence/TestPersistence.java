@@ -106,7 +106,7 @@ System.err.println(getClass().getResource("/object-mapped.xml"));
         @SuppressWarnings("unchecked")
         ObjectMappedQuery<Membership> selectMembership = (ObjectMappedQuery<Membership>)StorageConfiguration.getParametricStatement("SelectMembership");
 
-        Class<? extends DataObject> c = selectMembership.getDataObjectClass("lab.data.persistence.test.ObjectMappedQueryData");
+        Class<? extends DataObject> c = selectMembership.getDataObjectClass("lab.persistence.test");
         ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
         System.out.print("testDataObjectClassGen: Request = "); System.out.println(mapper.writeValueAsString(mapper.readTree(DataObject.Util.describe(c))));
 

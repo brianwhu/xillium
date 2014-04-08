@@ -55,7 +55,7 @@ public class PersistenceManager {
         ParametricStatement ps = _statements.get(name);
         if (ps != null) {
             try {
-                Class<? extends DataObject> c = ps.getDataObjectClass("org.xillium.core.management.persistence." + name.replace('/', '.'));
+                Class<? extends DataObject> c = ps.getDataObjectClass(name.replace('/', '.'));
                 _binder.put("interface", DataObject.Util.describe(c, "json:"));
                 _binder.put("statement", ps.getSQL());
             } catch (Exception x) {
@@ -80,7 +80,7 @@ public class PersistenceManager {
     public PersistenceManager x(String name) {
         try {
             ParametricStatement ps = _statements.get(name);
-            Class<? extends DataObject> c = ps.getDataObjectClass("org.xillium.core.management.persistence." + name.replace('/', '.'));
+            Class<? extends DataObject> c = ps.getDataObjectClass(name.replace('/', '.'));
             DataObject data = c != null ? new org.xillium.data.validation.Dictionary().collect(c.newInstance(), _binder) : null;
             Connection conn = _source.getConnection();
             try {

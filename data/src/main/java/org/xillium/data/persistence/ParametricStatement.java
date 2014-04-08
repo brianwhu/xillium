@@ -140,12 +140,13 @@ public class ParametricStatement {
     /**
      * Returns a DataObject class appropriate for this statement. If this statement defines no in/out parameters, this method returns DataObject.Empty.class.
      *
-     * @param cname - the class name to be associated with this class
+     * @param namespace - a namespace to be used as part of the class name. It must be a legal Java package name.
      */
     @SuppressWarnings("unchecked")
-    public Class<? extends DataObject> getDataObjectClass(String cname) throws Exception {
+    public Class<? extends DataObject> getDataObjectClass(String namespace) throws Exception {
         Class<? extends DataObject> c = DataObject.Empty.class;
 
+        String cname = getClass().getName().replace("persistence", "p.d." + namespace.toLowerCase()) + Integer.toHexString(System.identityHashCode(_sql));
         try {
             c = (Class<? extends DataObject>)Class.forName(cname);
             if (!DataObject.class.isAssignableFrom(c)) {

@@ -35,7 +35,7 @@ public class DatabaseService extends SecuredService implements Service.Extended,
 
     public Class<? extends DataObject> getRequestType() {
         try {
-            return _persistence.getParametricStatement(_statement).getDataObjectClass("org.xillium.core.util.dynamic.data." + _statement.replace('/', '.'));
+            return _persistence.getParametricStatement(_statement).getDataObjectClass(_statement.replace('/', '.'));
         } catch (Exception x) {
             throw new RuntimeException("Failed to obtain database service request class", x);
         }

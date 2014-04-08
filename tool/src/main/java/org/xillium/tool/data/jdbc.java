@@ -49,7 +49,7 @@ public class jdbc {
             ps.set(sql.toString());
         }
 
-        Class<? extends DataObject> c = ps.getDataObjectClass("org.xillium.tool.data.CallBlocksParams");
+        Class<? extends DataObject> c = ps.getDataObjectClass("xillium.t.d.call");
         if (c != null) {
             DataObject t = c.newInstance();
             if (args.length == 2) {
