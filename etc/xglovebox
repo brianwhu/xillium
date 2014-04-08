@@ -88,7 +88,7 @@ mvn package && mvn assembly:single
 mx() {
 case $# in
 0) echo mx PATH ARGUMENTS ...;;
-*) p=$1; shift; java -jar `find $p -name '*-jar-with-dependencies.jar'` $* > /tmp/mx-jar-with-dependencies.log;;
+*) p=$1; shift; java -jar `find $p -name '*-jar-with-dependencies.jar'` $*;;
 esac
 }
 
