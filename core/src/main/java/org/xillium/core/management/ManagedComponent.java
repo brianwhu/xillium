@@ -171,18 +171,18 @@ public abstract class ManagedComponent implements Manageable, Reporting, Notific
     }
 
     public void addNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) {
-        _broadcaster.addNotificationListener(listener, filter, handback);
+        if (_broadcaster != null) _broadcaster.addNotificationListener(listener, filter, handback);
     }
 
     public MBeanNotificationInfo[] getNotificationInfo() {
-        return _broadcaster.getNotificationInfo();
+        return (_broadcaster != null) ? _broadcaster.getNotificationInfo() : new MBeanNotificationInfo[0];
     }
 
     public void removeNotificationListener(NotificationListener listener) throws ListenerNotFoundException {
-        _broadcaster.removeNotificationListener(listener);
+        if (_broadcaster != null) _broadcaster.removeNotificationListener(listener);
     }
 
     public void removeNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws ListenerNotFoundException {
-        _broadcaster.removeNotificationListener(listener, filter, handback);
+        if (_broadcaster != null) _broadcaster.removeNotificationListener(listener, filter, handback);
     }
 }
