@@ -10,9 +10,9 @@ import org.xillium.data.Transformer;
  * An object formatter.
  */
 public class FieldFormatter extends FieldRetriever {
-    private final Transformer _trans;
+    private final Transformer<Object, Object> _trans;
 
-    public FieldFormatter(Field field, Transformer trans) {
+    public FieldFormatter(Field field, Transformer<Object, Object> trans) {
         super(field);
         _trans = trans;
     }
