@@ -141,6 +141,7 @@ public class ParametricStatement {
      * Returns a DataObject class appropriate for this statement. If this statement defines no in/out parameters, this method returns DataObject.Empty.class.
      *
      * @param namespace - a namespace to be used as part of the class name. It must be a legal Java package name.
+     * @return a DataObject class representing the calling interface of this ParametricStatement
      */
     @SuppressWarnings("unchecked")
     public Class<? extends DataObject> getDataObjectClass(String namespace) throws Exception {
@@ -233,7 +234,7 @@ public class ParametricStatement {
     /**
      * Executes an UPDATE or DELETE statement.
      *
-     * @returns the number of rows affected
+     * @return the number of rows affected
      */
     public int executeUpdate(Connection conn, DataObject object) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql);
@@ -248,7 +249,7 @@ public class ParametricStatement {
     /**
      * Executes a batch UPDATE or DELETE statement.
      *
-     * @returns the number of rows affected
+     * @return the number of rows affected
      */
     public int executeUpdate(Connection conn, DataObject[] objects) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql);
@@ -267,7 +268,7 @@ public class ParametricStatement {
     /**
      * Executes a batch UPDATE or DELETE statement.
      *
-     * @returns the number of rows affected
+     * @return the number of rows affected
      */
     public int executeUpdate(Connection conn, Collection<? extends DataObject> objects) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql);
@@ -286,7 +287,7 @@ public class ParametricStatement {
     /**
      * Executes an INSERT statement.
      *
-     * @returns an array whose length indicates the number of rows inserted. If generatedKeys is true, the array
+     * @return an array whose length indicates the number of rows inserted. If generatedKeys is true, the array
      *          contains the keys; otherwise the content of the array is not defined.
      */
     public long[] executeInsert(Connection conn, DataObject object, boolean generatedKeys) throws SQLException {
@@ -310,7 +311,7 @@ public class ParametricStatement {
     /**
      * Executes a batch INSERT statement.
      *
-     * @returns the number of rows inserted.
+     * @return the number of rows inserted.
      */
     public int executeInsert(Connection conn, DataObject[] objects) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql);
@@ -328,7 +329,7 @@ public class ParametricStatement {
     /**
      * Executes a batch INSERT statement.
      *
-     * @returns the number of rows inserted.
+     * @return the number of rows inserted.
      */
     public int executeInsert(Connection conn, Collection<? extends DataObject> objects) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(_sql);
@@ -346,7 +347,7 @@ public class ParametricStatement {
     /**
      * Executes a callable statement that performs updates.
      *
-     * @returns the number of rows affected
+     * @return the number of rows affected
      */
     public int executeProcedure(Connection conn, DataObject object) throws SQLException {
         CallableStatement statement = conn.prepareCall(_sql);
