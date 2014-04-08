@@ -3,7 +3,7 @@ package org.xillium.gear.util;
 import java.util.Random;
 import java.util.logging.*;
 import org.xillium.base.beans.Throwables;
-import org.xillium.core.management.Manageable;
+import org.xillium.core.management.Reporting;
 
 
 /**
@@ -15,26 +15,31 @@ import org.xillium.core.management.Manageable;
  * A VitalTask is interruptible. If a VitalTask is submitted to a separate thread, a negative age reveals execution interruption. When running a
  * VitalTask on the local thread, call runAsInterruptible() instead of run() to get execution interruption reported as an InterruptedException.
  */
-public abstract class VitalTask<T extends Manageable> implements Runnable {
+public abstract class VitalTask<T extends Reporting> implements Runnable {
     protected static final Logger _logger = Logger.getLogger(VitalTask.class.getName());
 
-    private final T _manageable;
+    private final T _reporting;
     private final TrialStrategy _strategy;
     private InterruptedException _interrupted;
     private int _age;
 
-    protected VitalTask(T manageable) {
-        _manageable = manageable;
+    protected VitalTask(T reporting) {
+        _reporting = reporting;
         _strategy = ExponentialBackoff.instance;
     }
 
-    protected VitalTask(T manageable, TrialStrategy strategy) {
-        _manageable = manageable;
+    protected VitalTask(T reporting, TrialStrategy strategy) {
+        _reporting = reporting;
         _strategy = strategy;
     }
 
+    @Deprecated
     protected T getManageable() {
-        return _manageable;
+        return _reporting;
+    }
+
+    protected T getReporting() {
+        return _reporting;
     }
 
     /**
@@ -67,7 +72,7 @@ public abstract class VitalTask<T extends Manageable> implements Runnable {
                 _strategy.observe(_age);
                 execute();
                 if (_age > 0) {
-                    _manageable.emit(Manageable.Severity.NOTICE, "Failure recovered: " + toString(), _age);
+                    _reporting.emit(Reporting.Severity.NOTICE, "Failure recovered: " + toString(), _age, _logger);
                 }
                 break;
             } catch (InterruptedException x) {
@@ -75,7 +80,7 @@ public abstract class VitalTask<T extends Manageable> implements Runnable {
                 _interrupted = x;
                 break;
             } catch (Exception x) {
-                _manageable.emit(Manageable.Severity.ALERT, "Failure detected, age = " + _age + ": " + Throwables.getFullMessage(x), _age);
+                _reporting.emit(x, "Failure detected, age = " + _age, _age, _logger);
                 try {
                     _strategy.backoff(_age);
                 } catch (InterruptedException i) {

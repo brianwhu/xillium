@@ -8,6 +8,9 @@ import javax.management.*;
  */
 @MXBean
 public interface Manageable {
+    /**
+     * Component Status.
+     */
     public enum Status {
 		INITIALIZING,
 		HEALTHY,
@@ -15,13 +18,14 @@ public interface Manageable {
 		DYSFUNCTIONAL
 	}
 
-    public enum Severity {
-		NOTICE,
-		ALERT
-	}
-
+    /**
+     * Reports component status.
+     */
 	public Status getStatus();
 
+    /**
+     * Reports component liveliness.
+     */
 	public boolean isActive();
 
     /**
@@ -30,21 +34,4 @@ public interface Manageable {
      * @return the same ObjectName passed to this method.
      */
     public ObjectName assignObjectName(ObjectName name);
-
-    /**
-     * Emits a NOTICE/ALERT through this manageable, logging it at the same time if a logger is provided.
-     */
-    public void emit(Severity severity, String message, long sequence);
-
-    /**
-     * Emits an ALERT through this manageable upon an Throwable, logging it at the same time if a logger is provided.
-     *
-     * @return the same throwable that was passed to this method.
-     */
-    //public <T extends Throwable> T emit(T throwable, String message, long sequence);
-
-    /**
-     * Emits an ALERT through this manageable in response to a caught throwable.
-     */
-    //public <T extends Throwable> T alert(Logger logger, T throwable, String message, long sequence);
 }

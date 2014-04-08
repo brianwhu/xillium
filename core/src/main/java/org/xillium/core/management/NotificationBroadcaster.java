@@ -20,7 +20,7 @@ public class NotificationBroadcaster extends NotificationBroadcasterSupport {
                 "Bean attribute change"
             ),
             new MBeanNotificationInfo(
-                new String[] { Manageable.Severity.ALERT.toString(), Manageable.Severity.NOTICE.toString() },
+                new String[] { Reporting.Severity.ALERT.toString(), Reporting.Severity.NOTICE.toString() },
                 Notification.class.getName(),
                 "Alert"
             )

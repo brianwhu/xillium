@@ -16,7 +16,7 @@ public class ManagedComponentTest extends ManagedComponent {
         SimpleSmtpServer server = SimpleSmtpServer.start(2525);
 
         setMessageChannel((MessageChannel)new XMLBeanAssembler(new DefaultObjectFactory()).build("src/test/java/lab/email-channel.xml"));
-        sendMessage(SUBJECT, MESSAGE);
+        send(SUBJECT, MESSAGE);
 
         server.stop();
 
