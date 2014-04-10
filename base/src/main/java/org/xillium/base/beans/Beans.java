@@ -487,10 +487,9 @@ public class Beans {
                     ++index;
                 }
             } else if (type.isArray()) {
-                Object[] array = (Object[])bean;
-                for (int i = 0; i < array.length; ++i) {
+                for (int i = 0; i < Array.getLength(bean); ++i) {
                     indent(sb, level+1);
-                    printNameValue(sb, objects, "[" + i+ "]", array[i], level+1);
+                    printNameValue(sb, objects, "[" + i + "]", Array.get(bean, i), level+1);
                 }
             } else {
                 PropertyDescriptor[] properties = Introspector.getBeanInfo(type, Object.class).getPropertyDescriptors();
