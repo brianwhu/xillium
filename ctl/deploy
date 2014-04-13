@@ -13,7 +13,7 @@ echo $r
 echo $g
 
 ctrl() {
-    if m=`expr "$2" : '\([^.0-9]*\)[0-9]*\..*'` > /dev/null
+    if m=`expr "$2" : '\(.*[^.0-9]\)[0-9]*\..*'` > /dev/null
     then
         echo "Deploying '$m' to server '$2' ..."
         ssh root@$2 /bin/rm -rf '${CATALINA_HOME:-/usr/tomcat}/webapps/'$m
