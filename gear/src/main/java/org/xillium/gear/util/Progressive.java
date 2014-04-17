@@ -1,6 +1,5 @@
 package org.xillium.gear.util;
 
-//import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.*;
@@ -8,49 +7,118 @@ import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.core.Persistent;
 import org.xillium.core.Persistence;
-//import org.xillium.core.management.*;
-//import org.xillium.core.management.ManagedComponent;
 import org.xillium.core.util.*;
 import org.springframework.transaction.annotation.Transactional;
-//import com.yizheng.yep.*;
-//import com.yizheng.yep.util.DatabaseUpdate;
-//import com.yizheng.yep.util.LRUCache;
-//import com.yizheng.yep.util.PairingOutcome;
-//import com.yizheng.yep.settings.PlatformSettings;
 
 
 /**
- * A facility that supports stepwise, progressive processes.
- *
- *  <xmp>
+ * <p>Progressive is facility that supports stepwise, progressive processes. To use it, follow these steps.</p>
+ * <ol>
+ *  <li><p>Create a database table with the following columns:</p>
+ *      <xmp>
+ *      MODULE_ID VARCHAR2 (32 CHAR) NOT NULL
+ *      STATE     VARCHAR2 (40 CHAR)
+ *      PREVIOUS  VARCHAR2 (40 CHAR)
+ *      PARAM     VARCHAR2 (1024 CHAR)
+ *      STEP      NUMBER (5)
+ *      </xmp>
+ *  </li>
+ *  <li><p>Define parametric statements that read and write state information in the database, and pass these statement
+ *      names to the constructor of Progressive. Read the constructor description for more details. The following gives
+        example statements on Oracle database.</p>
+        <xmp>
+    <persist:object-mapped-query class="org.xillium.gear.util.Progressive.State">
+    <?assemble name="RecallState"?>
+        <![CDATA[
+        SELECT PREVIOUS, STEP FROM MARKET_STATE WHERE MODULE_ID = :moduleId:VARCHAR
+        ]]>
+    </persist:object-mapped-query>
+
+    <persist:parametric-query>
+    <?assemble name="RecallParam"?>
+        <![CDATA[
+        SELECT PARAM FROM MARKET_STATE WHERE MODULE_ID = :moduleId:VARCHAR
+        ]]>
+    </persist:parametric-query>
+
+    <persist:parametric-statement>
+    <?assemble name="CommitState"?>
+        <![CDATA[
+        MERGE INTO MARKET_STATE USING DUAL ON (MODULE_ID = :moduleId:VARCHAR)
+        WHEN MATCHED THEN
+            UPDATE SET STATE = NULL, PREVIOUS = :state:VARCHAR, STEP = :step:INTEGER, PARAM = SUBSTR(:param:VARCHAR, 1, 1024)
+        WHEN NOT MATCHED THEN
+            INSERT (MODULE_ID, PREVIOUS, STEP, PARAM) VALUES (:moduleId:VARCHAR, :state:VARCHAR, :step:INTEGER, SUBSTR(:param:VARCHAR, 1, 1024))
+        ]]>
+    </persist:parametric-statement>
+
+    <persist:parametric-statement>
+    <?assemble name="RecordAttempt"?>
+        <![CDATA[
+        DECLARE
+            PRAGMA AUTONOMOUS_TRANSACTION;
+        BEGIN
+            MERGE INTO MARKET_STATE USING DUAL ON (MODULE_ID = :moduleId:VARCHAR)
+            WHEN MATCHED THEN
+                UPDATE SET STATE = :state:VARCHAR||'/'||:step:INTEGER, PARAM = SUBSTR(:param:VARCHAR, 1, 1024)
+            WHEN NOT MATCHED THEN
+                INSERT (MODULE_ID, STATE, PARAM) VALUES (:moduleId:VARCHAR, :state:VARCHAR||'/'||:step:INTEGER, SUBSTR(:param:VARCHAR, 1, 1024));
+            COMMIT;
+        END;
+        ]]>
+    </persist:parametric-statement>
+        </xmp>
+    </li>
+ *  <li><p>Define a "progressive" bean in a Spring context:</p>
+ *      <xmp>
+ *  <bean id="progressive" class="org.xillium.gear.util.Progressive">
+ *      <constructor-arg index="0"><ref bean="persistence"/></constructor-arg>
+ *      <constructor-arg index="1"><value>module1/RecallState</value></constructor-arg>
+ *      <constructor-arg index="2"><value>module1/RecallParam</value></constructor-arg>
+ *      <constructor-arg index="3"><value>module1/CommitState</value></constructor-arg>
+ *      <constructor-arg index="4"><value>module1/RecordAttempt</value></constructor-arg>
+ *  </bean>
+ *      </xmp>
+ *  </li>
+ * </ol>
+ * Java code example:
+ * <xmp>
+ *  // the steps to go through, defined as values in an enum type.
  *  public enum AccountingStep {
- *      STEP0,
  *      STEP1,
- *      STEP2
+ *      STEP2,
+ *      STEP3
  *  }
  *
- *  private final Progressive _progressive; // injected by Spring
+ *  // a Progressive property, injected by Spring
+ *  private final Progressive _progressive;
  *
- *  Progressive.State state = new Progressive.State&lt;AccountingStep&gt;("accounting");
+ *  // a Progressive.State object, used to keep track of the current process state
+ *  Progressive.State state = new Progressive.State<AccountingStep>("accounting");
  *  ...
  *
- *  new VitalTask&lt;SomeManagedComponentClass&gt;(managedComponent, _progressive) {
+ *  // the process logic inside a VitalTask, which depends on an instance of ManagedComponent.
+ *  new VitalTask<SomeManagedComponentClass>(managedComponent, _progressive) {
  *      protected void execute() throws Exception {
- *          _progressive.doStateful(state, AccountingStep.STEP0, null, new Persistent.Task&lt;Void, Void&gt;() {
+ *
+ *          // do work in STEP1
+ *          _progressive.doStateful(state, AccountingStep.STEP1, null, new Persistent.Task<Void, Void>() {
  *              public Void run(Void facility, Persistence persistence) throws Exception {
  *                  ...
  *                  return null;
  *              }
  *          });
  *
- *          _progressive.doStateful(state, AccountingStep.STEP1, null, new Persistent.Task&lt;Void, Void&gt;() {
+ *          // do work in STEP2
+ *          _progressive.doStateful(state, AccountingStep.STEP2, null, new Persistent.Task<Void, Void>() {
  *              public Void run(Void facility, Persistence persistence) throws Exception {
  *                  ...
  *                  return null;
  *              }
  *          });
  *
- *          _progressive.doStateful(state, AccountingStep.STEP2, null, new Persistent.Task&lt;Void, Void&gt;() {
+ *          // do work in STEP3
+ *          _progressive.doStateful(state, AccountingStep.STEP3, null, new Persistent.Task<Void, Void>() {
  *              public Void run(Void facility, Persistence persistence) throws Exception {
  *                  ...
  *                  return null;
@@ -58,10 +126,7 @@ import org.springframework.transaction.annotation.Transactional;
  *          });
  *      }
  *  }.runAsInterruptible();
- *
- *  </xmp>
- *
- * An implementation of this interface will be wired through Spring and transaction enabled.
+ * </xmp>
  */
 public class Progressive {
     private static final Logger _logger = Logger.getLogger(Progressive.class.getName());
@@ -86,10 +151,13 @@ public class Progressive {
         public int basis;
         public int progress;
 
-        public State(Progressive progressive, String module) {
+        /**
+         * Constructs a State object that is associated with a Progressive object and a unique ID that identifies the process.
+         */
+        public State(Progressive progressive, String id) {
             _persistence = progressive._persistence;
             _qRecallParam = progressive._qRecallParam;
-            moduleId = module;
+            moduleId = id;
         }
 
         public State() {
@@ -132,9 +200,11 @@ public class Progressive {
 
 
     /**
-     * @param Persistence - a Persistence object
+     * Constructs a Progressive object.
+     *
+     * @param persistence - a Persistence object
      * @param qRecallState - an ObjectMappedQuery that returns a row from the "PersistentState" table
-     * @param qRecallState - an ParametricQuery that returns the "param" column from the "PersistentState" table
+     * @param qRecallParam - an ParametricQuery that returns the "param" column as a string from the "PersistentState" table
      * @param uCommitState - an ParametricState that commits state change into the the "PersistentState" table
      * @param uRecordAttempt - an ParametricState that commits state change into the the "PersistentState" table
      */
@@ -146,11 +216,31 @@ public class Progressive {
         _uRecordAttempt = uRecordAttempt;
     }
 
+    /**
+     * Performs a task that is associated with a state. The task is only executed if the state has not been reached previously.
+     *
+     * @param state - a State object that keeps track of the progress of the process
+     * @param current - the state associated with the task
+     * @param facility - an optional object that might provides environmental support to the task. This parameter is passed directly
+     *        to the task.
+     * @param task - the Persistent.Task to execute
+     */
     @Transactional
     public <E extends Enum<E>, T, F> T doStateful(State<E> state, E current, F facility, Persistent.Task<T, F> task) {
         return doStateful(state, current, 0, facility, task);
     }
 
+    /**
+     * Performs a task that is associated with a state and a step within the state. The task is only executed if the state has not been reached previously,
+     * or the step has not been reached previously.
+     *
+     * @param state - a State object that keeps track of the progress of the process
+     * @param current - the state associated with the task
+     * @param step - a step within the state
+     * @param facility - an optional object that might provides environmental support to the task. This parameter is passed directly
+     *        to the task.
+     * @param task - the Persistent.Task to execute
+     */
     @Transactional
     public <E extends Enum<E>, T, F> T doStateful(State<E> state, E current, int step, F facility, Persistent.Task<T, F> task) {
         _logger.info(".param = " + state.param);
