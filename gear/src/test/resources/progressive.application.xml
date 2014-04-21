@@ -35,7 +35,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
     <bean id="persistence" class="org.xillium.core.Persistence">
         <constructor-arg index="0"><ref bean="dataSource"/></constructor-arg>
         <property name="transactionManager" ref="transactionManager"/>
-        <property name="intrinsic">
+        <property name="intrinsics">
             <list>
                 <value>/progressive.storage.xml</value>
             </list>
