@@ -115,7 +115,7 @@ public class PingService extends ManagementService {
                     if (request.parameter != null) {
                         final ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
                         engine.put("db", new PersistenceManager(binder, _statements, persist.getDataSource()));
-                        persist.doReadWrite(null, new Persistent.Task<Void, Void>() {
+                        persist.doReadWrite(null, new Persistence.Task<Void, Void>() {
                             public Void run(Void v, Persistence p) throws Exception {
                                 engine.eval(request.parameter);
                                 return null;

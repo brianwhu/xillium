@@ -4,40 +4,44 @@ import java.sql.*;
 import java.util.*;
 import java.math.BigDecimal;
 import javax.sql.DataSource;
+import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
+import org.xillium.core.conf.*;
 import org.springframework.jdbc.datasource.DataSourceUtils;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.*;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 
-public class Persistence implements Persistent {
+public class Persistence {
     public static final SingleValueRetriever<BigDecimal> DecimalRetriever = new SingleValueRetriever<BigDecimal>();
     public static final SingleValueRetriever<Number> NumberRetriever = new SingleValueRetriever<Number>();
     public static final SingleValueRetriever<String> StringRetriever = new SingleValueRetriever<String>();
 
     private final DataSource _dataSource;
     private final Map<String, ParametricStatement> _statements;
+    private PlatformTransactionManager _manager;
+    private DefaultTransactionDefinition _readonly;
 
-    @Override @Transactional(readOnly=true)
-    public <T, F> T doReadOnly(F facility, Task<T, F> task) {
-        try {
-            return task.run(facility, this);
-        } catch (RuntimeException x) {
-            throw x;
-        } catch (Exception x) {
-            throw new RuntimeException(x.getMessage(), x);
-        }
+    /**
+     * A task that can be wrapped in a Transaction.
+     */
+    public static interface Task<T, F> {
+        public T run(F facility, Persistence persistence) throws Exception;
     }
 
-    @Override @Transactional
+    /**
+     * Executes a task within a read-only transaction. Any exception rolls back the transaction and gets rethrown as a RuntimeException.
+     */
+    public <T, F> T doReadOnly(F facility, Task<T, F> task) {
+        return doTransaction(facility, task, _readonly);
+    }
+
+    /**
+     * Executes a task within a read-write transaction. Any exception rolls back the transaction and gets rethrown as a RuntimeException.
+     */
     public <T, F> T doReadWrite(F facility, Task<T, F> task) {
-        try {
-            return task.run(facility, this);
-        } catch (RuntimeException x) {
-            throw x;
-        } catch (Exception x) {
-            throw new RuntimeException(x.getMessage(), x);
-        }
+        return doTransaction(facility, task, null);
     }
 
     /**
@@ -228,7 +232,42 @@ public class Persistence implements Persistent {
         return sb.append("Persistence:DataSource=").append(_dataSource.toString());
     }
 
+    public void setTransactionManager(PlatformTransactionManager manager) {
+        _manager = manager;
+        _readonly = new DefaultTransactionDefinition();
+        _readonly.setReadOnly(true);
+    }
+
+    public void setIntrinsics(List<String> locations) {
+        try {
+            BurnedInArgumentsObjectFactory factory = new BurnedInArgumentsObjectFactory(StorageConfiguration.class, _statements, "-");
+            XMLBeanAssembler assembler = new XMLBeanAssembler(factory);
+
+            for (String location: locations) {
+                try {
+                    assembler.build(getClass().getResourceAsStream(location));
+                } catch (Exception x) {
+                    System.err.println("Failure in loading configuration: " + x.getMessage());
+                }
+            }
+        } catch (Exception x) {
+            System.err.println("Failure in object assembly: " + x.getMessage());
+        }
+    }
+
     Map<String, ParametricStatement> getStatementMap() {
         return _statements;
+    }
+
+    private final <T, F> T doTransaction(F facility, Task<T, F> task, TransactionDefinition definition) {
+        TransactionStatus transaction = _manager.getTransaction(definition);
+        try {
+            T value = task.run(facility, this);
+            _manager.commit(transaction);
+            return value;
+        } catch (Exception x) {
+            _manager.rollback(transaction);
+            throw (x instanceof RuntimeException) ? (RuntimeException)x : new RuntimeException(x.getMessage(), x);
+        }
     }
 }
