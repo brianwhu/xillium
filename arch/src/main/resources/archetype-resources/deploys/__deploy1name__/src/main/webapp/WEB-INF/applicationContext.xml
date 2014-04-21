@@ -42,19 +42,20 @@
   </bean>
 
   <!--
-  ** xillium Persistence object supporting SQL with named parameters
-  -->
-
-  <bean id="persistence" class="org.xillium.core.Persistence">
-    <constructor-arg index="0"><ref bean="dataSource"/></constructor-arg>
-  </bean>
-
-  <!--
   ** Spring jdbc transaction manager
   -->
 
   <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
     <property name="dataSource" ref="dataSource"/>
+  </bean>
+
+  <!--
+  ** xillium Persistence object supporting SQL with named parameters
+  -->
+
+  <bean id="persistence" class="org.xillium.core.Persistence">
+    <constructor-arg index="0"><ref bean="dataSource"/></constructor-arg>
+    <property name="transactionManager" ref="transactionManager"/>
   </bean>
 
 #end
