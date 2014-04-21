@@ -8,7 +8,7 @@ import org.xillium.core.management.Reporting;
 
 /**
  * A VitalTask is a Runnable that detects execution failure and undertakes retries automatically.
- * Failure and recovery notifications are reported via an associated Manageable.
+ * Failure and recovery notifications are reported via an associated Reporting object.
  *
  * By default, a VitalTask uses randomized exponetial backoff to avoid retrying the task too eagerly. Other TrialStrategy can be used as well.
  *
@@ -23,11 +23,17 @@ public abstract class VitalTask<T extends Reporting> implements Runnable {
     private InterruptedException _interrupted;
     private int _age;
 
+    /**
+     * Constructs a VitalTask associated with the given Reporting object, adopting a randomized exponential-backoff trial strategy.
+     */
     protected VitalTask(T reporting) {
         _reporting = reporting;
         _strategy = ExponentialBackoff.instance;
     }
 
+    /**
+     * Constructs a VitalTask associated with the given Reporting object and the given trial strategy.
+     */
     protected VitalTask(T reporting, TrialStrategy strategy) {
         _reporting = reporting;
         _strategy = strategy;
