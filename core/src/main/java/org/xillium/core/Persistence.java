@@ -266,7 +266,7 @@ public class Persistence {
             _manager.commit(transaction);
             return value;
         } catch (Exception x) {
-            _manager.rollback(transaction);
+            try { _manager.rollback(transaction); } catch (IllegalTransactionStateException t) { /* already rolled back by database */ }
             throw (x instanceof RuntimeException) ? (RuntimeException)x : new RuntimeException(x.getMessage(), x);
         }
     }
