@@ -48,7 +48,7 @@ public class Strings {
     /**
      * Converts a word sequence into a single camel-case sequence.
      *
-     * @strict - if true, all letters following the first are forced into lower case in each word
+     * @param strict - if true, all letters following the first are forced into lower case in each word
      */
     public static String toCamelCase(String text, char separator, boolean strict) {
         char[] chars = text.toCharArray();
