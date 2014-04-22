@@ -495,13 +495,25 @@ public class Beans {
                 PropertyDescriptor[] properties = Introspector.getBeanInfo(type, Object.class).getPropertyDescriptors();
                 for (PropertyDescriptor property : properties) {
                     Object value = null;
-                    try {
-                        value = accessible(property.getReadMethod()).invoke(bean); // Java bug #4071957 - have to use the following 3 lines instead
-                    } catch (Exception x) {
-                        value = x.getMessage();
+                    Class<?> ptype = property.getPropertyType();
+                    if (ptype != null) {
+                        try {
+                            value = accessible(property.getReadMethod()).invoke(bean); // Java bug #4071957
+                        } catch (Exception x) {
+                            value = x.getMessage();
+                        }
+                        indent(sb, level);
+                        printNameValue(sb, objects, property.getDisplayName() + '<' + ptype.getName() + '>', value, level);
+                    } else {
+                        try {
+                            Method reader = accessible(((IndexedPropertyDescriptor)property).getIndexedReadMethod()); // Java bug #4071957
+                            for (int i = 0; ; ++i) {
+                                value = reader.invoke(bean, i);
+                                indent(sb, level);
+                                printNameValue(sb, objects, property.getDisplayName() + '[' + i + ']', value, level);
+                            }
+                        } catch (Exception x) {}
                     }
-                    indent(sb, level);
-                    printNameValue(sb, objects, property.getDisplayName() + '[' + property.getPropertyType().getName() + ']', value, level);
                 }
             }
         }
