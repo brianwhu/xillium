@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * An Authenticator that stores credential and session data in databases.
  */
-public class DatabaseBackedAuthenticator implements Authenticator {
+public class DatabaseBackedAuthenticator extends PageAwareAuthenticator {
 	private static final Logger _logger = Logger.getLogger(DatabaseBackedAuthenticator.class.getName());
 
 	public static final String USERNAME = "_username_";
@@ -35,7 +35,7 @@ public class DatabaseBackedAuthenticator implements Authenticator {
     private final String UpdateSecureSession;
 	private final Map<String, Permission[]> _roles = new HashMap<String, Permission[]>(); // a map from role name to authorized function names
 	private final SecureRandom _random = new SecureRandom();
-    private String _page;
+    //private String _page;
 
     /**
      * Constructs a DatabaseBackedAuthenticator.
@@ -61,9 +61,11 @@ public class DatabaseBackedAuthenticator implements Authenticator {
         _random.setSeed(InetAddress.getLocalHost().getAddress());
 	}
 
+/*
     public void setAuthenticationPage(String page) {
         _page = page;
     }
+*/
 
 	protected Credential collectCredential(DataBinder parameters) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         // allow clients to use either <IdentityName> or USERNAME; if both are present <IdentityName> takes precedence
@@ -121,6 +123,7 @@ _logger.info("found session in cookie: " + cookies[i].getValue());
         return Strings.toHexString(bytes).toUpperCase();
     }
 
+/*
     private void redirectToAuthenticationPage(DataBinder binder) {
         if (_page != null) {
             binder.useHashMap(Service.SERVICE_HTTP_HEADER, String.class, String.class).put("Content-Type", "text/html; charset=utf-8");
@@ -128,6 +131,7 @@ _logger.info("found session in cookie: " + cookies[i].getValue());
 _logger.log(Level.FINE, "redirecting to {0}", binder.get(Service.SERVICE_PAGE_TARGET));
         }
     }
+*/
 
     @Transactional
     public List<Role> authenticate(DataBinder parameters) throws AuthorizationException {
