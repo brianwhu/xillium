@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 import java.lang.management.ManagementFactory;
 import java.util.*;
 import javax.management.*;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.CompositeType;
 import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
@@ -82,7 +84,15 @@ public class JMXCommander {
 
     public JMXCommander g(String selector, String attribute) {
         try {
-            bdr.put("value", Beans.toString(mbs.getAttribute(new ObjectName(selector), attribute)));
+            Object value = mbs.getAttribute(new ObjectName(selector), attribute);
+            if (value instanceof CompositeData) {
+                CompositeData data = (CompositeData)value;
+                for (String key: data.getCompositeType().keySet()) {
+                    bdr.put("value[" + key + ']', Beans.toString(data.get(key)));
+                }
+            } else {
+                bdr.put("value", Beans.toString(value));
+            }
         } catch (Exception x) {
             bdr.put(MESSAGE, vbs ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
         }
