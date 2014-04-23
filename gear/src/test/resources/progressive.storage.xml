@@ -19,13 +19,13 @@
     <?assemble name="CommitState"?>
         <![CDATA[
         MERGE INTO PROGRESSIVE_STATES USING (VALUES(
-            :moduleId:VARCHAR, :state:VARCHAR, :step:INTEGER, SUBSTR(COALESCE(:param:VARCHAR, ''), 1, 1024)
-        )) AS V(I, S, P, M)
-            ON PROGRESSIVE_STATES.MODULE_ID = V.I
+            :moduleId:VARCHAR, :previous:VARCHAR, :step:INTEGER, SUBSTR(COALESCE(:param:VARCHAR, ''), 1, 1024)
+        )) AS D(I, V, P, M)
+            ON PROGRESSIVE_STATES.MODULE_ID = D.I
         WHEN MATCHED THEN
-            UPDATE SET STATE = NULL, PREVIOUS = V.S, STEP = V.P, PARAM = V.M
+            UPDATE SET STATE = NULL, PREVIOUS = D.V, STEP = D.P, PARAM = D.M
         WHEN NOT MATCHED THEN
-            INSERT (MODULE_ID, PREVIOUS, STEP, PARAM) VALUES V.I, V.S, V.P, V.M
+            INSERT (MODULE_ID, PREVIOUS, STEP, PARAM) VALUES D.I, D.V, D.P, D.M
         ]]>
     </persist:parametric-statement>
   
@@ -33,13 +33,13 @@
     <?assemble name="MarkAttempt"?>
         <![CDATA[
         MERGE INTO PROGRESSIVE_STATES USING (VALUES(
-            :moduleId:VARCHAR, :state:VARCHAR||'/'||:step:INTEGER, SUBSTR(:param:VARCHAR, 1, 1024)
-        )) AS V(I, S, M)
-            ON PROGRESSIVE_STATES.MODULE_ID = V.I
+            :moduleId:VARCHAR, :state:VARCHAR, SUBSTR(:param:VARCHAR, 1, 1024)
+        )) AS D(I, S, M)
+            ON PROGRESSIVE_STATES.MODULE_ID = D.I
         WHEN MATCHED THEN
-            UPDATE SET STATE = V.S, PARAM = V.M
+            UPDATE SET STATE = D.S, PARAM = D.M
         WHEN NOT MATCHED THEN
-            INSERT (MODULE_ID, STATE, PARAM) VALUES V.I, V.S, V.M
+            INSERT (MODULE_ID, STATE, PARAM) VALUES D.I, D.S, D.M
         ]]>
     </persist:parametric-statement>
 
@@ -49,13 +49,6 @@
     <?assemble name="RecallFullInformation"?>
         <![CDATA[
         SELECT * FROM PROGRESSIVE_STATES WHERE MODULE_ID = :moduleId:VARCHAR
-        ]]>
-    </persist:object-mapped-query>
-
-    <persist:object-mapped-query class="org.xillium.gear.util.Progressive$State">
-    <?assemble name="ResetParam"?>
-        <![CDATA[
-        UPDATE PROGRESSIVE_STATES SET PARAM = NULL WHERE MODULE_ID = :moduleId:VARCHAR
         ]]>
     </persist:object-mapped-query>
 

@@ -38,18 +38,18 @@ public class Progression implements Progressive {
 
     @Override
     @Transactional
-    public <E extends Enum<E>, T, F> T doStateful(State<E> state, E current, F facility, Persistence.Task<T, F> task) {
+    public <E extends Enum<E>, T, F> T doStateful(State state, E current, F facility, Persistence.Task<T, F> task) {
         return doStateful(state, current, 0, facility, task);
     }
 
     @Override
     @Transactional
-    public <E extends Enum<E>, T, F> T doStateful(State<E> state, E current, int step, F facility, Persistence.Task<T, F> task) {
-        _logger.info(".param = " + state.param);
+    public <E extends Enum<E>, T, F> T doStateful(State state, E current, int step, F facility, Persistence.Task<T, F> task) {
+        //_logger.info(".param = " + state.param);
         try {
             try {
-                State<E> last = _persistence.getObject(_qRecallState, state);
-                _logger.fine("Module " + state.moduleId + " last state = " + last);
+                State last = _persistence.getObject(_qRecallState, state);
+                _logger.info("Module " + state.moduleId + " at " + last);
                 if (last != null && last.previous != null) {
                     @SuppressWarnings("unchecked") int previous = Enum.valueOf(current.getClass(), last.previous).ordinal();
                     if (previous > current.ordinal() || (previous == current.ordinal() && last.step >= step)) {
@@ -60,14 +60,15 @@ public class Progression implements Progressive {
             } catch (Exception x) {
                 throw new RuntimeException(x.getMessage(), x);
             }
+            state.state = current.toString() + '/' + step;
             state.param = null;
             //state.assessProgress(current);
-            markAttempt(state, current, step);
+            markAttempt(state);
             _logger.info("Module " + state.moduleId + " to " + current);
 
             T result = task.run(facility, _persistence);
 
-            state.state = current.toString();
+            state.previous = current.toString();
             state.step = step;
             _persistence.executeUpdate(_uCommitState, state);
             _logger.info("Module " + state.moduleId + " .. " + current);
@@ -75,44 +76,30 @@ public class Progression implements Progressive {
         } catch (Exception x) {
             String message = Throwables.getRootCause(x).getMessage();
             state.param = message != null ? "+ " + Strings.substringBefore(message, '\n') : "+";
-            //markAttempt(state, current, step);
-        state.current = current;
-        state.step = step;
+            // try to mark the attempt including the param - this is only possible with something like autonomous transactions
+            //markAttempt(state);
             throw (x instanceof RuntimeException) ? (RuntimeException)x : new RuntimeException(x.getMessage(), x);
         }
     }
 
     @Override
     @Transactional(readOnly=true)
-    public <E extends Enum<E>> String report(State<E> state) {
+    public String report(State state) {
         try {
             return _persistence.executeSelect(_qRecallParam, state, Persistence.StringRetriever);
         } catch (Exception x) {
-            _logger.log(Level.WARNING, "failure in reading state param", x);
+            _logger.log(Level.WARNING, "failure in reading param", x);
             throw new RuntimeException(x.getMessage(), x);
         }
     }
 
     @Override
     @Transactional
-    public <E extends Enum<E>> void markAttempt(State<E> state, E current) {
-        markAttempt(state, current, 0);
-    }
-
-    @Override
-    @Transactional
-    public <E extends Enum<E>> void markAttempt(State<E> state, E current, int step) {
-        String lstate = state.state;
-        int lstep = state.step;
+    public void markAttempt(State state) {
         try {
-            state.state = current.toString();
-            state.step = step;
             _persistence.executeUpdate(_uMarkAttempt, state);
         } catch (Exception x) {
-            _logger.log(Level.WARNING, "failure in logging stateful attempt for module " + state.moduleId, x);
-        } finally {
-            state.state = lstate;
-            state.step = lstep;
+            _logger.log(Level.WARNING, "failure in logging attempt: " + state, x);
         }
     }
 }

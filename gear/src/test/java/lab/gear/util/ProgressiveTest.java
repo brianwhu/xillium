@@ -60,22 +60,22 @@ public class ProgressiveTest {
         final Controller controller = new Controller();
 
         // a Progressive.State object, used to keep track of the current process state
-        final Progressive.State<OperationState> state = new Progressive.State<OperationState>(progressive, "progressive");
+        final Progressive.State state = new Progressive.State(progressive, "progressive");
 
         // start a progress monitor in a separate thread
         new Thread() {
             public void run() {
                 System.out.println("PROGRESS MONITOR start");
-                Progressive.State<OperationState> last = new Progressive.State<OperationState>(), current = null;
+                Progressive.State last = new Progressive.State(), current = null;
                 do {
                     try { Thread.sleep(100L); } catch (Exception x) {}
-                    current = persistence.doReadOnly(null, new Persistence.Task<Progressive.State<OperationState>, Void>() {
-                        public Progressive.State<OperationState> run(Void facility, Persistence persistence) throws Exception {
+                    current = persistence.doReadOnly(null, new Persistence.Task<Progressive.State, Void>() {
+                        public Progressive.State run(Void facility, Persistence persistence) throws Exception {
                             return persistence.getObject("-/RecallFullInformation", state);
                         }
                     });
                     if (current != null && (!Objects.equals(current.state, last.state) || !Objects.equals(current.previous, last.previous))) {
-                        System.out.println(">>>> PROGRESS: state = " + current.state + ", previous = " + current.previous + ", param = " + current.param);
+                        System.out.println(">>>> PROGRESS: " + current);
                         last = current;
                     }
                 } while (last.previous == null || !last.previous.equals("PERFORM_TASK_3"));
@@ -87,23 +87,19 @@ public class ProgressiveTest {
         new Thread() {
             public void run() {
                 System.out.println("PROBLEM RESOLVER start");
-                Progressive.State<OperationState> current = null;
+                Progressive.State current = null;
                 do {
                     try { Thread.sleep(100L); } catch (Exception x) {}
-                    current = persistence.doReadOnly(null, new Persistence.Task<Progressive.State<OperationState>, Void>() {
-                        public Progressive.State<OperationState> run(Void facility, Persistence persistence) throws Exception {
+                    current = persistence.doReadOnly(null, new Persistence.Task<Progressive.State, Void>() {
+                        public Progressive.State run(Void facility, Persistence persistence) throws Exception {
                             return persistence.getObject("-/RecallFullInformation", state);
                         }
                     });
                     if (current != null && current.param != null && current.param.length() > 0) {
                         System.out.println(">>>> RESOLVER: " + current.param);
                         try { Thread.sleep(3000L); } catch (Exception x) {}
-                        persistence.doReadWrite(null, new Persistence.Task<Void, Void>() {
-                            public Void run(Void facility, Persistence persistence) throws Exception {
-                                persistence.executeUpdate("-/ResetParam", state);
-                                return null;
-                            }
-                        });
+                        current.param = null;
+                        progressive.markAttempt(current);
                         System.out.println(">>>> RESOLVER: problem resolved");
                     }
                 } while (current == null || current.previous == null || !current.previous.equals("PERFORM_TASK_3"));

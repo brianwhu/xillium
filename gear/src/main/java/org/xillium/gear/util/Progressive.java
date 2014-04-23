@@ -39,9 +39,9 @@ import org.xillium.core.Persistence;
  *      <![CDATA[
  *      MERGE INTO PROGRESSIVE_STATES USING DUAL ON (MODULE_ID = :moduleId:VARCHAR)
  *      WHEN MATCHED THEN
- *          UPDATE SET STATE = NULL, PREVIOUS = :state:VARCHAR, STEP = :step:INTEGER, PARAM = SUBSTR(:param:VARCHAR, 1, 1024)
+ *          UPDATE SET STATE = NULL, PREVIOUS = :previous:VARCHAR, STEP = :step:INTEGER, PARAM = SUBSTR(:param:VARCHAR, 1, 1024)
  *      WHEN NOT MATCHED THEN
- *          INSERT (MODULE_ID, PREVIOUS, STEP, PARAM) VALUES (:moduleId:VARCHAR, :state:VARCHAR, :step:INTEGER, SUBSTR(:param:VARCHAR, 1, 1024))
+ *          INSERT (MODULE_ID, PREVIOUS, STEP, PARAM) VALUES (:moduleId:VARCHAR, :previous:VARCHAR, :step:INTEGER, SUBSTR(:param:VARCHAR, 1, 1024))
  *      ]]>
  *  </persist:parametric-statement>
  *
@@ -53,9 +53,9 @@ import org.xillium.core.Persistence;
  *      BEGIN
  *          MERGE INTO PROGRESSIVE_STATES USING DUAL ON (MODULE_ID = :moduleId:VARCHAR)
  *          WHEN MATCHED THEN
- *              UPDATE SET STATE = :state:VARCHAR||'/'||:step:INTEGER, PARAM = SUBSTR(:param:VARCHAR, 1, 1024)
+ *              UPDATE SET STATE = :state:VARCHAR, PARAM = SUBSTR(:param:VARCHAR, 1, 1024)
  *          WHEN NOT MATCHED THEN
- *              INSERT (MODULE_ID, STATE, PARAM) VALUES (:moduleId:VARCHAR, :state:VARCHAR||'/'||:step:INTEGER, SUBSTR(:param:VARCHAR, 1, 1024));
+ *              INSERT (MODULE_ID, STATE, PARAM) VALUES (:moduleId:VARCHAR, :state:VARCHAR, SUBSTR(:param:VARCHAR, 1, 1024));
  *          COMMIT;
  *      END;
  *      ]]>
@@ -87,7 +87,7 @@ import org.xillium.core.Persistence;
  *  private final Progressive _progressive;
  *
  *  // a Progressive.State object, used to keep track of the current process state
- *  Progressive.State<OperationState> state = new Progressive.State<OperationState>(_progressive, "accounting");
+ *  Progressive.State state = new Progressive.State(_progressive, "accounting");
  *  ...
  *
  *  // the process logic inside a VitalTask, which depends on an instance of Reporting for exception reporting.
@@ -128,17 +128,16 @@ public interface Progressive {
     /**
      * A State object is used to keep track of progress in a stepwise process.
      */
-    public static class State<E extends Enum<E>> implements DataObject, TrialStrategy {
+    public static class State implements DataObject, TrialStrategy {
         private static final long PAUSE_BETWEEN_OBSERVATIONS = 5000L;
 
         private final Progressive _progressive;
 
         public final String moduleId;
-        public String state;
+        public String state; // (attempted state) + '/' + (attempted step)
         public String previous;
         public int step;
         public String param;
-        public transient E current;
 
         //public int basis;
         //public int progress;
@@ -184,7 +183,12 @@ public interface Progressive {
 
         @Override
         public final void backoff(int age) {
-            _progressive.markAttempt(this, current, step);
+            _progressive.markAttempt(this);
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getName() + "{state:" + state + ", previous:" + previous + ", step:" + step + ", param:" + param + '}';
         }
     }
 
@@ -196,7 +200,7 @@ public interface Progressive {
      * @param facility - an optional object that provides environmental support to the task. This parameter is passed directly to the task.
      * @param task - the Persistence.Task to execute
      */
-    public <E extends Enum<E>, T, F> T doStateful(State<E> state, E current, F facility, Persistence.Task<T, F> task);
+    public <E extends Enum<E>, T, F> T doStateful(State state, E current, F facility, Persistence.Task<T, F> task);
 
     /**
      * Performs a task that is associated with a state and a step within the state. The task is only executed if the state has not been
@@ -208,21 +212,16 @@ public interface Progressive {
      * @param facility - an optional object that provides environmental support to the task. This parameter is passed directly to the task.
      * @param task - the Persistence.Task to execute
      */
-    public <E extends Enum<E>, T, F> T doStateful(State<E> state, E current, int step, F facility, Persistence.Task<T, F> task);
+    public <E extends Enum<E>, T, F> T doStateful(State state, E current, int step, F facility, Persistence.Task<T, F> task);
 
     /**
      * Reports any error from a previous state progression attempt, stored in the "param" column.
      */
-    public <E extends Enum<E>> String report(State<E> state);
+    public String report(State state);
 
     /**
      * Logs an attempt.
      */
-    public <E extends Enum<E>> void markAttempt(State<E> state, E current);
-
-    /**
-     * Logs an attempt.
-     */
-    public <E extends Enum<E>> void markAttempt(State<E> state, E current, int step);
+    public void markAttempt(State state);
 }
 
