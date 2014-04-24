@@ -136,36 +136,40 @@ public class HttpServiceDispatcher extends HttpServlet {
     }
 
     public void destroy() {
-        _logger.info("Terminating service dispatcher: " + _application);
+        _logger.info("<<<< Service Dispatcher(" + _application + ") destruction starting");
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         while (!_manageables.empty()) {
             ObjectName on = _manageables.pop();
-            _logger.info("unregistering MBean " + on);
+            _logger.info("<<<<<<<< MBean(" + on + ") unregistration starting");
             try {
                 mbs.unregisterMBean(on);
             } catch (Exception x) {
                 _logger.log(Level.WARNING, on.toString());
             }
+            _logger.info("<<<<<<<< MBean(" + on + ") unregistration complete");
         }
         while (!_plca.empty()) {
             List<PlatformLifeCycleAwareDef> plcas = _plca.pop();
             for (PlatformLifeCycleAwareDef plca: plcas) {
-                _logger.info("terminate PlatformLifeCycleAware: " + plca.module + '/' + plca.bean.getClass().getName());
+                _logger.info("<<<<<<<< PlatformLifeCycleAware(" + plca.module + '/' + plca.bean.getClass().getName() + ") termination starting");
                 plca.bean.terminate(_application, plca.module);
+                _logger.info("<<<<<<<< PlatformLifeCycleAware(" + plca.module + '/' + plca.bean.getClass().getName() + ") termination complete");
             }
         }
 
-        // finally, manually deregisters JDBC driver, which prevents Tomcat 7 from complaining about memory leaks
+        // finally, deregisters JDBC driver manually to prevent Tomcat 7 from complaining about memory leaks
         Enumeration<java.sql.Driver> drivers = java.sql.DriverManager.getDrivers();
         while (drivers.hasMoreElements()) {
             java.sql.Driver driver = drivers.nextElement();
+            _logger.info("<<<<<<<< JDBC Driver(" + driver + ") deregistration starting");
             try {
                 java.sql.DriverManager.deregisterDriver(driver);
-                _logger.info("Deregistering jdbc driver: " + driver);
             } catch (java.sql.SQLException x) {
                 _logger.log(Level.WARNING, "Error deregistering driver " + driver, x);
             }
+            _logger.info("<<<<<<<< JDBC Driver(" + driver + ") deregistration complete");
         }
+        _logger.info("<<<< Service Dispatcher(" + _application + ") destruction complete");
     }
 
     /**

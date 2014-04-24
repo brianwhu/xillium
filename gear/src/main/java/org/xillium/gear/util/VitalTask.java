@@ -7,13 +7,17 @@ import org.xillium.core.management.Reporting;
 
 
 /**
- * A VitalTask is a Runnable that detects execution failure and undertakes retries automatically.
- * Failure and recovery notifications are reported via an associated Reporting object.
- *
- * By default, a VitalTask uses randomized exponetial backoff to avoid retrying the task too eagerly. Other TrialStrategy can be used as well.
- *
- * A VitalTask is interruptible. If a VitalTask is submitted to a separate thread, a negative age reveals execution interruption. When running a
- * VitalTask on the local thread, call runAsInterruptible() instead of run() to get execution interruption reported as an InterruptedException.
+ * <p>
+ * A VitalTask is a Runnable that detects operation failure and undertakes retries automatically. An operation failure happens when method
+ * execute() throws an exception before completion.</p>
+ * <p>
+ * Failure and recovery notifications are reported via an associated Reporting object.</p>
+ * <p>
+ * By default, a VitalTask uses randomized exponetial backoff to avoid retrying the task too eagerly. Other TrialStrategy can be used as well.</p>
+ * <p>
+ * A VitalTask is interruptible. If a VitalTask is submitted to a separate thread, call getInterruptedException() to detect execution interruption
+ * after the thread has joined.  When running a VitalTask on the local thread, call runAsInterruptible() instead of run() to get interruption
+ * reported as an InterruptedException.</p>
  */
 public abstract class VitalTask<T extends Reporting> implements Runnable {
     protected static final Logger _logger = Logger.getLogger(VitalTask.class.getName());
@@ -49,7 +53,9 @@ public abstract class VitalTask<T extends Reporting> implements Runnable {
     }
 
     /**
-     * Performs the task. Subclass overrides this method to implement the task.
+     * Performs the task. Subclass overrides this method to implement the task. This method must guarantee that when it fails (i.e. throws an
+     * exception) it fails completely. Such guarantee allows the task to be meaningfully retried. In other words, if a task fails many times
+     * through the retry cycles until it eventually succeeds, it makes the same effect as if it had succeeded on the first attempt.
      */
     protected abstract void execute() throws Exception;
 
