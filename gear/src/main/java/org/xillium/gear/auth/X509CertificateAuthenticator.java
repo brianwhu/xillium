@@ -3,6 +3,9 @@ package org.xillium.gear.auth;
 import java.util.*;
 import java.util.logging.*;
 import java.security.cert.X509Certificate;
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 import javax.servlet.http.*;
 import org.xillium.data.*;
 import org.xillium.core.*;
@@ -18,14 +21,14 @@ public class X509CertificateAuthenticator extends PageAwareAuthenticator {
 	private final Persistence _persistence;
     private final String _identityName;
     private final String _qRolesBySubjectName;
-    //private String _page;
+    private boolean _useFullSubjectName;
 
     /**
      * Constructs an X509CertificateAuthenticator.
      *
      * @param persist - a Persistence object
-     * @param identityName - the name of the identity parameter in data binder
-     * @param qRolesBySubjectName - a ParametricStatement that retrieves roles by a credential consisting of identity name and subject name,
+     * @param identityName - the name of the identity parameter in the data binder
+     * @param qRolesBySubjectName - a ParametricStatement that retrieves roles by a credential consisting of an identity name and a password.
      *        e.g.
      *  <xmp>
      *  SELECT
@@ -44,19 +47,15 @@ public class X509CertificateAuthenticator extends PageAwareAuthenticator {
         _qRolesBySubjectName = qRolesBySubjectName;
 	}
 
-/*
-    public void setAuthenticationPage(String page) {
-        _page = page;
+    /**
+     * Sets whether to check the full subject name. By default, this authenticator only checks the common name part of the subject name inside
+     * the X509 certificate.
+     */
+    public void setUseFullSubjectName(boolean full) {
+        _useFullSubjectName = full;
     }
 
-    private void redirectToAuthenticationPage(DataBinder binder) {
-        if (_page != null) {
-            binder.useHashMap(Service.SERVICE_HTTP_HEADER, String.class, String.class).put("Content-Type", "text/html; charset=utf-8");
-            binder.put(Service.SERVICE_PAGE_TARGET, _page + "?_redirect_=" + binder.get(Service.REQUEST_TARGET_PATH));
-        }
-    }
-*/
-
+    @Override
     @Transactional(readOnly=true)
     public List<Role> authenticate(DataBinder binder) throws AuthorizationException {
         try {
@@ -64,10 +63,12 @@ public class X509CertificateAuthenticator extends PageAwareAuthenticator {
             X509Certificate[] certs = (X509Certificate[])req.getAttribute("javax.servlet.request.X509Certificate");
 
             if (certs != null && certs.length != 0) {
-                Credential credential = new Credential(binder.get(_identityName), certs[0].getSubjectX500Principal().getName());
+                Credential credential = new Credential(binder.get(_identityName), getPrincipalIdentity(certs[0].getSubjectX500Principal().getName()));
+                _logger.fine(org.xillium.base.beans.Beans.toString(credential));
                 List<Role> roles = _persistence.getResults(_qRolesBySubjectName, credential, Role.class);
                 for (int i = 1; i < certs.length; ++i) {
-                    credential.password = certs[i].getSubjectX500Principal().getName();
+                    credential.password = getPrincipalIdentity(certs[i].getSubjectX500Principal().getName());
+                    _logger.fine(org.xillium.base.beans.Beans.toString(credential));
                     roles.addAll(_persistence.getResults(_qRolesBySubjectName, credential, Role.class));
                 }
                 if (roles.size() > 0) {
@@ -84,6 +85,17 @@ public class X509CertificateAuthenticator extends PageAwareAuthenticator {
         } catch (Exception x) {
             redirectToAuthenticationPage(binder);
             throw new AuthorizationException(x.getMessage(), x);
+        }
+    }
+
+    private final String getPrincipalIdentity(String name) throws InvalidNameException {
+        if (_useFullSubjectName) {
+            return name;
+        } else {
+            for(Rdn rdn: new LdapName(name).getRdns()) {
+                if ("CN".equalsIgnoreCase(rdn.getType())) return rdn.getValue().toString();
+            }
+            throw new InvalidNameException("NoCommonNameInSubjectName");
         }
     }
 }
