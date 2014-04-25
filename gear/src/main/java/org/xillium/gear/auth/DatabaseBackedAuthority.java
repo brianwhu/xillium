@@ -13,24 +13,28 @@ public class DatabaseBackedAuthority implements Authority {
 	private static final Logger _logger = Logger.getLogger(DatabaseBackedAuthority.class.getName());
 
 	private final Persistence _persistence;
-    private final String RetrieveRoleAuthorizations;
+    private final String _qRoleAuthorizations;
 
     /**
      * Constructs a DatabaseBackedAuthority.
      *
      * @param persist - a Persistence object
-     * @param qRoleAuthorizations - a ParametricStatement that retrieves role authorizations from the database
+     * @param qRoleAuthorizations - an ObjectMappedQuery that retrieves a list of Permission objects (role authorizations)
+     * from the database, e.g.
+     * <xmp>
+     *    SELECT ROLE_ID, FUNCTION, PERMISSION FROM ROLE_AUTHORIZATION ORDER BY ROLE_ID
+     * </xmp>
      */
 	public DatabaseBackedAuthority(Persistence persist, String qRoleAuthorizations) {
 		_persistence = persist;
-        RetrieveRoleAuthorizations = qRoleAuthorizations;
+        _qRoleAuthorizations = qRoleAuthorizations;
 	}
 
 	/**
-	 * Loads all user roles into memory.
+	 * Loads all role permissions into memory.
 	 */
 	@Transactional(readOnly=true)
     public List<Permission> loadRolesAndPermissions() throws Exception {
-        return _persistence.getResults(RetrieveRoleAuthorizations, null);
+        return _persistence.getResults(_qRoleAuthorizations, null);
     }
 }
