@@ -77,6 +77,7 @@ public class X509CertificateAuthenticator extends PageAwareAuthenticator {
                     throw new AuthorizationException("InvalidSubjectName");
                 }
             } else {
+                _logger.fine("no client certificate in request");
                 throw new AuthenticationRequiredException("AuthenticationRequired");
             }
         } catch (AuthorizationException x) {
