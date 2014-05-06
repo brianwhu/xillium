@@ -5,10 +5,6 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
-//import org.xml.sax.*;
-//import org.xml.sax.helpers.DefaultHandler;
-//import org.xillium.data.*;
-//import org.xillium.base.etc.Arrays;
 
 
 /**

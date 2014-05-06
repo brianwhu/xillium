@@ -122,7 +122,7 @@ public class CachedResultSet {
                     Object value = columns[i].equals("-") ? object : Beans.invoke(object, "get"+Strings.capitalize(columns[i]));
                     if (value != null) {
                         if (value.getClass().isArray()) {
-                            row[i] = org.xillium.base.etc.Arrays.join(value, ';');
+                            row[i] = Strings.join(value, ';');
                         } else {
                             row[i] = value.toString();
                         }
@@ -149,7 +149,7 @@ public class CachedResultSet {
                     Object value = Beans.getKnownField(object.getClass(), columns[i]).get(object);
                     if (value != null) {
                         if (value.getClass().isArray()) {
-                            row[i] = org.xillium.base.etc.Arrays.join(value, ';');
+                            row[i] = Strings.join(value, ';');
                         } else {
                             row[i] = value.toString();
                         }

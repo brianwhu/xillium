@@ -9,7 +9,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
 
-import org.xillium.base.etc.Arrays;
 import org.xillium.base.util.XML;
 import org.xillium.data.*;
 

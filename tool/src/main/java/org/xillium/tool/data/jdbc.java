@@ -9,7 +9,7 @@ import javax.sql.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import org.xillium.base.*;
+import org.xillium.base.util.Bytes;
 import org.xillium.base.beans.*;
 import org.xillium.data.DataObject;
 import org.xillium.data.DataBinder;
@@ -39,41 +39,35 @@ public class jdbc {
             assembler.build(args[1].substring(0, separator+4));
             ps = map.get("-/" + args[1].substring(separator+5));
         } else {
-            StringBuilder sql = new StringBuilder();
-            BufferedReader r = new BufferedReader(new FileReader(args[1]));
-            String line;
-            while ((line = r.readLine()) != null) {
-                sql.append(line).append('\n'); // newline keeps good syntax with end-of-line comments
-            }
             ps = new ParametricStatement();
-            ps.set(sql.toString());
+            ps.set(new String(Bytes.read(new FileInputStream(args[1]), true)));
         }
 
         Class<? extends DataObject> c = ps.getDataObjectClass("xillium.t.d.call");
-        if (c != null) {
+        if (c != DataObject.Empty.class) {
             DataObject t = c.newInstance();
             if (args.length == 2) {
                 ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
                 System.out.print("Request = "); System.out.println(mapper.writeValueAsString(mapper.readTree(DataObject.Util.describe(c))));
             } else if (args.length == 3 && args[2].indexOf('=') < 0) {
                 t = new org.xillium.data.validation.Dictionary().collect(t, new DataBinder().load(args[2]));
-System.out.println("calling with"); System.out.println(Beans.toString(t));
+System.out.println(" calling with"); System.out.println(Beans.toString(t));
                 execute(ps, t, dataSource);
 System.out.println("returned with"); System.out.println(Beans.toString(t));
             } else if (args[2].indexOf('=') < 0) {
                 DataBinder binder = new DataBinder().load(args[2]);
                 t = new org.xillium.data.validation.Dictionary().collect(t, binder.load(args, 3));
-System.out.println("calling with"); System.out.println(Beans.toString(t));
+System.out.println(" calling with"); System.out.println(Beans.toString(t));
                 execute(ps, t, dataSource);
-System.out.println("returned with "); System.out.println(Beans.toString(t));
+System.out.println("returned with"); System.out.println(Beans.toString(t));
             } else {
                 t = new org.xillium.data.validation.Dictionary().collect(t, new DataBinder().load(args, 2));
-System.out.println("calling with"); System.out.println(Beans.toString(t));
+System.out.println(" calling with"); System.out.println(Beans.toString(t));
                 execute(ps, t, dataSource);
-System.out.println("returned with "); System.out.println(Beans.toString(t));
+System.out.println("returned with"); System.out.println(Beans.toString(t));
             }
         } else {
-System.out.println("calling w/o parameters");
+System.out.println(" calling w/o parameters");
             execute(ps, (DataObject)null, dataSource);
         }
     }

@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.regex.*;
 import java.util.logging.*;
 import java.net.InetAddress;
+import org.xillium.base.beans.Strings;
 import org.xillium.data.*;
 import org.xillium.core.*;
 import org.xillium.core.management.ManagedComponent;
@@ -83,7 +84,7 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
                         }
                     }
                 }
-                _logger.fine("normalized ipv4 address pattern = " + org.xillium.base.etc.Arrays.join(address, '.'));
+                _logger.fine("normalized ipv4 address pattern = " + Strings.join(address, '.'));
                 _ipv4patterns.add(address);
             } else if ((matcher = IPv6_ADDRESS_PATTERN.matcher(pattern)).matches()) {
                 short[] address = new short[16];
@@ -103,7 +104,7 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
                         }
                     }
                 }
-                _logger.fine("normalized ipv6 address pattern = " + org.xillium.base.etc.Arrays.join(address, '.'));
+                _logger.fine("normalized ipv6 address pattern = " + Strings.join(address, '.'));
                 _ipv6patterns.add(address);
             } else {
                 _logger.warning("Invalid pattern ignored: " + pattern);
@@ -124,7 +125,7 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
                         continue patterns;
                     }
                 }
-                _logger.fine("pattern match " + org.xillium.base.etc.Arrays.join(pattern, '.'));
+                _logger.fine("pattern match " + Strings.join(pattern, '.'));
                 return;
             }
         } catch (java.net.UnknownHostException x) {

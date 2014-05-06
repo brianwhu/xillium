@@ -16,7 +16,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-import org.xillium.base.etc.Arrays;
+import org.xillium.base.util.Bytes;
 import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.xml.*;
@@ -238,16 +238,16 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
 
                             if (SERVICE_CONFIG.equals(jarname)) {
                                 _logger.config("ServiceConfiguration:" + module.path + ":" + jarname);
-                                serviceConfiguration = new ByteArrayInputStream(Arrays.read(jis));
+                                serviceConfiguration = new ByteArrayInputStream(Bytes.read(jis));
                             } else if (_persistence != null && jarname.startsWith(STORAGE_PREFIX) && jarname.endsWith(".xml")) {
                                 _logger.config("StorageConfiguration:" + module.path + ":" + jarname);
-                                assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
+                                assembler.build(new ByteArrayInputStream(Bytes.read(jis)));
                             } else if (VALIDATION_DIC.equals(jarname)) {
                                 _logger.config("ValidationDictionary:" + module.path + ":" + jarname);
-                                assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
+                                assembler.build(new ByteArrayInputStream(Bytes.read(jis)));
                             } else if (jarname.startsWith(XILLIUM_PREFIX) && jarname.endsWith(".xml")) {
                                 _logger.config("ApplicationResources:" + module.path + ":" + jarname);
-                                assembler.build(new ByteArrayInputStream(Arrays.read(jis)));
+                                assembler.build(new ByteArrayInputStream(Bytes.read(jis)));
                             }
                         }
                         if (serviceConfiguration != null) {
