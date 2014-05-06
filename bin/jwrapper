@@ -1,12 +1,20 @@
 #!/bin/sh
 
+d=''
+while expr "$1" : '-[^-].*' >/dev/null 2>&1; do
+    d="$d $1"
+    shift
+done
+if [ "$1" == "--" ]; then
+    shift
+fi
 x=`dirname $0`
 b=`basename $0`
 if j=`cygpath -d $x/$b.jar 2> /dev/null`
 then
-    java -jar $j $*
+    java $d -jar $j $*
 else
-    java -jar $x/$b.jar $*
+    java $d -jar $x/$b.jar $*
 fi
 
 ##############################################################################
