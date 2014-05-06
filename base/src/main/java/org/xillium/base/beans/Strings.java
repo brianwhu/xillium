@@ -1,5 +1,6 @@
 package org.xillium.base.beans;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.regex.*;
 import java.io.UnsupportedEncodingException;
@@ -127,7 +128,7 @@ public class Strings {
     public static String extend(String text, char fill, int length) {
         if (text.length() < length) {
             char[] buffer = new char[length];
-            java.util.Arrays.fill(buffer, 0, length, fill);
+            Arrays.fill(buffer, 0, length, fill);
             System.arraycopy(text.toCharArray(), 0, buffer, 0, text.length());
             return new String(buffer);
         } else {
@@ -250,5 +251,30 @@ public class Strings {
         }
 
         return (sb == null) ? pattern : sb.append(pattern.substring(top)).toString();
+    }
+
+    /**
+     * Concatenates elements in an array into a single String, with elements separated by the given separator.
+     */
+    public static String join(Object array, char separator) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0, ii = Array.getLength(array); i < ii; ++i) {
+            Object element = Array.get(array, i);
+            sb.append(element != null ? element.toString() : "null").append(separator);
+        }
+        if (sb.length() > 0) sb.setLength(sb.length()-1);
+        return sb.toString();
+    }
+
+    /**
+     * Concatenates elements in an Iterable into a single String, with elements separated by the given separator.
+     */
+    public static <T> String join(Iterable<T> list, char separator) {
+        StringBuilder sb = new StringBuilder();
+        for (T element: list) {
+            sb.append(element != null ? element.toString() : "null").append(separator);
+        }
+        if (sb.length() > 0) sb.setLength(sb.length()-1);
+        return sb.toString();
     }
 }

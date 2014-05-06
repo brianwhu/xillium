@@ -5,6 +5,7 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
+import org.xillium.base.util.Bytes;
 import org.xillium.data.DataObject;
 import org.xillium.data.DataBinder;
 import org.xillium.data.CachedResultSet;
@@ -120,7 +121,7 @@ public class RemoteService {
             pw.close();
             InputStream in = connection.getInputStream();
             try {
-                byte[] bytes = org.xillium.base.etc.Arrays.read(in);
+                byte[] bytes = Bytes.read(in);
                 try {
                     Response response = _mapper.readValue(bytes, Response.class).setResponseBody(bytes);
                     if (response.params == null) {

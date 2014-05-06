@@ -8,6 +8,7 @@ import java.util.List;
 /**
  * A collection of commonly used array related utilities.
  */
+@Deprecated
 public class Arrays {
     public static byte[] read(InputStream in) throws IOException {
         byte[] buffer = new byte[32*1024];
