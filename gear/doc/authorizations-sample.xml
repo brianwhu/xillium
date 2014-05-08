@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<util:array-list xmlns:util="java://java.util">
+    <auth:authorization xmlns:auth="java://org.xillium.gear.auth">
+        <auth:credential id="steve" pass="CN=9656102230000325,OU=Individual-1,OU=TPC-S3,O=OCA21,C=CN"/>
+        <util:array-list>
+            <auth:role name="user"/>
+            <auth:role name="staff"/>
+        </util:array-list>
+    </auth:authorization>
+</util:array-list>
+

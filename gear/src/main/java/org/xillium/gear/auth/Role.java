@@ -4,18 +4,22 @@ import org.xillium.data.DataObject;
 
 
 /**
- * A user/merchant role.
+ * A role.
  */
 public class Role implements DataObject {
-	public String id;
 	public String roleId;
     public int permission;
     public int prerequisite;
 
     public Role() {}
 
-    public Role(String id, String roleId) {
-        this.id = id;
-        this.roleId = roleId;
+    public Role(String id) {
+        roleId = id;
+    }
+
+    public Role(String id, int perm, int prereq) {
+        roleId = id;
+        permission = perm;
+        prerequisite = prereq;
     }
 }

@@ -10,4 +10,12 @@ public class Permission implements DataObject {
 	public String roleId;
 	public String function;
 	public int permission;
+
+    public Permission() {}
+
+    public Permission(String id, String f, int p) {
+        roleId = id;
+        function = f;
+        permission = p;
+    }
 }

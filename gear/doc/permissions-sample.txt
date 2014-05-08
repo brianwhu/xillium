@@ -1,0 +1,3 @@
+user:/core:0
+staff:/core:1
+admin:/:1
