@@ -31,7 +31,7 @@ import org.xillium.data.xml.*;
 @WebServlet(name="dispatcher", value="/x!/*", loadOnStartup=1)
 public class HttpServiceDispatcher extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("/[^/?]+/([^/?]+/[^/?]+)"); // '/context/module/service'
-    private static final Pattern SQL_CONSTRAINT = Pattern.compile("\\([A-Z_]+\\.([A-Z_]+)\\)");
+    private static final Pattern SQL_CONSTRAINT = Pattern.compile("\\([^.]+\\.([\\w-]+)\\)");
     private static final File TEMPORARY = null;
     private static final Logger _logger = Logger.getLogger(HttpServiceDispatcher.class.getName());
 
@@ -49,7 +49,7 @@ public class HttpServiceDispatcher extends HttpServlet {
         _application = context.getContextPath();
         if (_application.charAt(0) == '/') _application = _application.substring(1);
 
-        ApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+        ApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(context);
         if (wac.containsBean("persistence")) { // persistence may not be there if persistent storage is not required
             _persistence = (Persistence)wac.getBean("persistence");
         }
