@@ -21,7 +21,7 @@ find . -name '*.xml' -exec grep -l "$1" {} \;
 # find all used parametric statements
 used() {
 case $# in 0) p=.;; *) p=$1;; esac
-find $p \( -name '*.java' -o -name service-configuration.xml \) -exec grep '[>"][a-z][a-z0-9]*/[A-Za-z][A-Za-z0-9]*["<]' {} \; | grep -v '^[ \t]*//' | awk '{split($0,a,"[a-z][a-z]*/");p=2;do {split(a[p],b,"[<\"]");print(b[1]);p=p+1;} while (p in a);}' | sort -u
+find $p \( -name '*.java' -o -name service-configuration.xml \) -exec grep '[>"][a-z][a-z0-9]*/[A-Za-z][A-Za-z0-9]*["<]' {} \; | grep -v '^[ \t]*//' | awk '{split($0,a,"[a-z][a-z0-9]*/");p=2;do {split(a[p],b,"[<\"]");print(b[1]);p=p+1;} while (p in a);}' | sort -u
 }
 
 # find all defined parametric statements

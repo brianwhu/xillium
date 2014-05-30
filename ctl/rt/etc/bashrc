@@ -4,7 +4,7 @@
 
 ulimit -n 40960
 export MEM="-Xmx${XILLIUM_MEM:-6g} -Xms${XILLIUM_MEM:-6g} -XX:+UseConcMarkSweepGC"
-export JMX='-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=8689 -Dcom.sun.management.jmxremote.rmi.port=8689 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false' # -Djava.rmi.server.hostname=58.215.219.166'
+#export JMX='-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=8689 -Dcom.sun.management.jmxremote.rmi.port=8689 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false' # -Djava.rmi.server.hostname=58.215.219.166'
 export XLM="-Dxillium.service.HideDescription=$XILLIUM_HIDE"
 #export XLM="-Dxillium.service.HideDescription=true"
 export ENV="-Dxillium.deployment.environ=$XILLIUM_ENV -Dxillium.deployment.instance=$XILLIUM_INS -Dxillium.deployment.location=$XILLIUM_LOC -Dxillium.deployment.profile=/root/deployment/conf"
