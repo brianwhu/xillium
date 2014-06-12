@@ -263,7 +263,11 @@ public class HttpServiceDispatcher extends HttpServlet {
                             } catch (Exception x) {}
                         } else {
                             binder.clearAutoValues();
-                            res.setContentType("application/json;charset=utf-8");
+                            if (id.endsWith(".html")) {
+                                res.setContentType("text/html;charset=utf-8");
+                            } else {
+                                res.setContentType("application/json;charset=utf-8");
+                            }
                             String json = binder.get(Service.SERVICE_JSON_TUNNEL);
 
                             if (json == null) {
