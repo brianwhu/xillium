@@ -108,7 +108,11 @@ public class ProgressiveTest {
         }.start();
 
         // the process logic inside a VitalTask, which depends on an instance of Reporting for exception reporting.
-        new VitalTask<Controller>(controller, state) {
+        new VitalTask<Controller>(controller, state, new Runnable() {
+            public void run() {
+                System.out.println("**** Prepared for another retry");
+            }
+        }) {
             protected void execute() throws Exception {
                 // do work in PERFORM_TASK_1
                 progressive.doStateful(state, OperationState.PERFORM_TASK_1, null, new Persistence.Task<Void, Void>() {

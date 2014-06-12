@@ -8,7 +8,11 @@ import org.testng.annotations.*;
 public class VitalTaskTest extends ManagedComponent {
     @Test(groups={"vital"})
     public void test() throws Exception {
-        VitalTask<VitalTaskTest> task = new VitalTask<VitalTaskTest>(this) {
+        VitalTask<VitalTaskTest> task = new VitalTask<VitalTaskTest>(this, new Runnable() {
+            public void run() {
+                System.out.println("**** Preparation done before trial");
+            }
+        }) {
             protected void execute() throws Exception {
                 Thread.sleep(2000L);
                 throw new Exception();

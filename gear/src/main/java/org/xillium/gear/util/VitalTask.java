@@ -24,6 +24,8 @@ public abstract class VitalTask<T extends Reporting> implements Runnable {
 
     private final T _reporting;
     private final TrialStrategy _strategy;
+    private final Runnable _preparation;
+
     private InterruptedException _interrupted;
     private int _age;
 
@@ -33,6 +35,17 @@ public abstract class VitalTask<T extends Reporting> implements Runnable {
     protected VitalTask(T reporting) {
         _reporting = reporting;
         _strategy = ExponentialBackoff.instance;
+        _preparation = null;
+    }
+
+    /**
+     * Constructs a VitalTask associated with the given Reporting object, adopting a randomized exponential-backoff trial strategy.
+     * The provided Runnable is called before each trial of the task to perform any preparation work.
+     */
+    protected VitalTask(T reporting, Runnable preparation) {
+        _reporting = reporting;
+        _strategy = ExponentialBackoff.instance;
+        _preparation = preparation;
     }
 
     /**
@@ -41,6 +54,17 @@ public abstract class VitalTask<T extends Reporting> implements Runnable {
     protected VitalTask(T reporting, TrialStrategy strategy) {
         _reporting = reporting;
         _strategy = strategy;
+        _preparation = null;
+    }
+
+    /**
+     * Constructs a VitalTask associated with the given Reporting object and the given trial strategy.
+     * The provided Runnable is called before each trial of the task to perform any preparation work.
+     */
+    protected VitalTask(T reporting, TrialStrategy strategy, Runnable preparation) {
+        _reporting = reporting;
+        _strategy = strategy;
+        _preparation = preparation;
     }
 
     @Deprecated
@@ -82,6 +106,7 @@ public abstract class VitalTask<T extends Reporting> implements Runnable {
         while (true) {
             try {
                 _strategy.observe(_age);
+                if (_preparation != null) _preparation.run();
                 execute();
                 if (_age > 0) {
                     _reporting.emit(Reporting.Severity.NOTICE, "Failure recovered: " + toString(), _age, _logger);
