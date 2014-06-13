@@ -52,12 +52,28 @@ public class XMLBeanAssembler extends DefaultHandler {
     }
 
     /**
+     * Assembles a bean from an XML file.
+     */
+    public <T> T build(String file, Class<T> type) throws ParserConfigurationException, SAXException, IOException {
+        _parser.parse(new File(file), this);
+        return type.cast(getBean());
+    }
+
+    /**
      * Assembles a bean from an XML stream.
      */
     @SuppressWarnings("unchecked")
     public <T> T build(InputStream stream) throws ParserConfigurationException, SAXException, IOException {
         _parser.parse(stream, this);
         return (T)getBean();
+    }
+
+    /**
+     * Assembles a bean from an XML stream.
+     */
+    public <T> T build(InputStream stream, Class<T> type) throws ParserConfigurationException, SAXException, IOException {
+        _parser.parse(stream, this);
+        return type.cast(getBean());
     }
 
     public boolean isLenient() {
