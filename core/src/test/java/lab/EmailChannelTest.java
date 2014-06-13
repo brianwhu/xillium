@@ -33,7 +33,7 @@ public class EmailChannelTest {
     public void testWithProperties() throws Exception {
         SimpleSmtpServer server = SimpleSmtpServer.start(2525);
 
-        EmailChannel channel = new EmailChannel("src/test/java/lab/email-setting.properties");
+        EmailChannel channel = new EmailChannel("file:src/test/java/lab/email-setting.properties");
         channel.sendMessage(SUBJECT, MESSAGE);
 
         server.stop();

@@ -10,7 +10,7 @@ import org.xillium.base.util.XilliumProperties;
 /**
  * An implementation of MessageChannel that uses SMTP as the means of message delivery.
  */
-public class EmailChannel implements MessageChannel {
+public class EmailChannel extends PropertiesConfigured implements MessageChannel {
     private Authenticator _authenticator;
     private Properties _properties;
     private String[] _recipients;
@@ -25,34 +25,20 @@ public class EmailChannel implements MessageChannel {
      * Constructs an EmailChannel and configures it with given properties.
      */
     public EmailChannel(Properties properties) {
-        setProperties(properties);
+        super(properties);
     }
 
     /**
-     * Constructs an EmailChannel and configures it with given properties.
+     * Constructs an EmailChannel and configures it with given properties file.
      */
     public EmailChannel(String path) {
-        setPropertiesFile(path);
-    }
-
-    /**
-     * Configures the EmailChannel with a properties file.
-     */
-    public void setPropertiesFile(String path) {
-        try {
-            Reader reader = new InputStreamReader(new FileInputStream(path), "UTF-8");
-            try {
-                setProperties(new XilliumProperties(reader)); 
-            } finally {
-                reader.close();
-            }
-        } catch (Exception x) {}
+        super(path);
     }
 
     /**
      * Configures the EmailChannel with given properties.
      */
-    public void setProperties(Properties properties) {
+    protected void configure(Properties properties) {
         _properties = properties;
         _recipients = properties.getProperty("mail.smtp.to").split(" *[,;] *");
         _authenticator = new Authenticator() {
