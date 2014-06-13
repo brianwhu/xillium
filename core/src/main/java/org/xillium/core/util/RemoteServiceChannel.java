@@ -60,11 +60,13 @@ public class RemoteServiceChannel extends PropertiesConfigured implements Messag
      * Configures the RemoteServiceChannel with given properties.
      */
     protected void configure(Properties p) {
-        _properties = p;
-        _host = (String)p.remove(HOST);
-        if (_host == null) throw new NoSuchElementException(HOST);
-        _path = (String)p.remove(PATH);
-        if (_path == null) throw new NoSuchElementException(PATH);
+        try {
+            _host = (String)p.remove(HOST);
+            if (_host == null) throw new NoSuchElementException(HOST);
+            _path = (String)p.remove(PATH);
+            if (_path == null) throw new NoSuchElementException(PATH);
+            _properties = p;
+        } catch (Exception x) {}
     }
 
     @Override
