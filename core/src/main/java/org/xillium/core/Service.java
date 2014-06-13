@@ -88,7 +88,7 @@ public interface Service {
         public void aborted(DataBinder parameters, Throwable throwable) throws Throwable;
 
         /**
-         * An extra step that always runs after the service has been completed, disregard whether the associated transaction is committed or rolled back.
+         * An extra step that always runs after the service has been completed, disregarding whether the associated transaction is committed or rolled back.
          *
          * Anything thrown from this method is silently ignored.
          */

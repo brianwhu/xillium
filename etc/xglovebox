@@ -18,6 +18,11 @@ lxml() {
 find . -name '*.xml' -exec grep -l "$1" {} \;
 }
 
+# list any .swp files
+lswp() {
+find . -name '*.swp'
+}
+
 # find all used parametric statements
 used() {
 case $# in 0) p=.;; *) p=$1;; esac
