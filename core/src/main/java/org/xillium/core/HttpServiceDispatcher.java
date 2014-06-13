@@ -265,6 +265,8 @@ public class HttpServiceDispatcher extends HttpServlet {
                             binder.clearAutoValues();
                             if (id.endsWith(".html")) {
                                 res.setContentType("text/html;charset=utf-8");
+                            } else if (id.endsWith(".text")) {
+                                res.setContentType("text/plain;charset=utf-8");
                             } else {
                                 res.setContentType("application/json;charset=utf-8");
                             }
