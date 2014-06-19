@@ -10,6 +10,8 @@ import org.xillium.core.util.RemoteService;
 
 public class call {
     public static void main(String[] args) throws Exception {
+        final PrintWriter out = new PrintWriter(new OutputStreamWriter(System.out, "UTF-8"), true);
+
         boolean data = false;
         int argc = args.length - 2;
 
@@ -26,19 +28,20 @@ public class call {
         if (data) {
             //System.err.println("# enter additional parameters below ... (names wrapped by underscores are ignored)");
             DataBinder binder = new DataBinder();
-            Reader reader = new InputStreamReader(System.in);
+            Reader reader = new InputStreamReader(System.in, "UTF-8");
             binder.load(new XilliumProperties(reader));
             reader.close();
+
             if (argc == 0) {
-                System.out.println(Beans.toString(RemoteService.call(args[1], args[2], binder)));
+                out.println(Beans.toString(RemoteService.call(args[1], args[2], binder)));
             } else {
-                System.out.println(Beans.toString(RemoteService.call(args[1], args[2], binder, Arrays.copyOfRange(args, 3, args.length))));
+                out.println(Beans.toString(RemoteService.call(args[1], args[2], binder, Arrays.copyOfRange(args, 3, args.length))));
             }
         } else {
             if (argc == 0) {
-                System.out.println(Beans.toString(RemoteService.call(args[0], args[1])));
+                out.println(Beans.toString(RemoteService.call(args[0], args[1])));
             } else {
-                System.out.println(Beans.toString(RemoteService.call(args[0], args[1], Arrays.copyOfRange(args, 2, args.length))));
+                out.println(Beans.toString(RemoteService.call(args[0], args[1], Arrays.copyOfRange(args, 2, args.length))));
             }
         }
 
