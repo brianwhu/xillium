@@ -75,7 +75,7 @@ public class Progression implements Progressive {
             return result;
         } catch (Exception x) {
             String message = Throwables.getRootCause(x).getMessage();
-            state.param = message != null ? "+ " + Strings.substringBefore(message, '\n') : "+";
+            state.param = message != null ? State.PARAM_PROBLEM + ' ' + Strings.substringBefore(message, '\n') : State.PARAM_PROBLEM;
             // try to mark the attempt including the param - this is only possible with something like autonomous transactions
             //markAttempt(state);
             throw (x instanceof RuntimeException) ? (RuntimeException)x : new RuntimeException(x.getMessage(), x);

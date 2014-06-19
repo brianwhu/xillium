@@ -5,7 +5,7 @@ import org.xillium.core.Persistence;
 
 
 /**
- * <p>Progressive is facility that supports stepwise, progressive processes. To use it, follow these steps.</p>
+ * <p>Progressive is a facility that supports stepwise, progressive processes. To use it, follow these steps.</p>
  * <ol>
  *  <li><p>Create a "PROGRESSIVE_STATES" database table with the following columns, of which MODULE_ID column is the primary key:</p>
  *      <xmp>
@@ -129,6 +129,8 @@ public interface Progressive {
      * A State object is used to keep track of progress in a stepwise process.
      */
     public static class State implements DataObject, TrialStrategy {
+        public static final String PARAM_PROBLEM = "+"; // NOTE: Don't include surrounding spaces to this value! See observe()
+
         private static final long PAUSE_BETWEEN_OBSERVATIONS = 5000L;
 
         private final Progressive _progressive;
@@ -165,13 +167,19 @@ public interface Progressive {
         }
 */
 
+        /**
+         * Waits until one of the following condition is true:
+         * <ol>
+         *  <li>PARAM is empty</li>
+         *  <li>PARAM does not start with PARAM_PROBLEM ("+")</li>
+         * </ol>
+         */
         @Override
         public final void observe(int age) throws InterruptedException {
-            // wait until "param" is empty
             String param;
             while (true) {
                 try {
-                    if ((param = _progressive.report(this)) == null || param.trim().length() == 0) break;
+                    if ((param = _progressive.report(this)) == null || (param = param.trim()).length() == 0 || !param.startsWith(PARAM_PROBLEM)) break;
                     Thread.sleep(PAUSE_BETWEEN_OBSERVATIONS);
                 } catch (InterruptedException x) {
                     throw x;
@@ -189,6 +197,20 @@ public interface Progressive {
         @Override
         public String toString() {
             return getClass().getName() + "{state:" + state + ", previous:" + previous + ", step:" + step + ", param:" + param + '}';
+        }
+
+        /**
+         * Marks the current state transition attempt. This is a convenience method which simply calls Provessive.markAttempt(this).
+         */
+        public void markAttempt() {
+            _progressive.markAttempt(this);
+        }
+
+        /**
+         * Cleans a message string so that it won't start with PARAM_PROBLEM.
+         */
+        public static String clean(String message) {
+            return message.startsWith(PARAM_PROBLEM) ? ".. " + message : message;
         }
     }
 
