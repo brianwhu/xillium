@@ -39,15 +39,13 @@ public class EmailChannel extends PropertiesConfigured implements MessageChannel
      * Configures the EmailChannel with given properties.
      */
     protected void configure(Properties properties) {
-        try {
-            _recipients = properties.getProperty("mail.smtp.to").split(" *[,;] *");
-            _authenticator = new Authenticator() {
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(_properties.getProperty("mail.smtp.user"), _properties.getProperty("mail.smtp.pass"));
-                }
-            };
-            _properties = properties;
-        } catch (Exception x) {}
+        _properties = properties;
+        _recipients = properties.getProperty("mail.smtp.to").split(" *[,;] *");
+        _authenticator = new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(_properties.getProperty("mail.smtp.user"), _properties.getProperty("mail.smtp.pass"));
+            }
+        };
     }
 
     @Override
