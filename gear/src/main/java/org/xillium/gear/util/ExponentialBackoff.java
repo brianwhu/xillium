@@ -29,10 +29,10 @@ public class ExponentialBackoff implements TrialStrategy {
      */
     @Override
     public void backoff(int age) throws InterruptedException {
-        Thread.sleep(computeRandomizedExponentialSequence(age));
+        Thread.sleep(randomizedExponentialSequence(age));
     }
 
-    public static long computeRandomizedExponentialSequence(int age) {
+    public static long randomizedExponentialSequence(int age) {
         return INIT_BACKOFF + (long)Math.round(_random.nextDouble() * INIT_BACKOFF * (1L << Math.min(MAX_EXPONENT, age)));
     }
 }
