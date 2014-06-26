@@ -7,8 +7,9 @@ import java.util.Random;
  * A TrialStrategy that implements randomized exponential backoff
  */
 public class ExponentialBackoff implements TrialStrategy {
-    private static final long INI_BACKOFF =  1000;
-    private static final long MAX_BACKOFF = 32000;
+    public static final long INIT_BACKOFF = 1000;
+    public static final long MAX_EXPONENT = 6;
+
     private static final Random _random = new Random();
 
     /**
@@ -28,6 +29,10 @@ public class ExponentialBackoff implements TrialStrategy {
      */
     @Override
     public void backoff(int age) throws InterruptedException {
-        Thread.sleep(Math.min(MAX_BACKOFF, INI_BACKOFF + (int)Math.round(_random.nextDouble() * INI_BACKOFF * (1L << age))));
+        Thread.sleep(computeRandomizedExponentialSequence(age));
+    }
+
+    public static long computeRandomizedExponentialSequence(int age) {
+        return INIT_BACKOFF + (long)Math.round(_random.nextDouble() * INIT_BACKOFF * (1L << Math.min(MAX_EXPONENT, age)));
     }
 }
