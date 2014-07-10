@@ -22,8 +22,19 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
         _lower = null;
     }
 
+    /**
+     * Creates a DataBinder that sits on top of the given binder.
+     */
     public DataBinder(DataBinder binder) {
         _lower = binder;
+    }
+
+    /**
+     * Creates a DataBinder that sits on top of and at the same time is placed as a named object inside the given binder.
+     */
+    public DataBinder(DataBinder binder, String name) {
+        _lower = binder;
+        binder.putNamedObject(name, this);
     }
 
     public DataBinder getLower() {
@@ -31,7 +42,7 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     }
 
     /**
-     * Finds a string value from all data binders, starting from the top.
+     * Finds a string value from all data binders, starting from the current binder searching downwards.
      */
     public String find(String name) {
         String value = null;
