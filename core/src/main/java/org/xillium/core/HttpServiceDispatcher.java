@@ -214,18 +214,40 @@ public class HttpServiceDispatcher extends HttpServlet {
             } catch (Throwable t) {
                 _logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
             }
-        } catch (org.springframework.transaction.TransactionException x) {
+        } catch (Throwable x) {
+            // if a new binder can't be returned from Service.run, it can be placed in the original binder as a named object
+            Object replacement = binder.getNamedObject(Service.SERVICE_DATA_BINDER);
+            if (replacement != null && replacement instanceof DataBinder) {
+                binder = (DataBinder)replacement;
+            }
+
             String message = Throwables.getFirstMessage(x);
-            Matcher matcher = SQL_CONSTRAINT.matcher(message);
-            if (matcher.find()) {
-                message = CrudConfiguration.icve.get(matcher.group(1));
-                if (message == null) {
-                    message = matcher.group(1);
+            if (x instanceof org.springframework.transaction.TransactionException) {
+                Matcher matcher = SQL_CONSTRAINT.matcher(message);
+                if (matcher.find()) {
+                    message = CrudConfiguration.icve.get(matcher.group(1));
+                    if (message == null) {
+                        message = matcher.group(1);
+                    }
                 }
             }
-            serviceAborted(binder, id, service, x, message);
-        } catch (Throwable x) {
-            serviceAborted(binder, id, service, x, Throwables.getFirstMessage(x));
+
+            binder.put(Service.FAILURE_MESSAGE, message);
+
+            // post-service exception handler
+            if (service instanceof Service.Extended) {
+                try { ((Service.Extended)service).aborted(binder, x); } catch (Throwable t) { _logger.log(Level.WARNING, "aborted()", t); }
+            }
+
+            String sst = binder.get(Service.SERVICE_STACK_TRACE);
+            String pst = System.getProperty("xillium.service.PrintStackTrace");
+            if (sst != null || pst != null) {
+                CharArrayWriter sw = new CharArrayWriter();
+                x.printStackTrace(new PrintWriter(sw));
+                String stack = sw.toString();
+                if (sst != null) binder.put(Service.FAILURE_STACK, stack);
+                if (pst != null) _logger.warning(x.getClass().getSimpleName() + " caught in (" + id + "): " + message + '\n' + stack);
+            }
         } finally {
             // post-service filter
             if (service instanceof Service.Extended) {
@@ -294,25 +316,6 @@ public class HttpServiceDispatcher extends HttpServlet {
 
     private static boolean isPostedXML(String method, String content) {
         return "post".equals(method) && (content.endsWith("xml") || content.contains("xml;"));
-    }
-
-    private static void serviceAborted(DataBinder binder, String id, Service service, Throwable x, String message) {
-        binder.put(Service.FAILURE_MESSAGE, message);
-
-        // post-service exception handler
-        if (service instanceof Service.Extended) {
-            try { ((Service.Extended)service).aborted(binder, x); } catch (Throwable t) { _logger.log(Level.WARNING, "aborted()", t); }
-        }
-
-        String sst = binder.get(Service.SERVICE_STACK_TRACE);
-        String pst = System.getProperty("xillium.service.PrintStackTrace");
-        if (sst != null || pst != null) {
-            CharArrayWriter sw = new CharArrayWriter();
-            x.printStackTrace(new PrintWriter(sw));
-            String stack = sw.toString();
-            if (sst != null) binder.put(Service.FAILURE_STACK, stack);
-            if (pst != null) _logger.warning(x.getClass().getSimpleName() + " caught in (" + id + "): " + message + '\n' + stack);
-        }
     }
 
     private static final long serialVersionUID = 1L;
