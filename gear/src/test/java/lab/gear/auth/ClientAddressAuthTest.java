@@ -38,6 +38,13 @@ public class ClientAddressAuthTest {
         "172.21.3.*",
     };
 
+    private static final String[] BAD_PRIVATE = {
+        "192.168.5.3",
+        "172.16.3.55",
+        "172.24.6.1",
+        "172.31.3.1",
+    };
+
     private static final String MORE_PATTERNS = "10.0.*.*, 10.1.10.*, 10.2.*.*";
 
     private static final String[] MORE_GOOD = {
@@ -70,6 +77,22 @@ public class ClientAddressAuthTest {
             } catch (AuthorizationException x) {
             }
         }
+
+        for (String ip: BAD_PRIVATE) {
+            try {
+                parameters.put(Service.REQUEST_CLIENT_ADDR, ip);
+                pa.authorize(null, null, parameters, null);
+                throw new RuntimeException("Failed to catch illegitimate address " + ip);
+            } catch (AuthorizationException x) {
+            }
+        }
+
+        pa.setAllowingPrivate(true);
+        for (String ip: BAD_PRIVATE) {
+            parameters.put(Service.REQUEST_CLIENT_ADDR, ip);
+            pa.authorize(null, null, parameters, null);
+        }
+        pa.setAllowingPrivate(false);
 
         pa.setAuthorizedPatterns(MORE_PATTERNS);
         for (String ip: MORE_GOOD) {

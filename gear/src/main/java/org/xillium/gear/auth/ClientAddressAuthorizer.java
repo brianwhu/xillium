@@ -34,6 +34,7 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
 
     private final List<short[]> _ipv4patterns = new ArrayList<short[]>();
     private final List<short[]> _ipv6patterns = new ArrayList<short[]>();
+    private boolean _allowingPrivate;
 
 
     /**
@@ -56,6 +57,13 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
      */
     public void setAuthorizedPatterns(String patterns) {
         setAuthorizedPatternArray(patterns.split(" *, *"));
+    }
+
+    /**
+     * Sets whether to authorize all private addresses.
+     */
+    public void setAllowingPrivate(boolean allowing) {
+        _allowingPrivate = allowing;
     }
 
     /**
@@ -117,7 +125,12 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
         String address = parameters.get(Service.REQUEST_CLIENT_ADDR);
         _logger.fine("checking address " + address);
         try {
-            byte[] bytes = InetAddress.getByName(address).getAddress();
+            InetAddress inet = InetAddress.getByName(address); 
+            if (_allowingPrivate && (inet.isLoopbackAddress() || inet.isLinkLocalAddress() || inet.isSiteLocalAddress())) {
+                return;
+            }
+
+            byte[] bytes = inet.getAddress();
 
   patterns: for (short[] pattern: bytes.length == 4 ? _ipv4patterns : _ipv6patterns) {
                 for (int i = 0; i < pattern.length; ++i) {
