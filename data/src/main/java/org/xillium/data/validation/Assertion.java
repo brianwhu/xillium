@@ -22,10 +22,10 @@ public interface Assertion {
                 if (value instanceof Number) {
                     String s = value.toString();
                     if (s.charAt(0) == '-') {
-                        throw new DataValidationException("NonnegativeNumber{" + s + '}');
+                        throw new DataValidationException("NONNEGATIVE", "", s);
                     }
                 } else {
-                    throw new DataValidationException("NonnegativeNumber{" + value + '}');
+                    throw new DataValidationException("NONNEGATIVE", "", value);
                 }
             }
         };

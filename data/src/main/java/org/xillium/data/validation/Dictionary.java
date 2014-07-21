@@ -133,7 +133,7 @@ public class Dictionary {
                     Trace.g.std.note(Dictionary.class, "Array '" + qualified + "' stored");
                 } else if (field.getAnnotation(required.class) != null) {
                     throw new MissingParameterException(
-                        "MissingRequiredParameter{"+name+"}# in " + (prefix != null ? prefix : "") + '(' + data.getClass().getName() + ')'
+                        name, (prefix != null ? prefix : "") + '(' + data.getClass().getName() + ')'
                     );
                 } else {
                     continue;
@@ -157,7 +157,7 @@ public class Dictionary {
                     if (absent != null) {
                         // now report missing required parameters
                         throw new MissingParameterException(
-                        "MissingRequiredParameter{"+absent+"}# in " + (prefix != null ? prefix : "") + '('+data.getClass().getName()+')'
+                            absent, (prefix != null ? prefix : "") + '('+data.getClass().getName()+')'
                         );
                     } else {
                         try {
@@ -194,7 +194,7 @@ public class Dictionary {
         if (present == 0 && prefix != null) {
             throw new EmptyDataObjectException(prefix);
         } else if (prefix == null && absent != null) {
-            throw new MissingParameterException("MissingRequiredParameter{"+absent+"}# in ("+data.getClass().getName()+')');
+            throw new MissingParameterException(absent, "(" + data.getClass().getName()+')');
         } else {
             return data;
         }
@@ -264,7 +264,7 @@ public class Dictionary {
             } else {
                 Trace.g.std.note(Dictionary.class, "Data object already has " + present + " member values");
                 throw new MissingParameterException(
-                    "MissingRequiredParameter{"+name+"}# in " + (prefix != null ? prefix : "") + '(' + data.getClass().getName() + ')'
+                    name, (prefix != null ? prefix : "") + '(' + data.getClass().getName() + ')'
                 );
             }
         } else {

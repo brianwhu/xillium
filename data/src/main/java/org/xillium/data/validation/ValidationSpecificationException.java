@@ -4,7 +4,7 @@ package org.xillium.data.validation;
 /**
  * Data validation exception.
  */
-public class ValidationSpecificationException extends DataValidationException {
+public class ValidationSpecificationException extends RuntimeException {
     public ValidationSpecificationException() {
     }
 

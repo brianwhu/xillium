@@ -119,9 +119,9 @@ public class Validator {
             throw x;
         } catch (InvocationTargetException x) {
             // various format errors from valueOf() - ignore the details
-            throw new DataValidationException("FailureInDataValidation{"+_name+'}');
+            throw new DataValidationException("FORMAT", _name, text);
         } catch (Throwable t) {
-            throw new DataValidationException(_name, t);
+            throw new DataValidationException("", _name, text, t);
         }
     }
 
@@ -135,13 +135,13 @@ public class Validator {
         // size
         Trace.g.std.note(Validator.class, "preValidate: size = " + _size);
         if (_size > 0 && text.length() > _size) {
-            throw new DataValidationException(_name + " - 'size' check failure for value '" + text + '\'');
+            throw new DataValidationException("SIZE", _name, text);
         }
 
         // pattern
         Trace.g.std.note(Validator.class, "preValidate: pattern = " + _pattern);
         if (_pattern != null && !_pattern.matcher(text).matches()) {
-            throw new DataValidationException(_name + " - 'pattern' check failure for value '" + text + '\'');
+            throw new DataValidationException("PATTERN", _name, text);
         }
     }
 
@@ -172,7 +172,7 @@ public class Validator {
                 }
             }
 
-            throw new DataValidationException(_name + " - values/ranges check failure for value '" + object + '\'');
+            throw new DataValidationException("VALUES/RANGES", _name, object);
         }
     }
 
