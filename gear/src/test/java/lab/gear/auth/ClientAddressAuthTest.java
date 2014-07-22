@@ -61,6 +61,7 @@ public class ClientAddressAuthTest {
     @Test(groups={"ipauth"})
     public void test() throws Exception {
         ClientAddressAuthorizer pa = new ClientAddressAuthorizer(PATTERN);
+        pa.setAuthorizedPatterns(" "); // no effect
 
         DataBinder parameters = new DataBinder();
 

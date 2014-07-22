@@ -20,7 +20,17 @@ import org.xillium.core.management.ManagedComponent;
  * <li> "234.66.*.10",
  * <li> "0:0:0:0:0:0:0:1"
  * </ul>
- * Zero-compression in IPv6 addresses is not permitted in address patterns.
+ * Zero-compression in IPv6 addresses is not permitted in address patterns. This restriction does not apply to
+ * client addresses to be authorized.
+ * <p/>
+ * You can also use the <code>allowingPrivate</code> property to authorize all private IP addresses, as shown
+ * in this Spring bean definition.
+ * <xmp>
+ *  <bean id="ipguard" class="org.xillium.gear.auth.ClientAddressAuthorizer">
+ *      <property name="allowingPrivate" value="true"/>
+ *      ...
+ *  </bean>
+ * </xmp>
  */
 public class ClientAddressAuthorizer extends ManagedComponent implements Authorizer {
 	private static final Logger _logger = Logger.getLogger(ClientAddressAuthorizer.class.getName());
