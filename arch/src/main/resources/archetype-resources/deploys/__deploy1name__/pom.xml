@@ -6,7 +6,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>${groupId}</groupId>
-  <artifactId>${deploy1name}</artifactId>
+  <artifactId>${rootArtifactId}-${deploy1name}</artifactId>
   <version>${global.version}</version>
   <name>${project.groupId}:${rootArtifactId} - ${project.artifactId}</name>
   <packaging>war</packaging>
