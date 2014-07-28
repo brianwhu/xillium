@@ -104,7 +104,17 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     /**
      * Introduces a HashMap under the given name if one does not exist yet.
      */
+    @Deprecated
     public <K, V> Map<K, V> useHashMap(String name, Class<K> ktype, Class<V> vtype) {
+        Map<K, V> map = getNamedObject(name);
+        if (map == null) putNamedObject(name, map = new HashMap<K, V>());
+        return map;
+    }
+
+    /**
+     * Introduces a HashMap under the given name if one does not exist yet.
+     */
+    public <K, V> Map<K, V> map(String name, Class<K> ktype, Class<V> vtype) {
         Map<K, V> map = getNamedObject(name);
         if (map == null) putNamedObject(name, map = new HashMap<K, V>());
         return map;

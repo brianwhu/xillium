@@ -117,9 +117,7 @@ public class DatabaseService extends ExtendableAndSecured implements DynamicServ
 			throw new ServiceException(x.getMessage(), x);
 		} finally {
             if (_page != null) {
-                //Map<String, String> headers = new HashMap<String, String>();
-                binder.useHashMap(Service.SERVICE_HTTP_HEADER, String.class, String.class).put("Content-Type", "text/html; charset=utf-8");
-                //binder.putNamedObject(Service.SERVICE_HTTP_HEADER, headers);
+                binder.map(Service.SERVICE_HTTP_HEADER, String.class, String.class).put("Content-Type", "text/html; charset=utf-8");
                 binder.put(Service.SERVICE_PAGE_TARGET, _page);
             }
         }
