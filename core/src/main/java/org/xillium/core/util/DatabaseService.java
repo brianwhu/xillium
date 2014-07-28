@@ -19,7 +19,7 @@ import org.xillium.data.persistence.ParametricQuery;
  *
  * Any specified DataBinder parameter renaming (mapping) is also performed before the ParametricStatement is called.
  */
-public class DatabaseService extends SecuredService implements Service.Extended, DynamicService {
+public class DatabaseService extends ExtendableAndSecured implements DynamicService {
     private static final Logger _logger = Logger.getLogger(DatabaseService.class.getName());
     private static final String RSET = "results";
 
@@ -27,7 +27,6 @@ public class DatabaseService extends SecuredService implements Service.Extended,
     private final String _statement;
 
     private Pair<String, String>[] _renames;
-    private Service.Filter _filter;
     private String _rset;
     private String _missing;
     private String _page;
@@ -61,13 +60,6 @@ public class DatabaseService extends SecuredService implements Service.Extended,
             }
             _renames = renames;
         }
-    }
-
-    /**
-     * Installs a service filter.
-     */
-    public void setFilter(Service.Filter filter) {
-        _filter = filter;
     }
 
     /**
@@ -132,39 +124,5 @@ public class DatabaseService extends SecuredService implements Service.Extended,
             }
         }
         return binder;
-    }
-
-    /**
-     * An extra step that runs before the service transaction starts.
-     */
-    @Override
-    public void filtrate(DataBinder parameters) {
-        if (_filter != null) _filter.filtrate(parameters);
-    }
-
-    /**
-     * An extra step that runs after the service is successful and the associated transaction committed.
-     * It will NOT run if the service has failed.
-     */
-    @Override
-    public void successful(DataBinder parameters) throws Throwable {
-        if (_filter != null) _filter.successful(parameters);
-    }
-
-    /**
-     * An extra step that runs after the service has failed and the associated transaction rolled back.
-     * It will NOT run if the service is successful.
-     */
-    @Override
-    public void aborted(DataBinder parameters, Throwable throwable) throws Throwable {
-        if (_filter != null) _filter.aborted(parameters, throwable);
-    }
-
-    /**
-     * An extra step that always runs after the service has been completed, disregard whether the associated transaction is committed or rolled back.
-     */
-    @Override
-    public void complete(DataBinder parameters) throws Throwable {
-        if (_filter != null) _filter.complete(parameters);
     }
 }

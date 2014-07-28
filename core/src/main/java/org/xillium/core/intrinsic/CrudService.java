@@ -17,14 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Service description.
  */
-public class CrudService extends SecuredService implements Service.Extended, DynamicService {
+public class CrudService extends ExtendableAndSecured implements DynamicService {
     private static final Logger _logger = Logger.getLogger(CrudService.class.getName());
     private static final Pattern CONSTRAINT = Pattern.compile("\\([A-Z_]+\\.([A-Z_]+)\\)");
 
     private final CrudCommand _command;
     private boolean _isUnique;
     private String _missing;
-    private Service.Filter _filter;
 
 	/**
 	 * Creates a non-retrieval CRUD service. A CRUD service object is typically configured in service-configuration.xml.
@@ -103,10 +102,6 @@ public class CrudService extends SecuredService implements Service.Extended, Dyn
         return _command.getRequestType();
     }
 
-    public void setFilter(Service.Filter filter) {
-        _filter = filter;
-    }
-
     public void setUnique(boolean unique) {
         _isUnique = unique;
     }
@@ -116,36 +111,6 @@ public class CrudService extends SecuredService implements Service.Extended, Dyn
      */
     public void setMissing(String missing) {
         _missing = missing;
-    }
-
-    /**
-     * An extra step that runs before the service transaction starts.
-     */
-    public void filtrate(DataBinder parameters) {
-        if (_filter != null) _filter.filtrate(parameters);
-    }
-
-    /**
-     * An extra step that runs after the service is successful and the associated transaction committed.
-     * It will NOT run if the service has failed.
-     */
-    public void successful(DataBinder parameters) throws Throwable {
-        if (_filter != null) _filter.successful(parameters);
-    }
-
-    /**
-     * An extra step that runs after the service has failed and the associated transaction rolled back.
-     * It will NOT run if the service is successful.
-     */
-    public void aborted(DataBinder parameters, Throwable throwable) throws Throwable {
-        if (_filter != null) _filter.aborted(parameters, throwable);
-    }
-
-    /**
-     * An extra step that always runs after the service has been completed, disregard whether the associated transaction is committed or rolled back.
-     */
-    public void complete(DataBinder parameters) throws Throwable {
-        if (_filter != null) _filter.complete(parameters);
     }
 
     @Transactional

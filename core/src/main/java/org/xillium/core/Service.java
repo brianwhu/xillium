@@ -102,6 +102,16 @@ public interface Service {
 	}
 
     /**
+     * Interface to indicate an Extended service that calls installed filters when its own filter methods are called by the service platform.
+     */
+    public static interface Extendable extends Extended {
+        /**
+         * Installs a service filter. Multiple invocations of this method should install <i>all</i> filters provided.
+         */
+        public void setFilter(Filter filter);
+    }
+
+    /**
      * Interface to indicate an asynchronous service.
      */
     public static interface Asynchronous extends Service {

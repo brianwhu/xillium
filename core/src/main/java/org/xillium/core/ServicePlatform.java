@@ -51,6 +51,13 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
         }
     }
 
+    private static class ServiceModuleInfo {
+        List<FiltersInstallation> filters = new ArrayList<FiltersInstallation>();
+        Map<String, String> descriptions = new HashMap<String, String>();
+        List<PlatformLifeCycleAwareDef> plcas;
+    }
+
+
     private final Stack<ObjectName> _manageables = new Stack<ObjectName>();
     private final Stack<List<PlatformLifeCycleAwareDef>> _plca = new Stack<List<PlatformLifeCycleAwareDef>>();
     private static final Map<String, Service> _services = new HashMap<String, Service>();
@@ -93,35 +100,39 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
             _persistence = (Persistence)wac.getBean("persistence");
         }
 
-        // if intrinsic services are wanted
-        Map<String, String> descriptions = new HashMap<String, String>();
-
         ModuleSorter.Sorted sorted = sortServiceModules(context);
 
+        ServiceModuleInfo info = new ServiceModuleInfo();
+
         // scan special modules, configuring and initializing PlatformLifeCycleAware objects as each module is loaded
-        wac = scanServiceModules(context, sorted.specials(), wac, descriptions, null);
+        wac = scanServiceModules(context, sorted.specials(), wac, info);
 
         // scan regular modules, collecting all PlatformLifeCycleAware objects
-        List<PlatformLifeCycleAwareDef> plcas = new ArrayList<PlatformLifeCycleAwareDef>();
-        scanServiceModules(context, sorted.regulars(), wac, descriptions, plcas);
+        info.plcas = new ArrayList<PlatformLifeCycleAwareDef>();
+        scanServiceModules(context, sorted.regulars(), wac, info);
 
         _logger.info("configure PlatformLifeCycleAware objects in regular modules");
-        for (PlatformLifeCycleAwareDef plca: plcas) {
+        for (PlatformLifeCycleAwareDef plca: info.plcas) {
             _logger.info("Configuring REGULAR PlatformLifeCycleAware " + plca.bean.getClass().getName());
             plca.bean.configure(_application, plca.module);
         }
 
         _logger.info("initialize PlatformLifeCycleAware objects in regular modules");
-        for (PlatformLifeCycleAwareDef plca: plcas) {
+        for (PlatformLifeCycleAwareDef plca: info.plcas) {
             _logger.info("Initalizing REGULAR PlatformLifeCycleAware " + plca.bean.getClass().getName());
             plca.bean.initialize(_application, plca.module);
         }
 
-        _plca.push(plcas);
+        _plca.push(info.plcas);
+
+        _logger.log(Level.CONFIG, "install service filters");
+        for (FiltersInstallation fi: info.filters) {
+            fi.install(_services);
+        }
 
         String hide = System.getProperty("xillium.service.HideDescription");
         if (hide == null || hide.length() == 0) {
-            _services.put("x!/desc", new DescService(descriptions));
+            _services.put("x!/desc", new DescService(info.descriptions));
             _services.put("x!/list", new ListService(_services));
         }
         _services.put("x!/ping", new PingService(wac, _persistence != null ? _persistence.getStatementMap() : null));
@@ -205,13 +216,10 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
         return sorter.sort();
     }
 
-    private ApplicationContext scanServiceModules(
-        ServletContext context, Iterator<ModuleSorter.Entry> it, ApplicationContext wac, Map<String, String> descs, List<PlatformLifeCycleAwareDef> plcas
-    ) {
-
-        boolean isSpecial = plcas == null;
+    private ApplicationContext scanServiceModules(ServletContext context, Iterator<ModuleSorter.Entry> it, ApplicationContext wac, ServiceModuleInfo info) {
+        boolean isSpecial = info.plcas == null;
         if (isSpecial) {
-            plcas = new ArrayList<PlatformLifeCycleAwareDef>();
+            info.plcas = new ArrayList<PlatformLifeCycleAwareDef>();
         }
 
         try {
@@ -252,27 +260,26 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
                         }
                         if (serviceConfiguration != null) {
                             if (isSpecial) {
-                                wac = loadServiceModule(context, wac, domain, module.name, serviceConfiguration, descs, plcas);
+                                wac = load(context, wac, domain, module.name, serviceConfiguration, info);
                             } else {
-                                loadServiceModule(context, wac, domain, module.name, serviceConfiguration, descs, plcas);
+                                load(context, wac, domain, module.name, serviceConfiguration, info);
                             }
                         }
                     } finally {
                         jis.close();
                     }
                     if (isSpecial) {
-                        for (PlatformLifeCycleAwareDef plca: plcas) {
+                        for (PlatformLifeCycleAwareDef plca: info.plcas) {
                             _logger.config("Configuring SPECIAL PlatformLifeCycleAware " + plca.bean.getClass().getName());
                             plca.bean.configure(_application, module.name);
                         }
 
-                        for (PlatformLifeCycleAwareDef plca: plcas) {
+                        for (PlatformLifeCycleAwareDef plca: info.plcas) {
                             _logger.config("Initalizing SPECIAL PlatformLifeCycleAware " + plca.bean.getClass().getName());
                             plca.bean.initialize(_application, module.name);
                         }
-                        //plcas.clear();
-                        _plca.push(plcas);
-                        plcas = new ArrayList<PlatformLifeCycleAwareDef>();
+                        _plca.push(info.plcas);
+                        info.plcas = new ArrayList<PlatformLifeCycleAwareDef>();
                     }
                     context.getServletRegistration("dispatcher").addMapping("/" + module.name + "/*");
                 } catch (IOException x) {
@@ -289,9 +296,7 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
     }
 
     @SuppressWarnings("unchecked")
-    private ApplicationContext loadServiceModule(
-ServletContext context, ApplicationContext wac, String domain, String name, InputStream stream, Map<String, String> desc, List<PlatformLifeCycleAwareDef> plcas
-    ) {
+    private ApplicationContext load(ServletContext context, ApplicationContext wac, String domain, String name, InputStream stream, ServiceModuleInfo info) {
         GenericApplicationContext gac = new GenericApplicationContext(wac);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
@@ -306,20 +311,20 @@ ServletContext context, ApplicationContext wac, String domain, String name, Inpu
             try {
                 Class<? extends DataObject> request = ((DynamicService)gac.getBean(id)).getRequestType();
                 _logger.config("Service '" + fullname + "' request description captured: " + request.getName());
-                desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
+                info.descriptions.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
             } catch (ClassCastException x) {
                 try {
                     Class<?> request = Class.forName(gac.getBeanDefinition(id).getBeanClassName()+"$Request");
                     if (DataObject.class.isAssignableFrom(request)) {
                         _logger.config("Service '" + fullname + "' request description captured: " + request.getName());
-                        desc.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
+                        info.descriptions.put(fullname, "json:" + DataObject.Util.describe((Class<? extends DataObject>)request));
                     } else {
                         _logger.warning("Service '" + fullname + "' defines a Request type that is not a DataObject");
-                        desc.put(fullname, "json:{}");
+                        info.descriptions.put(fullname, "json:{}");
                     }
                 } catch (Exception t) {
                     _logger.warning("Service '" + fullname + "' does not expose its request structure" + t.getClass());
-                    desc.put(fullname, "json:{}");
+                    info.descriptions.put(fullname, "json:{}");
                 }
             }
 
@@ -327,8 +332,16 @@ ServletContext context, ApplicationContext wac, String domain, String name, Inpu
             _services.put(fullname, (Service)gac.getBean(id));
         }
 
+        // Filter installations
+
+        for (String id: gac.getBeanNamesForType(FiltersInstallation.class)) {
+            info.filters.add(gac.getBean(id, FiltersInstallation.class).name(name));
+        }
+
+        // Platform life cycle aware objects
+
         for (String id: gac.getBeanNamesForType(PlatformLifeCycleAware.class)) {
-            plcas.add(new PlatformLifeCycleAwareDef((PlatformLifeCycleAware)gac.getBean(id), name));
+            info.plcas.add(new PlatformLifeCycleAwareDef((PlatformLifeCycleAware)gac.getBean(id), name));
         }
 
         // Manageable object registration: objects are registered under "bean-id/context-path"

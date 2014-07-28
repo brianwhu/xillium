@@ -10,11 +10,10 @@ import org.xillium.data.validation.*;
 /**
  * A simple proxy service that redirects requests to other remote services via a lookup mechanism based on request data.
  */
-public class ProxyService extends SecuredService implements Service.Extended {
+public class ProxyService extends ExtendableAndSecured {
     private static final Logger _logger = Logger.getLogger(ProxyService.class.getName());
 
     private String _service;
-    private Service.Filter _filter;
     private Map<String, String> _servers;
     private String _selector;
     private String _error;
@@ -47,13 +46,6 @@ public class ProxyService extends SecuredService implements Service.Extended {
      */
     public void setService(String service) {
         _service = service;
-    }
-
-    /**
-     * Installs a service filter.
-     */
-    public void setFilter(Service.Filter filter) {
-        _filter = filter;
     }
 
     /**
@@ -99,39 +91,5 @@ public class ProxyService extends SecuredService implements Service.Extended {
 			throw new ServiceException(x.getMessage(), x);
 		}
         return binder;
-    }
-
-    /**
-     * An extra step that runs before the service transaction starts.
-     */
-    @Override
-    public void filtrate(DataBinder parameters) {
-        if (_filter != null) _filter.filtrate(parameters);
-    }
-
-    /**
-     * An extra step that runs after the service is successful and the associated transaction committed.
-     * It will NOT run if the service has failed.
-     */
-    @Override
-    public void successful(DataBinder parameters) throws Throwable {
-        if (_filter != null) _filter.successful(parameters);
-    }
-
-    /**
-     * An extra step that runs after the service has failed and the associated transaction rolled back.
-     * It will NOT run if the service is successful.
-     */
-    @Override
-    public void aborted(DataBinder parameters, Throwable throwable) throws Throwable {
-        if (_filter != null) _filter.aborted(parameters, throwable);
-    }
-
-    /**
-     * An extra step that always runs after the service has been completed, disregard whether the associated transaction is committed or rolled back.
-     */
-    @Override
-    public void complete(DataBinder parameters) throws Throwable {
-        if (_filter != null) _filter.complete(parameters);
     }
 }
