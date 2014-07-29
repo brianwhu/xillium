@@ -28,37 +28,47 @@ public abstract class ExtendableAndSecured extends SecuredService implements Ser
         for (Service.Filter filter: filters) setFilter(filter);
     }
 
-    /**
-     * An extra step that runs before the service transaction starts.
-     */
     @Override
     public final void filtrate(DataBinder parameters) {
+        filtrateRequest(parameters);
         if (_filter != null) _filter.filtrate(parameters);
     }
 
-    /**
-     * An extra step that runs after the service is successful and the associated transaction committed.
-     * It will NOT run if the service has failed.
-     */
     @Override
     public final void successful(DataBinder parameters) throws Throwable {
+        try { reportSuccessful(parameters); } catch (Throwable t) {}
         if (_filter != null) _filter.successful(parameters);
     }
 
-    /**
-     * An extra step that runs after the service has failed and the associated transaction rolled back.
-     * It will NOT run if the service is successful.
-     */
     @Override
     public final void aborted(DataBinder parameters, Throwable throwable) throws Throwable {
+        try { reportAborted(parameters, throwable); } catch (Throwable t) {}
         if (_filter != null) _filter.aborted(parameters, throwable);
     }
 
-    /**
-     * An extra step that always runs after the service has been completed, disregard whether the associated transaction is committed or rolled back.
-     */
     @Override
     public final void complete(DataBinder parameters) throws Throwable {
+        try { completeService(parameters); } catch (Throwable t) {}
         if (_filter != null) _filter.complete(parameters);
     }
+
+    /**
+     * Filtrates requests, before all other filters.
+     */
+    protected void filtrateRequest(DataBinder parameters) {}
+
+    /**
+     * Performs extra work upon service success, before all other filters.
+     */
+    protected void reportSuccessful(DataBinder parameters) throws Throwable {}
+
+    /**
+     * Performs extra work upon service failure, before all other filters.
+     */
+    protected void reportAborted(DataBinder parameters, Throwable throwable) throws Throwable {}
+
+    /**
+     * Completes the service, before all other filters.
+     */
+    protected void completeService(DataBinder parameters) throws Throwable {}
 }
