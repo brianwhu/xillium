@@ -135,7 +135,7 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
             _services.put("x!/desc", new DescService(info.descriptions));
             _services.put("x!/list", new ListService(_services));
         }
-        _services.put("x!/ping", new PingService(wac, _persistence != null ? _persistence.getStatementMap() : null));
+        _services.put("x!/ping", new PingService(wac, _persistence != null ? _persistence.getStatementMap() : null, _services));
 
         // Tomcat/Catalina special
         try { ManagementFactory.getPlatformMBeanServer().setAttribute(

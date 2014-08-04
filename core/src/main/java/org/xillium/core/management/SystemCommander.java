@@ -3,9 +3,12 @@ package org.xillium.core.management;
 import java.lang.reflect.Field;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
+import org.xillium.core.*;
+import org.xillium.core.util.ScriptableServiceFilter;
 
 
 /**
@@ -20,14 +23,17 @@ public class SystemCommander {
     private static final String MESSAGE = "jos.exception";
     private static final String OUTPUT  = "jos.output";
 
+    private static AtomicInteger _installed = new AtomicInteger();
+    private static AtomicInteger _sequence = new AtomicInteger();
+
     private final DataBinder _binder;
-    private int _sequence;
+    private final Map<String, Service> _services;
     private boolean _async;
     private boolean _verbose;
-    private String _address;
 
-    public SystemCommander(DataBinder binder) {
+    public SystemCommander(DataBinder binder,  Map<String, Service> services) {
         _binder = binder;
+        _services = services;
     }
 
     public SystemCommander v(boolean verbose) {
@@ -40,8 +46,20 @@ public class SystemCommander {
         return this;
     }
 
-    public SystemCommander f(String address) {
-        _address = address;
+    public SystemCommander t() {
+        _binder.put("installed", _installed.toString());
+        return this;
+    }
+
+    public SystemCommander f(String address, String script) {
+        try {
+            ScriptableServiceFilter filter = new ScriptableServiceFilter();
+            filter.setFiltrate(script);
+            ((Service.Extendable)_services.get(address)).setFilter(filter);
+            _installed.incrementAndGet();
+        } catch (Exception x) {
+            _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
+        }
         return this;
     }
 
@@ -49,7 +67,7 @@ public class SystemCommander {
         try {
             String[] args = line.split(" +");
             Process process = new ProcessBuilder(Arrays.asList(args)).redirectErrorStream(true).start();
-            Object sequence = "#" + _sequence++;
+            Object sequence = "#" + _sequence.incrementAndGet();
             try {
                 Field field = process.getClass().getDeclaredField("pid");
                 field.setAccessible(true);

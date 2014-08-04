@@ -24,6 +24,7 @@ public class PingService extends ManagementService {
     private static final Pattern SYSTEM_PROPERTY_REALM = Pattern.compile("java\\..*|os\\..*|user\\..*|file\\..*|path\\..*|xillium.system\\..*");
     private final ApplicationContext _context;
     private final Map<String, ParametricStatement> _statements;
+    private final Map<String, Service> _services;
 
     public static enum Signal {
         SystemProperties,
@@ -38,9 +39,10 @@ public class PingService extends ManagementService {
         public boolean verbose;
     }
 
-    public PingService(ApplicationContext ac, Map<String, ParametricStatement> statements) {
+    public PingService(ApplicationContext ac, Map<String, ParametricStatement> statements, Map<String, Service> services) {
         _context = ac;
         _statements = statements;
+        _services = services;
     }
 
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
@@ -100,7 +102,7 @@ public class PingService extends ManagementService {
                 case SystemDiagnosis:
                     if (request.parameter != null) {
                         ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
-                        engine.put("os", new SystemCommander(binder));
+                        engine.put("os", new SystemCommander(binder, _services));
                         engine.eval(request.parameter);
                     }
                     break;
