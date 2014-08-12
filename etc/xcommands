@@ -2,10 +2,20 @@
 # xillium service invocation from curl
 #
 _x_() {
-s=$1
+local o="-k -#"
+while true; do
+    case $# in
+    0) break;;
+    *) case $1 in
+       -*) o="$o $1";shift;;
+       *) break;;
+       esac;;
+    esac
+done
+local s=$1
 shift
-c=($XILLIUM_C)
-d="curl $XILLIUM_P -# -k --data-urlencode '#stack_trace#=1' ${c[*]/#/ --data-urlencode }"
+local c=($XILLIUM_C)
+local d="curl $XILLIUM_P $o --data-urlencode '#stack_trace#=1' ${c[*]/#/ --data-urlencode }"
 while true; do
     case $# in
     0) break;;
