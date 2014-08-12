@@ -37,9 +37,10 @@ public interface DataObject {
         }
 
         public static StringBuilder describe(StringBuilder sb, Class<? extends DataObject> type) {
+            int existing = sb.length();
             sb.append("[");
             print(sb, null, type);
-            if (sb.length() > 1) sb.deleteCharAt(sb.length()-1);
+            if (sb.length() > existing + 1) sb.deleteCharAt(sb.length()-1);
             sb.append("]");
             return sb;
         }
