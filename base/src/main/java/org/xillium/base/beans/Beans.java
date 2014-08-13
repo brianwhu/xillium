@@ -385,6 +385,31 @@ public class Beans {
     }
 
     /**
+     * Converts a String representation into a value of a given type.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T valueOf(Class<T> type, String value) {
+        if (type.equals(String.class)) {
+            return type.cast(value);
+        } else {
+            try {
+                Class<?> boxed = boxPrimitive(type);
+                try {
+                    return (T)boxed.getMethod("valueOf", String.class).invoke(null, value);
+                } catch (NoSuchMethodException x) {
+                    try {
+                        return (T)boxed.getMethod("valueOf", type, String.class).invoke(null, type, value);
+                    } catch (NoSuchMethodException y) {
+                        return (T)boxed.getConstructor(String.class).newInstance(value);
+                    }
+                }
+            } catch (Exception x) {
+                throw new IllegalArgumentException(x.getMessage(), x);
+            }
+        }
+    }
+
+    /**
      * Fills empty, identically named public fields with values from another object.
      */
     public static <T> T fill(T destination, Object source) {
