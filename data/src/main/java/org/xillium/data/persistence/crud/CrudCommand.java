@@ -13,11 +13,37 @@ import org.xillium.data.persistence.*;
 
 
 /**
- * A CRUD operation generated from database schema.
+ * A CRUD operation generated from database schema. Operations include
+ * <ul>
+ * <li><code>CREATE</code> - INSERT data to one or more tables</li>
+ * <li><code>RETRIEVE</code> - SELECT a single row from one or more tables located by the primary key</li>
+ * <li><code>UPDATE</code> - UPDATE a single row in one or more tables located by the primary key</li>
+ * <li><code>DELETE</code> - DELETE a single row in one or more tables located by the primary key</li>
+ * <li><code>SEARCH</code> - SELECT rows from a single table by conditions on a variety of columns</li>
+ * </ul>
  *
- * The following features are supported:
- * - multiple tables associated with ISA relations; dominant tables can be specified in this case so that only their columns are selected (RETRIEVE, SEARCH).
- * - restrictions on values for specific columns; a value starting with '!' indicate negative comparison.
+ * <h4>General Features</h4>
+ * CREATE, RETRIEVE, UPDATE, DELETE operations on multiple tables associated with ISA relations are supported. SEARCH operation must operate on
+ * a single table/view.
+ * <p/>
+ *
+ * <h4>Dominant Tables</h4>
+ * In RETRIEVE and SEARCH operations, dominant tables can be specified so that only their columns are selected.
+ *
+ * <h4>Specified Column List</h4>
+ * <p>A CREATE operation can be given a set of columns to exclude from the INSERT statement.</p>
+ * <p>An UPDATE operation can target a specified set of columns. If this set of columns is not specified, the statement updates all
+ * non-key columns.</p>
+ * <p>To a SEARCH operation, a specified set of columns forms the search condition and therefore must be specified.</p>
+ *
+ * <h4>Column Value Restrictions</h4>
+ * <p>It is possible to specify restriction values for specific columns; a value starting with '!' indicates a negative restriction.</p>
+ * <ul>
+ * <li><code>CREATE</code> - only positive restrictions make sense; negative restriction values are ignored</li>
+ * <li><code>RETRIEVE</code>, <code>DELETE</code> - restrictions on key columns appear in the WHERE clause, others are ignored</li>
+ * <li><code>UPDATE</code> - restrictions on key columns appear in the WHERE clause, others appear in the SET clause.</li>
+ * <li><code>SEARCH</code> - restrictions appear in the WHERE clause</li>
+ * </ul>
  *
  * A SEARCH command with n optional arguments will generate 2^n statements to match the incoming request arguments.
  */
@@ -45,6 +71,7 @@ public class CrudCommand {
         final Operation op;
         final String[] args;
         final boolean[] reqd;
+        final String[] cmps;
         final Map<String, String> restriction;
         final String[] opts;
 
@@ -52,6 +79,7 @@ public class CrudCommand {
             this.op = op;
             this.args = null;
             this.reqd = null;
+            this.cmps = null;
             this.restriction = null;
             this.opts = null;
         }
@@ -62,31 +90,45 @@ public class CrudCommand {
             if (op == Operation.SEARCH) {
                 this.args = restriction.keySet().toArray(new String[restriction.size()]);
                 this.reqd = new boolean[this.args.length];
+                this.cmps = new String[this.args.length];
                 List<String> opts = analyzeRequiredArgs();
                 this.opts = opts.toArray(new String[opts.size()]);
             } else {
                 this.args = null;
                 this.reqd = null;
+                this.cmps = null;
                 this.opts = null;
             }
         }
 
         /**
-         * @param args - applies to UPDATE, SEARCH. A leading asterisk indicates a required fields for SEARCH operation.
+         * @param args - applies to CREATE, UPDATE, SEARCH. A leading asterisk indicates a required fields for SEARCH operation.
          */
         public Action(Operation op, String[] args) {
             this.op = op;
             this.restriction = null;
             this.args = args;
             this.reqd = new boolean[this.args.length];
+            this.cmps = new String[this.args.length];
             List<String> opts = analyzeRequiredArgs();
             this.opts = opts.toArray(new String[opts.size()]);
         }
 
         /**
          * An Action with both column list (args) and restriction list.
+         * </p>
+         * The column list applies to UPDATE and SEARCH operations. A leading asterisk before a column name indicates a required fields.
+         * <ul>
+         * <li>UPDATE - in this case, the columns are used in the SET clause.</li>
+         * <li>SEARCH - in this case, the columns are used in the WHERE clause. Trailing symbols after a column name indicate custom comparison operations:
+         *     <ul>
+         *     <li> <code>&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>, <code>&lt;=</code> - inequality comparisons</li>
+         *     <li> '.' suffix - multiple comparison on the same column
+         *     </ul>
+         *     By default, the comparison operation is the equality test.
+         * </ul>
          *
-         * @param args - applies to UPDATE, SEARCH. A leading asterisk indicates a required fields for SEARCH operation.
+         * @param args - the column list
          * @param restriction - applies to CREATE, UPDATE, SEARCH, DELETE.  On UPDATE, if a restricted column name appears in the column list, it
          *        appears in the SET clause; otherwise it appears in the WHERE clause.
          */
@@ -101,6 +143,7 @@ public class CrudCommand {
                 this.args = args;
             }
             this.reqd = new boolean[this.args.length];
+            this.cmps = new String[this.args.length];
             List<String> opts = analyzeRequiredArgs();
             this.opts = opts.toArray(new String[opts.size()]);
         }
@@ -113,12 +156,22 @@ public class CrudCommand {
         }
 
         public String toString() {
-            return op.toString() + '[' + Arrays.toString(args) + ']' + restriction;
+            return op.toString() + " args=" + Arrays.toString(args) + " rstr=" + restriction;
         }
 
         private List<String> analyzeRequiredArgs() {
             List<String> optionals = new ArrayList<String>();
             for (int i = 0; i < args.length; ++i) {
+                if (args[i].endsWith("<") || args[i].endsWith(">")) {
+                    cmps[i] = args[i].substring(args[i].length()-1);
+                    args[i] = args[i].substring(0, args[i].length()-1);
+                } else if (args[i].endsWith("<=") || args[i].endsWith(">=") || args[i].endsWith("<>")) {
+                    cmps[i] = args[i].substring(args[i].length()-2);
+                    args[i] = args[i].substring(0, args[i].length()-2);
+                } else {
+                    cmps[i] = "=";
+                }
+
                 if (args[i].charAt(0) == REQUIRED_INDICATOR) {
                     args[i] = args[i].substring(1);
                     reqd[i] = true;
@@ -141,8 +194,8 @@ public class CrudCommand {
     public CrudCommand(Connection connection, String prefix, String tables, Action action) throws Exception {
         String[] names = tables.split(" *, *");
         _oper = action.op;
-        _name = Strings.toCamelCase(names[names.length-1], '_');
-        String cname = className("org.xillium.data.dynamic." + prefix, _name, action);
+        _name = action.toString() + " >> " + tables;
+        String cname = className("org.xillium.d.p.c." + prefix, tables, action);
         synchronized (_classes) {
             Class<? extends DataObject> type = _classes.get(cname);
             if (type == null) {
@@ -200,6 +253,16 @@ public class CrudCommand {
      */
     @SuppressWarnings({"unchecked", "fallthrough"})
     public static Class<? extends DataObject> modelFromTables(Connection connection, String classname, Action action, String... tablenames) throws Exception {
+
+        /*
+            SQL generation
+
+                INSERT INTO T  (  cols ) VALUES ( vals );
+                UPDATE      T SET cols      WHERE vals;
+                DELETE FROM T               WHERE vals;
+                SELECT *     FROM cols      WHERE vals;
+        */
+
         ClassPool pool = ClassPool.getDefault();
         // this line is necessary for web applications (web container class loader in play)
         pool.appendClassPath(new LoaderClassPath(org.xillium.data.DataObject.class.getClassLoader()));
@@ -263,7 +326,7 @@ public class CrudCommand {
                             break;
                         }
                     }
-                    if (jointable != null && primaryKeys.contains(keys.getString(FKEY_REFERENCING_COLUMN))) {
+                    if (jointable != null) {
                         String column = keys.getString(FKEY_REFERENCING_COLUMN);
                         isaKeys.add(column);
                         if (action.op == Operation.RETRIEVE || action.op == Operation.SEARCH) {
@@ -285,11 +348,15 @@ public class CrudCommand {
     /*SQL*/     cols.append(tablenames[i]);
             }
 
+            // Go through all columns in action.args for UPDATE and SEARCH operations
             Set<String> requested = new HashSet<String>();
             Set<String> required = new HashSet<String>();
             if (action.op == Operation.UPDATE) {
                 // UPDATE: the elements in the SET clause => cols
                 for (String column: calcUpdateColumns(action.args, colref, primaryKeys)) {
+                    // skip all key columns, which might be legally included through the restriction list
+                    if (primaryKeys.contains(column)) continue;
+                    // ... and SET others
                     Integer idx = colref.get(column);
                     if (idx != null) {
     /*SQL*/             if (cols.length() > 0) cols.append(',');
@@ -313,6 +380,9 @@ public class CrudCommand {
             } else if (action.op == Operation.SEARCH && action.args != null) {
                 // SEARCH: the elements in the WHERE clause => vals
                 for (int c = 0; c < action.args.length; ++c) {
+                    // skip all ISA columns, which might be legally included through the restriction list
+                    if (isaKeys.contains(action.args[c])) continue;
+                    // else ...
                     Integer idx = colref.get(action.args[c]);
                     if (idx != null) {
     /*SQL*/             String restriction = action.restriction == null ? null : action.restriction.get(action.args[c]);
@@ -321,7 +391,7 @@ public class CrudCommand {
     /*SQL*/                     vals.append(tablenames[i]).append('.').append(action.args[c]).append("<>").append(restriction.substring(1)).append(" AND ");
                             }
                             int vstart = vals.length(), fstart = flds.length();
-    /*SQL*/                 vals.append(tablenames[i]).append('.').append(action.args[c]).append("=? AND ");
+    /*SQL*/                 vals.append(tablenames[i]).append('.').append(action.args[c]).append(action.cmps[c]).append("? AND ");
                             flds.append(fieldName(tablenames[i], action.args[c])).append(':').append(rsmeta.getColumnType(idx.intValue())).append(',');
                             if (!action.reqd[c]) {
                                 traceOptional(voptional, action.args[c], vstart, vals.length());
@@ -337,7 +407,7 @@ public class CrudCommand {
             }
 
             ResultSet columns = meta.getColumns(connection.getCatalog(), schema, tablenames[i], "%");
-            while (columns.next()) {
+    columns:while (columns.next()) {
                 String name = columns.getString(COLUMN_NAME), fname = fieldName(tablenames[i], name);
                 int idx = colref.get(name).intValue();
 
@@ -352,12 +422,15 @@ public class CrudCommand {
     /*SQL*/     String restriction = action.restriction == null ? null : action.restriction.get(name);
                 switch (action.op) {
                 case CREATE:
+                    if (action.args != null) for (int j = 0; j < action.args.length; ++j) {
+                        if (action.args[j].equals(name)) continue columns;
+                    }
     /*SQL*/         if (cols.length() > 0) {
     /*SQL*/             cols.append(',');
     /*SQL*/             vals.append(',');
     /*SQL*/         }
     /*SQL*/         cols.append(name);
-    /*SQL*/         if (restriction == null) {
+    /*SQL*/         if (restriction == null || restriction.charAt(0) == NEGATIVE_INDICATOR) {
     /*SQL*/             vals.append('?');
     /*SQL*/             if (flds.length() > 0) flds.append(',');
                         flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
@@ -374,36 +447,12 @@ public class CrudCommand {
                     // fall through for the super-table
                 case DELETE:
                     // only primary key columns
-    /*SQL*/         vals.append(alias).append(name);
-    /*SQL*/         if (restriction == null) {
-    /*SQL*/             vals.append('=').append('?');
-    /*SQL*/             if (flds.length() > 0) flds.append(',');
-                        flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
-                    } else {
-                        if (restriction.charAt(0) == NEGATIVE_INDICATOR) {
-    /*SQL*/                 vals.append("<>").append(restriction.substring(1));
-                        } else {
-    /*SQL*/                 vals.append('=').append(restriction);
-                        }
-                    }
-                    vals.append(" AND ");
+                    generateCondition(restriction, vals, flds, alias + name, fname, rsmeta.getColumnType(idx));
                     break;
                 case UPDATE:
                     // only primary key & updating columns
                     if (primaryKeys.contains(name)) {
-    /*SQL*/             vals.append(name);
-    /*SQL*/             if (restriction == null) {
-    /*SQL*/                 vals.append('=').append('?');
-    /*SQL*/                 if (flds.length() > 0) flds.append(',');
-                            flds.append(fname).append(':').append(rsmeta.getColumnType(idx));
-                        } else {
-                            if (restriction.charAt(0) == NEGATIVE_INDICATOR) {
-    /*SQL*/                     vals.append("<>").append(restriction.substring(1));
-                            } else {
-    /*SQL*/                     vals.append('=').append(restriction);
-                            }
-                        }
-                        vals.append(" AND ");
+                        generateCondition(restriction, vals, flds, name, fname, rsmeta.getColumnType(idx));
                     }
                     break;
                 case SEARCH:
@@ -548,6 +597,23 @@ public class CrudCommand {
     //private static final int FKEY_REFERENCED_COLUMN = 4;
     private static final int FKEY_REFERENCING_COLUMN = 8;
 
+    private static void generateCondition(String restriction, StringBuilder vals, StringBuilder flds, String name, String fname, int ftype) {
+/*SQL*/ vals.append(name);
+        if (restriction == null || restriction.charAt(0) == NEGATIVE_INDICATOR) {
+/*SQL*/     vals.append('=').append('?');
+            if (flds.length() > 0) flds.append(',');
+            flds.append(fname).append(':').append(ftype);
+        }
+        if (restriction != null) {
+            if (restriction.charAt(0) == NEGATIVE_INDICATOR) {
+/*SQL*/         vals.append(" AND ").append(name).append("<>").append(restriction.substring(1));
+            } else {
+/*SQL*/         vals.append('=').append(restriction);
+            }
+        }
+        vals.append(" AND ");
+    }
+
     private static String[] calcUpdateColumns(String[] columns, Map<String, Integer> colref, Set<String> keys) {
         if (columns != null) {
             return columns;
@@ -571,23 +637,24 @@ public class CrudCommand {
         attr.addAnnotation(annotation);
     }
 
-    private static String className(String pkg, String name, Action action) {
-        StringBuilder sb = new StringBuilder(pkg).append('.').append(name).append(Strings.toCamelCase(action.op.toString(), '_'));
-        if (action.args != null) for (String arg: action.args) {
-            sb.append(Strings.toCamelCase(arg, '_'));
+    private static String className(String pkg, String tables, Action action) {
+        StringBuilder sb = new StringBuilder(action.op.toString());
+        if (action.args != null) for (int i = 0; i < action.args.length; ++i) {
+            sb.append(action.args[i]).append(action.cmps[i]).append(action.reqd[i]);
         }
         if (action.restriction != null) for (String key: action.restriction.keySet()) {
-            sb.append(Strings.toCamelCase(key, '_'));
+            sb.append(key);
             String value = action.restriction.get(key);
             if (value != null) {
-                if (value.charAt(0) == NEGATIVE_INDICATOR) {
-                    sb.append('0');
-                    value = value.substring(1);
-                }
-                sb.append(Strings.toCamelCase(value, '_'));
+                sb.append(value);
             }
         }
-        return sb.toString();
+        int hash = sb.toString().hashCode();
+
+        sb.setLength(0);
+        return sb.append(pkg).append('.').append(Strings.toCamelCase(action.op.toString(), '_'))
+                                         .append(Strings.toCamelCase(tables.replaceAll(" *, *", "_").replaceAll("\\*", ""), '_'))
+                                         .append(Integer.toHexString(hash)).toString();
     }
 
     private static String sqlTypeName(ResultSetMetaData rsmeta, int index) throws SQLException {

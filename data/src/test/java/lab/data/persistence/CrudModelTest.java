@@ -25,156 +25,234 @@ public class CrudModelTest extends AbstractTransactionalTestNGSpringContextTests
     @Resource
     private DataSource dataSource;
 
-    @Test(groups={"crud"})
-    public void crud() throws Exception {
-        String username = "yep";
-        String tablenames = "MEMBERSHIP,MEMBERPREF,PURCHASE";
-        String tablenamesD = "*MEMBERSHIP,MEMBERPREF,*PURCHASE";
-        Connection connection = dataSource.getConnection();
+    private static final String username = "yep";
+    private static final String tablenames = "MEMBERSHIP,MEMBERPREF,PURCHASE";
+    private static final String tablenamesD = "*MEMBERSHIP,MEMBERPREF,*PURCHASE";
+    private final Map<String, String> negative = new HashMap<String, String>();
+    private final Map<String, String> positive = new HashMap<String, String>();
+    private final DataBinder binder = new DataBinder();
+    private Connection connection;
 
-        Map<String, String> restrictions = new HashMap<String, String>();
-        restrictions.put("EMAIL", "!'me@mail.com'");
-        restrictions.put("LEVEL", "8");
+    @BeforeClass(groups={"crud", "crud-create", "crud-retrieve", "crud-update", "crud-delete", "crud-search"})
+    public void beforeClass() {
+        negative.put("EMAIL", "!'me@mail.com'");
+        negative.put("LEVEL", "8");
+        positive.put("EMAIL", "'steve@mail.com'");
+        positive.put("LEVEL", "6");
+        binder.put("level", "12");
+        binder.put("telephone", "12");
+    }
 
-        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.CREATE));
-		System.out.println("INSERT: ------------------------------------------------");
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
+    @BeforeMethod(groups={"crud", "crud-create", "crud-retrieve", "crud-update", "crud-delete", "crud-search"})
+    public void beforeMethod() throws Exception {
+        connection = dataSource.getConnection();
+    }
 
-        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.CREATE, restrictions));
-		System.out.println("INSERT: -- with restrictions ---------------------------");
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
-
-        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.RETRIEVE));
-		System.out.println("SELECT: ------------------------------------------------");
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
-
-        command = new CrudCommand(connection, username, tablenamesD, new CrudCommand.Action(CrudCommand.Operation.RETRIEVE));
-        System.out.println("SELECT: -- dominant tables -----------------------------");
-        System.out.println(command.getRequestType().getName());
-        System.out.println(DataObject.Util.describe(command.getRequestType()));
-        for (ParametricStatement statement: command.getStatements()) {
-            System.out.println(statement.print(new StringBuilder()));
-        }
-
-        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.RETRIEVE, restrictions));
-		System.out.println("SELECT: -- with restrictions ---------------------------");
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
-
-        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.UPDATE, new String[] {
-			"LEVEL", "TELEPHONE", "FIRST_NAME"
-		}));
-		System.out.println("UPDATE: ------------------------------------------------");
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
-
-        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.UPDATE));
-        System.out.println("UPDATE: -- all -----------------------------------------");
-        System.out.println(command.getRequestType().getName());
-        System.out.println(DataObject.Util.describe(command.getRequestType()));
-        for (ParametricStatement statement: command.getStatements()) {
-            System.out.println(statement.print(new StringBuilder()));
-        }
-
-        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.UPDATE, new String[] {
-			"LEVEL", "TELEPHONE", "FIRST_NAME"
-		}, restrictions));
-		System.out.println("UPDATE: -- with restrictions ---------------------------");
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
-
-        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.DELETE));
-		System.out.println("DELETE: ------------------------------------------------");
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
-
-        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.DELETE, restrictions));
-		System.out.println("DELETE: -- with restrictions ---------------------------");
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
-
+    @AfterMethod(groups={"crud", "crud-create", "crud-retrieve", "crud-update", "crud-delete", "crud-search"})
+    public void afterMethod() throws Exception {
         connection.close();
     }
 
+    @Test(groups={"crud", "crud-create"})
+    public void crudCREATE() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.CREATE));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-create"})
+    public void crudCREATExLEVEL() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.CREATE, new String[] { "LEVEL" }));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-create"})
+    public void crudCREATExPositive() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.CREATE, positive));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-create"})
+    public void crudCREATExNegative() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.CREATE, negative));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-create"})
+    public void crudCREATExLEVELxPositive() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.CREATE, new String[] { "LEVEL" },
+            positive
+        ));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-create"})
+    public void crudCREATExLEVELxNegative() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.CREATE, new String[] { "LEVEL" },
+            negative
+        ));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-retrieve"})
+    public void crudRETRIEVE() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.RETRIEVE));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-retrieve"})
+    public void crudRETRIEVEdominant() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenamesD, new CrudCommand.Action(CrudCommand.Operation.RETRIEVE));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-retrieve"})
+    public void crudRETRIEVExNegative() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.RETRIEVE, negative));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-retrieve"})
+    public void crudRETRIEVExPositive() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.RETRIEVE, positive));
+        printAndValidate(command, connection);
+    }
+
+    //HSQLDB BUG http://sourceforge.net/p/hsqldb/bugs/1359/
+    //@Test(groups={"crud", "crud-update"})
+    public void crudUPDATE() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.UPDATE));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-update"})
+    public void crudUPDATEw_FIRST_NAME_LAST_NAME() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.UPDATE, new String[] {
+            "FIRST_NAME", "LAST_NAME"
+        }));
+        printAndValidate(command, connection);
+    }
+
+    //HSQLDB BUG http://sourceforge.net/p/hsqldb/bugs/1359/
+    //@Test(groups={"crud", "crud-update"})
+    public void crudUPDATEwLEVEL_TELEPHONE_FIRST_NAME() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.UPDATE, new String[] {
+			"LEVEL", "TELEPHONE", "FIRST_NAME"
+		}));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-update"})
+    public void crudUPDATEwLEVEL_TELEPHONE_FIRST_NAMExPositive() throws Exception {
+        CrudCommand
+        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.UPDATE, new String[] {
+			"LEVEL", "TELEPHONE", "FIRST_NAME"
+		}, positive));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-update"})
+    public void crudUPDATEwLEVEL_TELEPHONE_FIRST_NAMExNegative() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.UPDATE, new String[] {
+            "LEVEL", "TELEPHONE", "FIRST_NAME"
+        }, negative));
+        printAndValidate(command, connection);
+    }
+
+    //HSQLDB BUG http://sourceforge.net/p/hsqldb/bugs/1359/
+    //@Test(groups={"crud", "crud-update"})
+    public void crudUPDATExNegative() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.UPDATE, negative));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-delete"})
+    public void crudDELETE() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.DELETE));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-delete"})
+    public void crudDELETExPositive() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.DELETE, positive));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-delete"})
+    public void crudDELETExNegative() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.DELETE, negative));
+        printAndValidate(command, connection);
+    }
+
     @Test(groups={"crud", "crud-search"})
-    public void crudSearch() throws Exception {
-        String username = "yep";
-        String tablenames = "MEMBERSHIP,MEMBERPREF,PURCHASE";
-        String tablenamesD = "*MEMBERSHIP,MEMBERPREF,*PURCHASE";
-        DataBinder binder = new DataBinder();
-        Connection connection = dataSource.getConnection();
-
-        Map<String, String> restrictions = new HashMap<String, String>();
-        restrictions.put("EMAIL", "!'me@mail.com'");
-        restrictions.put("LEVEL", "8");
-
-		System.out.println("SEARCH: ------------------------------------------------");
-        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.SEARCH, new String[] {
+    public void crudSEARCHwTELEPHONE_LEVEL_FIRST_NAME() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenamesD, new CrudCommand.Action(CrudCommand.Operation.SEARCH, new String[] {
             "TELEPHONE", "LEVEL", "*FIRST_NAME"
         }));
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
-        binder.put("level", "12");
-        binder.put("telephone", "12");
+        printAndValidate(command, connection);
         System.out.println("CRUD to execute: " + command.choose(binder));
+    }
 
-		System.out.println("SEARCH: -- with restrictions ---------------------------");
-        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.SEARCH, new String[] {
+    @Test(groups={"crud", "crud-search"})
+    public void crudSEARCHcustomOps() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.SEARCH, new String[] {
+            "TELEPHONE", "LEVEL<=", "*FIRST_NAME"
+        }));
+        printAndValidate(command, connection);
+        System.out.println("CRUD to execute: " + command.choose(binder));
+    }
+
+    @Test(groups={"crud", "crud-search"})
+    public void crudSEARCHwTELEPHONE_LEVEL_FIRST_NAME_EMAILxPositive() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.SEARCH, new String[] {
             "TELEPHONE", "LEVEL", "FIRST_NAME", "EMAIL"
-        }, restrictions));
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
+        }, positive));
+        printAndValidate(command, connection);
+    }
 
-		System.out.println("SEARCH: -- no args, no restrictions --------------------");
-        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.SEARCH));
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
+    @Test(groups={"crud", "crud-search"})
+    public void crudSEARCHwTELEPHONE_LEVEL_FIRST_NAME_EMAILxNegative() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.SEARCH, new String[] {
+            "TELEPHONE", "LEVEL", "FIRST_NAME", "EMAIL"
+        }, negative));
+        printAndValidate(command, connection);
+    }
 
-		System.out.println("SEARCH: -- restrictions only -------------------------");
-        command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.SEARCH, restrictions));
-        System.out.println(command.getRequestType().getName());
-		System.out.println(DataObject.Util.describe(command.getRequestType()));
-		for (ParametricStatement statement: command.getStatements()) {
-			System.out.println(statement.print(new StringBuilder()));
-		}
+    @Test(groups={"crud", "crud-search"})
+    public void crudSEARCH() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.SEARCH));
+        printAndValidate(command, connection);
+    }
 
-        connection.close();
+    @Test(groups={"crud", "crud-search"})
+    public void crudSEARCHxNegative() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.SEARCH, negative));
+        printAndValidate(command, connection);
+    }
+
+    @Test(groups={"crud", "crud-search"})
+    public void crudSEARCHxPositive() throws Exception {
+        CrudCommand command = new CrudCommand(connection, username, tablenames, new CrudCommand.Action(CrudCommand.Operation.SEARCH, positive));
+        printAndValidate(command, connection);
+    }
+
+    private static void printAndValidate(CrudCommand command, Connection connection) throws Exception {
+        System.out.println("------------------------------------------------------");
+        System.out.println("------------------------------------------------------");
+        System.out.println(command.getName());
+        System.out.println("------------------------------------------------------");
+        System.out.println("------------------------------------------------------");
+        System.out.println("[class: " + command.getRequestType().getName() + ']');
+        System.out.println(DataObject.Util.describe(command.getRequestType()));
+        for (ParametricStatement statement: command.getStatements()) {
+            System.out.println(statement.print(new StringBuilder()));
+            try {
+                connection.prepareStatement(statement.getSQL()).close();
+                System.out.println("   VERIFIED");
+            } catch (Exception x) {
+                System.out.println("***ERROR: " + x.getMessage());
+                throw x;
+            }
+        }
     }
 }
 
