@@ -4,10 +4,10 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import javax.management.ObjectName;
+import javax.management.*;
 
 import org.xillium.base.beans.Throwables;
-import org.xillium.core.management.Manageable;
+import org.xillium.core.management.*;
 
 
 /**
@@ -248,6 +248,16 @@ public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable
 
     public ObjectName getObjectName() {
         return _name;
+    }
+
+    @Override
+    public String getProperty(String name) throws AttributeNotFoundException {
+        return ManagedComponent.getProperty(this, name);
+    }
+
+    @Override
+    public void setProperty(String name, String value) throws AttributeNotFoundException, BadAttributeValueExpException {
+        ManagedComponent.setProperty(this, name, value);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.xillium.core.management;
 
+import java.lang.reflect.*;
 import java.util.concurrent.Executor;
 import java.util.logging.*;
 import javax.management.*;
@@ -52,6 +53,7 @@ public abstract class ManagedComponent implements Manageable, Reporting, Notific
         _broadcaster = broadcaster;
     }
 
+    @Override
     public ObjectName assignObjectName(ObjectName name) {
         if (_name != null) throw new IllegalStateException("ObjectNameAlreadyAssigned");
         return _name = name;
@@ -59,6 +61,16 @@ public abstract class ManagedComponent implements Manageable, Reporting, Notific
 
     public ObjectName getObjectName() {
         return _name;
+    }
+
+    @Override
+    public String getProperty(String name) throws AttributeNotFoundException {
+        return getProperty(this, name);
+    }
+
+    @Override
+    public void setProperty(String name, String value) throws AttributeNotFoundException, BadAttributeValueExpException {
+        setProperty(this, name, value);
     }
 
     public NotificationBroadcaster getNotificationBroadcaster() {
@@ -170,19 +182,65 @@ public abstract class ManagedComponent implements Manageable, Reporting, Notific
         }
     }
 
+    @Override
     public void addNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) {
         if (_broadcaster != null) _broadcaster.addNotificationListener(listener, filter, handback);
     }
 
+    @Override
     public MBeanNotificationInfo[] getNotificationInfo() {
         return (_broadcaster != null) ? _broadcaster.getNotificationInfo() : new MBeanNotificationInfo[0];
     }
 
+    @Override
     public void removeNotificationListener(NotificationListener listener) throws ListenerNotFoundException {
         if (_broadcaster != null) _broadcaster.removeNotificationListener(listener);
     }
 
+    @Override
     public void removeNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws ListenerNotFoundException {
         if (_broadcaster != null) _broadcaster.removeNotificationListener(listener, filter, handback);
+    }
+
+    /**
+     * Reports a component property.
+     *
+     * @param object - the target object
+     * @param name - a dot-separated path to the property
+     * @return the property value, or null if such property is not found
+     */
+    public static String getProperty(Object object, String name) throws AttributeNotFoundException {
+        try {
+            for (String property: name.split("\\.")) {
+                object = Beans.getKnownField(object.getClass(), property).get(object);
+            }
+            return String.valueOf(object);
+        } catch (Exception x) {
+            throw new AttributeNotFoundException(x.getMessage());
+        }
+    }
+
+    /**
+     * Updates a component property.
+     *
+     * @param object - the target object
+     * @param name - a dot-separated path to the property
+     * @param text - a String representation of the new value
+     */
+    public static void setProperty(Object object, String name, String text) throws AttributeNotFoundException, BadAttributeValueExpException {
+        String[] path = name.split("\\.");
+        try {
+            for (int i = 0; i < path.length - 1; ++i) {
+                object = Beans.getKnownField(object.getClass(), path[i]).get(object);
+            }
+        } catch (Exception x) {
+            throw new AttributeNotFoundException(x.getMessage());
+        }
+        try {
+            Field field = Beans.getKnownField(object.getClass(), path[path.length - 1]);
+            field.set(object, Beans.valueOf(field.getType(), text));
+        } catch (Exception x) {
+            throw new BadAttributeValueExpException(text);
+        }
     }
 }

@@ -34,4 +34,16 @@ public interface Manageable {
      * @return the same ObjectName passed to this method.
      */
     public ObjectName assignObjectName(ObjectName name);
+
+    /**
+     * Reports a component property.
+     *
+     * @return the property value, or null if such property is not found
+     */
+    public String getProperty(String name) throws AttributeNotFoundException;
+
+    /**
+     * Updates a component property.
+     */
+    public void setProperty(String name, String value) throws AttributeNotFoundException, BadAttributeValueExpException;
 }
