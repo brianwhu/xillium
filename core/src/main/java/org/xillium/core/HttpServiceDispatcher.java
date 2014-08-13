@@ -239,14 +239,14 @@ public class HttpServiceDispatcher extends HttpServlet {
                 try { ((Service.Extended)service).aborted(binder, x); } catch (Throwable t) { _logger.log(Level.WARNING, "aborted()", t); }
             }
 
-            String sst = binder.get(Service.SERVICE_STACK_TRACE);
-            String pst = System.getProperty("xillium.service.PrintStackTrace");
-            if (sst != null || pst != null) {
+            boolean sst = !(binder.get(Service.SERVICE_STACK_TRACE) == null);
+            boolean pst = !(System.getProperty("xillium.service.PrintStackTrace") == null || id.startsWith("x!/"));
+            if (sst || pst) {
                 CharArrayWriter sw = new CharArrayWriter();
                 x.printStackTrace(new PrintWriter(sw));
                 String stack = sw.toString();
-                if (sst != null) binder.put(Service.FAILURE_STACK, stack);
-                if (pst != null) _logger.warning(x.getClass().getSimpleName() + " caught in (" + id + "): " + message + '\n' + stack);
+                if (sst) binder.put(Service.FAILURE_STACK, stack);
+                if (pst) _logger.warning(x.getClass().getSimpleName() + " caught in (" + id + "): " + message + '\n' + stack);
             }
         } finally {
             // post-service filter

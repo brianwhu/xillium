@@ -22,7 +22,10 @@ import org.xillium.core.management.*;
  */
 public class PingService extends ManagementService {
     private static final Pattern SYSTEM_PROPERTY_REALM = Pattern.compile("java\\..*|os\\..*|user\\..*|file\\..*|path\\..*|xillium.system\\..*");
+    private static final String REDIRECT = "_redirect_";
+
     private final ApplicationContext _context;
+    private final String _name;
     private final Map<String, ParametricStatement> _statements;
     private final Map<String, Service> _services;
 
@@ -39,17 +42,17 @@ public class PingService extends ManagementService {
         public boolean verbose;
     }
 
-    public PingService(ApplicationContext ac, Map<String, ParametricStatement> statements, Map<String, Service> services) {
+    public PingService(ApplicationContext ac, String name, Map<String, ParametricStatement> statements, Map<String, Service> services) {
         _context = ac;
+        _name = name;
         _statements = statements;
         _services = services;
     }
 
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
         if (isLocal(binder)) {
-            String redirect = binder.get("redirect");
-            if (redirect != null) {
-                binder.remove("redirect"); // stop loops!!
+            String redirect = binder.remove(REDIRECT);
+            if (redirect != null && redirect.length() > 0) {
                 RemoteService.Response response = RemoteService.call(
                     redirect, binder.get(REQUEST_TARGET_PATH), binder, REQUEST_CLIENT_PHYS+'='+binder.get(REQUEST_CLIENT_PHYS)
                 );
@@ -62,8 +65,7 @@ public class PingService extends ManagementService {
             } else try {
                 final Request request = dict.collect(new Request(), binder);
                 if (request.parameter != null) request.parameter = URLDecoder.decode(request.parameter, "UTF-8");
-                binder.remove("signal");
-                binder.remove("parameter");
+                binder.put("application", _name);
 
                 if (request.signal != null) switch (request.signal) {
                 case SystemProperties:
@@ -136,6 +138,8 @@ public class PingService extends ManagementService {
         } else {
             binder.put("echo", String.valueOf(System.currentTimeMillis()));
         }
+        binder.remove("signal");
+        binder.remove("parameter");
         return binder;
     }
 

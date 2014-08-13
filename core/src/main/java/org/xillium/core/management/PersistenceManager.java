@@ -69,8 +69,12 @@ public class PersistenceManager {
 
     public PersistenceManager d(String name, String xml) {
         try {
-            XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
-            _statements.put(name, (ParametricStatement)assembler.build(new ByteArrayInputStream(xml.getBytes("UTF-8"))));
+            if (_statements.get(name) != null) {
+                XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
+                _statements.put(name, (ParametricStatement)assembler.build(new ByteArrayInputStream(xml.getBytes("UTF-8"))));
+            } else {
+                _binder.put(MESSAGE, "Unknown: " + name);
+            }
         } catch (Exception x) {
             _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
         }
