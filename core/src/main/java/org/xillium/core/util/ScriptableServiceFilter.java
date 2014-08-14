@@ -1,7 +1,6 @@
 package org.xillium.core.util;
 
 import java.util.Map;
-import java.util.logging.*;
 import javax.script.*;
 
 import org.xillium.base.beans.Throwables;
@@ -16,10 +15,8 @@ import org.xillium.core.ServiceException;
 public class ScriptableServiceFilter implements Service.Filter {
     private static final String JAVASCRIPT_LINE_INFO = " *\\([^()]+\\)$";
 
-    private static final Logger _logger = Logger.getLogger(ScriptableServiceFilter.class.getName());
     private static final ScriptEngine js = new ScriptEngineManager().getEngineByName("JavaScript");
-
-    private String _filtrate, _successful, _aborted, _complete;
+    private String _filtrate, _acknowledge, _successful, _aborted, _complete;
 
     /**
      * Provides a "system" object to the JavaScript engine.
@@ -42,6 +39,13 @@ public class ScriptableServiceFilter implements Service.Filter {
      */
     public void setFiltrate(String script) {
         _filtrate = script;
+    }
+
+    /**
+     * Provides a script for the "acknowledge" method.
+     */
+    public void setAcknowledge(String script) {
+        _acknowledge = script;
     }
 
     /**
@@ -72,7 +76,6 @@ public class ScriptableServiceFilter implements Service.Filter {
                 js.put("binder", parameters);
                 js.eval(_filtrate);
             } catch (Throwable t) {
-                _logger.log(Level.WARNING, "filtrate()", t);
                 t = Throwables.getRootCause(t);
                 String s = t.getMessage();
                 throw new ServiceException(s != null ? s.replaceAll(JAVASCRIPT_LINE_INFO, "") : "***UnknownError", t);
@@ -81,39 +84,35 @@ public class ScriptableServiceFilter implements Service.Filter {
     }
 
     @Override
-    public void successful(DataBinder parameters) throws Throwable {
+    public void acknowledge(DataBinder parameters) throws Exception {
+        if (_acknowledge != null) {
+            js.put("binder", parameters);
+            js.eval(_acknowledge);
+        }
+    }
+
+    @Override
+    public void successful(DataBinder parameters) throws Exception {
         if (_successful != null) {
-            try {
-                js.put("binder", parameters);
-                js.eval(_successful);
-            } catch (Throwable t) {
-                _logger.log(Level.WARNING, "successful()", t);
-            }
+            js.put("binder", parameters);
+            js.eval(_successful);
         }
     }
 
     @Override
-    public void aborted(DataBinder parameters, Throwable throwable) throws Throwable {
+    public void aborted(DataBinder parameters, Throwable throwable) throws Exception {
         if (_aborted != null) {
-            try {
-                js.put("binder", parameters);
-                js.put("throwable", throwable);
-                js.eval(_aborted);
-            } catch (Throwable t) {
-                _logger.log(Level.WARNING, "aborted()", t);
-            }
+            js.put("binder", parameters);
+            js.put("throwable", throwable);
+            js.eval(_aborted);
         }
     }
 
     @Override
-    public void complete(DataBinder parameters) throws Throwable {
+    public void complete(DataBinder parameters) throws Exception {
         if (_complete != null) {
-            try {
-                js.put("binder", parameters);
-                js.eval(_complete);
-            } catch (Throwable t) {
-                _logger.log(Level.WARNING, "complete()", t);
-            }
+            js.put("binder", parameters);
+            js.eval(_complete);
         }
     }
 }

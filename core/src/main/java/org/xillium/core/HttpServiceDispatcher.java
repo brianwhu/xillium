@@ -158,6 +158,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             if (service instanceof Service.Extended) {
                 try {
                     ((Service.Extended)service).filtrate(binder);
+                    try { ((Service.Extended)service).acknowledge(binder); } catch (Throwable t) {}
                 } catch (AuthenticationRequiredException x) {
                     if (binder.get(Service.REQUEST_HTTP_STATUS) != null) {
                         res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -202,7 +203,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             // post-service filter
 
             if (service instanceof Service.Extended) {
-                try { ((Service.Extended)service).successful(binder); } catch (Throwable t) { _logger.log(Level.WARNING, "successful()", t); }
+                try { ((Service.Extended)service).successful(binder); } catch (Throwable t) {}
             }
 
             // post-service action (deprecated)
@@ -236,7 +237,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 
             // post-service exception handler
             if (service instanceof Service.Extended) {
-                try { ((Service.Extended)service).aborted(binder, x); } catch (Throwable t) { _logger.log(Level.WARNING, "aborted()", t); }
+                try { ((Service.Extended)service).aborted(binder, x); } catch (Throwable t) {}
             }
 
             boolean sst = !(binder.get(Service.SERVICE_STACK_TRACE) == null);
@@ -251,7 +252,7 @@ public class HttpServiceDispatcher extends HttpServlet {
         } finally {
             // post-service filter
             if (service instanceof Service.Extended) {
-                try { ((Service.Extended)service).complete(binder); } catch (Throwable t) { _logger.log(Level.WARNING, "complete()", t); }
+                try { ((Service.Extended)service).complete(binder); } catch (Throwable t) {}
             }
 
             res.setHeader("Access-Control-Allow-Headers", "origin,x-prototype-version,x-requested-with,accept");

@@ -1,6 +1,5 @@
 package org.xillium.core.util;
 
-import java.util.logging.*;
 import org.xillium.base.etc.Pair;
 import org.xillium.data.DataBinder;
 import org.xillium.core.Service;
@@ -11,7 +10,6 @@ import org.xillium.core.ServiceException;
  * A compound service filter that binds together a pair of filters.
  */
 public class CompoundFilter extends Pair<Service.Filter, Service.Filter> implements Service.Filter {
-    private static final Logger _logger = Logger.getLogger(CompoundFilter.class.getName());
 
     /**
      * Constructs a CompoundFilter.
@@ -30,12 +28,21 @@ public class CompoundFilter extends Pair<Service.Filter, Service.Filter> impleme
     }
 
     /**
+     * Calls both filters' acknowledge() method, ignoring anything thrown.
+     */
+    @Override
+    public void acknowledge(DataBinder parameters) {
+        try { first.acknowledge(parameters);  } catch (Throwable t) {}
+        try { second.acknowledge(parameters); } catch (Throwable t) {}
+    }
+
+    /**
      * Calls both filters' successful() method, ignoring anything thrown.
      */
     @Override
     public void successful(DataBinder parameters) {
-        try { first.successful(parameters);  } catch (Throwable t) { _logger.log(Level.WARNING, "successful()", t); }
-        try { second.successful(parameters); } catch (Throwable t) { _logger.log(Level.WARNING, "successful()", t); }
+        try { first.successful(parameters);  } catch (Throwable t) {}
+        try { second.successful(parameters); } catch (Throwable t) {}
     }
 
     /**
@@ -43,8 +50,8 @@ public class CompoundFilter extends Pair<Service.Filter, Service.Filter> impleme
      */
     @Override
     public void aborted(DataBinder parameters, Throwable throwable) {
-        try { first.aborted(parameters, throwable);  } catch (Throwable t) { _logger.log(Level.WARNING, "aborted()", t); }
-        try { second.aborted(parameters, throwable); } catch (Throwable t) { _logger.log(Level.WARNING, "aborted()", t); }
+        try { first.aborted(parameters, throwable);  } catch (Throwable t) {}
+        try { second.aborted(parameters, throwable); } catch (Throwable t) {}
     }
 
     /**
@@ -52,7 +59,7 @@ public class CompoundFilter extends Pair<Service.Filter, Service.Filter> impleme
      */
     @Override
     public void complete(DataBinder parameters) {
-        try { first.complete(parameters);  } catch (Throwable t) { _logger.log(Level.WARNING, "complete()", t); }
-        try { second.complete(parameters); } catch (Throwable t) { _logger.log(Level.WARNING, "complete()", t); }
+        try { first.complete(parameters);  } catch (Throwable t) {}
+        try { second.complete(parameters); } catch (Throwable t) {}
     }
 }

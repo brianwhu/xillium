@@ -67,32 +67,39 @@ public interface Service {
      */
     public static interface Filter {
         /**
-         * An extra step that runs before the service transaction starts.
+         * Performs request filtration at the very beginning of the service. A runtime exception thrown by this method stops the service.
          */
         public void filtrate(DataBinder parameters) throws ServiceException;
 
         /**
-         * An extra step that runs after the service is successful and the associated transaction committed.
+         * Performs request acknowledgement just before the service transaction starts.
+         *
+         * Anything thrown from this method is silently ignored.
+         */
+        public void acknowledge(DataBinder parameters) throws Exception;
+
+        /**
+         * Performs extra processes after the service is successful and the associated transaction has been committed.
          * It will NOT run if the service has failed.
          *
          * Anything thrown from this method is silently ignored.
          */
-        public void successful(DataBinder parameters) throws Throwable;
+        public void successful(DataBinder parameters) throws Exception;
 
         /**
-         * An extra step that runs after the service has failed and the associated transaction rolled back.
+         * Performs extra processes after the service has failed and the associated transaction has been rolled back.
          * It will NOT run if the service is successful.
          *
          * Anything thrown from this method is silently ignored.
          */
-        public void aborted(DataBinder parameters, Throwable throwable) throws Throwable;
+        public void aborted(DataBinder parameters, Throwable throwable) throws Exception;
 
         /**
-         * An extra step that always runs after the service has been completed, disregarding whether the associated transaction is committed or rolled back.
+         * Performs extra processes after the service has completed either successfully or with failures.
          *
          * Anything thrown from this method is silently ignored.
          */
-        public void complete(DataBinder parameters) throws Throwable;
+        public void complete(DataBinder parameters) throws Exception;
     }
 
 	/**

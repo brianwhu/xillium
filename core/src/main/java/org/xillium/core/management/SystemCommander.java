@@ -54,7 +54,7 @@ public class SystemCommander {
     public SystemCommander f(String address, String script) {
         try {
             ScriptableServiceFilter filter = new ScriptableServiceFilter();
-            filter.setFiltrate(script);
+            filter.setAcknowledge(script);
             ((Service.Extendable)_services.get(address)).setFilter(filter);
             _installed.incrementAndGet();
         } catch (Exception x) {
