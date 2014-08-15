@@ -153,12 +153,11 @@ public class HttpServiceDispatcher extends HttpServlet {
                 // TODO provide a default, error reporting page template
             }
 
-            // pre-service filter
+            // pre-service filtration
 
             if (service instanceof Service.Extended) {
                 try {
                     ((Service.Extended)service).filtrate(binder);
-                    try { ((Service.Extended)service).acknowledge(binder); } catch (Throwable t) {}
                 } catch (AuthenticationRequiredException x) {
                     if (binder.get(Service.REQUEST_HTTP_STATUS) != null) {
                         res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -196,6 +195,12 @@ public class HttpServiceDispatcher extends HttpServlet {
                         throw x;
                     }
                 }
+            }
+
+            // acknowledgement
+
+            if (service instanceof Service.Extended) {
+                try { ((Service.Extended)service).acknowledge(binder); } catch (Throwable t) {}
             }
 
             binder = service.run(binder, ServicePlatform.getDictionary(), _persistence);
