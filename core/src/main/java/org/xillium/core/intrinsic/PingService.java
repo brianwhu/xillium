@@ -53,15 +53,9 @@ public class PingService extends ManagementService {
         if (isLocal(binder)) {
             String redirect = binder.remove(REDIRECT);
             if (redirect != null && redirect.length() > 0) {
-                RemoteService.Response response = RemoteService.call(
+                RemoteService.call(
                     redirect, binder.get(REQUEST_TARGET_PATH), binder, REQUEST_CLIENT_PHYS+'='+binder.get(REQUEST_CLIENT_PHYS)
-                );
-                for (Map.Entry<String, String> entry: response.params.entrySet()) {
-                    binder.put(entry.getKey(), entry.getValue());
-                }
-                for (Map.Entry<String, CachedResultSet> entry: response.tables.entrySet()) {
-                    binder.putResultSet(entry.getKey(), entry.getValue());
-                }
+                ).store(binder);
             } else try {
                 final Request request = dict.collect(new Request(), binder);
                 if (request.parameter != null) request.parameter = URLDecoder.decode(request.parameter, "UTF-8");

@@ -40,10 +40,33 @@ public class RemoteService {
             return this;
         }
 
+        /**
+         * Stores a String value from <code>params</code> into a DataBinder under a new name.
+         */
         public Response store(DataBinder binder, String target, String original) {
             String value = params.get(original);
             if (value != null) {
                 binder.put(target, value);
+            }
+            return this;
+        }
+
+        /**
+         * Stores the content of this response into a DataBinder.
+         */
+        public Response store(DataBinder binder) {
+            try {
+                for (Map.Entry<String, String> entry: params.entrySet()) {
+                    binder.put(entry.getKey(), entry.getValue());
+                }
+                if (values != null) for (Map.Entry<String, Object> entry: values.entrySet()) {
+                    binder.put(entry.getKey(), "json:" + _mapper.writeValueAsString(entry.getValue()));
+                }
+                for (Map.Entry<String, CachedResultSet> entry: tables.entrySet()) {
+                    binder.putResultSet(entry.getKey(), entry.getValue());
+                }
+            } catch (JsonProcessingException x) {
+                throw new RuntimeException(x.getMessage(), x);
             }
             return this;
         }
