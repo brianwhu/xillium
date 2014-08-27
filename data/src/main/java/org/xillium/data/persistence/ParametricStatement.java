@@ -14,7 +14,7 @@ import javassist.bytecode.annotation.MemberValue;
 
 
 /**
- * A prepared SQL statement with named parameters. A parameter accepts null value if its name ends with '?'.
+ * A ParametricStatement is a prepared SQL statement supporting named bind parameters.
  *
  * TODO: remove nullable setting and checking, and let the database check column nullability
  */
@@ -37,7 +37,7 @@ public class ParametricStatement {
          * A single-character suffix of '?' after the name marks the parameter as accepting null values. Without
          * the suffix the parameter is non-null.
          * <p/>
-         * Neither prefix or suffix is part of the actual parameter name.
+         * Neither the prefix nor the suffix is part of the actual parameter name.
          */
         public Param(String n, int t) {
             if (n.charAt(0) == '-') {
@@ -64,11 +64,22 @@ public class ParametricStatement {
         }
     };
 
+    /**
+     * Constructs a ParametricStatement with the given list of parameters and the SQL string. The SQL string
+     * may contain bind variable placeholders('?').
+     */
     public ParametricStatement(Param[] parameters, String sql) throws IllegalArgumentException {
         _params = parameters;
         set(sql);
     }
 
+    /**
+     * Constructs a ParametricStatement with the given the SQL string. The SQL string may contain named bind
+     * variables in the format
+     * <blockquote>
+     *      ':' variable-name ':' jdbc-type-name
+     * </blockquote>
+     */
     public ParametricStatement(String parameters) throws IllegalArgumentException {
         if (parameters != null && parameters.trim().length() > 0) {
             String[] params = parameters.trim().split("\\s*,\\s*");
@@ -96,9 +107,15 @@ public class ParametricStatement {
         }
     }
 
+    /**
+     * Constructs an empty ParametricStatement.
+     */
     public ParametricStatement() {
     }
 
+    /**
+     * Assigns a SQL string to this ParametricStatement.
+     */
     public ParametricStatement set(String sql) throws IllegalArgumentException {
     if (_params != null) {
         int count = 0;
@@ -129,10 +146,16 @@ public class ParametricStatement {
         return this;
     }
 
+    /**
+     * Returns the list of parameters of this ParametricStatement.
+     */
     public Param[] getParameters() {
         return _params;
     }
 
+    /**
+     * Returns the SQL string in this ParametricStatement.
+     */
     public String getSQL() {
         return _sql;
     }
@@ -439,60 +462,4 @@ public class ParametricStatement {
             return "java.lang.Object";
         }
     }
-
-/*
-    @SuppressWarnings("unchecked")
-    protected void setValue(Object object, Field field, Object value) throws IllegalArgumentException, IllegalAccessException {
-        if (value == null) {
-            //if (Number.class.isAssignableFrom(field.getType())) {
-                //value = BigDecimal.ZERO;
-            //} else return;
-            return;
-        }
-
-        try {
-            field.setAccessible(true);
-            field.set(object, value);
-        } catch (IllegalArgumentException x) {
-            @SuppressWarnings("rawtypes")
-            Class ftype = field.getType();
-            if (value instanceof Number) {
-                // size of "value" bigger than that of "field"?
-                try {
-                    Number number = (Number)value;
-                    if (Double.TYPE == ftype || Double.class.isAssignableFrom(ftype)) {
-                        field.set(object, number.doubleValue());
-                    } else if (Float.TYPE == ftype || Float.class.isAssignableFrom(ftype)) {
-                        field.set(object, number.floatValue());
-                    } else if (Long.TYPE == ftype || Long.class.isAssignableFrom(ftype)) {
-                        field.set(object, number.longValue());
-                    } else if (Integer.TYPE == ftype || Integer.class.isAssignableFrom(ftype)) {
-                        field.set(object, number.intValue());
-                    } else if (Short.TYPE == ftype || Short.class.isAssignableFrom(ftype)) {
-                        field.set(object, number.shortValue());
-                    } else {
-                        field.set(object, number.byteValue());
-                    }
-                } catch (Throwable t) {
-                    throw new IllegalArgumentException(t);
-                }
-            } else if (value instanceof java.sql.Timestamp) {
-                try {
-                    field.set(object, new java.sql.Date(((java.sql.Timestamp)value).getTime()));
-                } catch (Throwable t) {
-                    throw new IllegalArgumentException(t);
-                }
-            } else if ((value instanceof String) && Enum.class.isAssignableFrom(ftype)) {
-                try {
-                    field.set(object, Enum.valueOf(ftype, (String)value));
-                } catch (Throwable t) {
-                    throw new IllegalArgumentException(t);
-                }
-            } else {
-                throw new IllegalArgumentException(x);
-            }
-        }
-
-    }
-*/
 }
