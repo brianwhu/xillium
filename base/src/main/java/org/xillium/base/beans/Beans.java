@@ -3,6 +3,7 @@ package org.xillium.base.beans;
 import java.beans.*;
 import java.lang.reflect.*;
 import java.util.*;
+import org.xillium.base.type.Flags;
 
 
 /**
@@ -371,11 +372,23 @@ public class Beans {
                 } catch (Throwable t) {
                     throw new IllegalArgumentException(t);
                 }
-            } else if ((value instanceof String) && Enum.class.isAssignableFrom(ftype)) {
-                try {
-                    field.set(object, Enum.valueOf(ftype, (String)value));
-                } catch (Throwable t) {
-                    throw new IllegalArgumentException(t);
+            } else if (value instanceof String) {
+                if (Enum.class.isAssignableFrom(ftype)) {
+                    try {
+                        field.set(object, Enum.valueOf(ftype, (String)value));
+                    } catch (Throwable t) {
+                        throw new IllegalArgumentException(t);
+                    }
+                } else if (Flags.class.isAssignableFrom(ftype)) {
+                    try {
+                        ((Flags<? extends Enum<?>>)field.get(object)).clear().set((String)value);
+                    } catch (NullPointerException t) {
+                        throw new NullPointerException(field.toString());
+                    } catch (Throwable t) {
+                        throw new IllegalArgumentException(t);
+                    }
+                } else {
+                    throw new IllegalArgumentException(x);
                 }
             } else {
                 throw new IllegalArgumentException(x);
