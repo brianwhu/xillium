@@ -16,6 +16,7 @@ import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.persistence.crud.CrudConfiguration;
 import org.xillium.data.xml.*;
+import org.xillium.core.management.ManagedPlatform;
 
 
 /**
@@ -45,11 +46,9 @@ public class HttpServiceDispatcher extends HttpServlet {
      * Initializes the servlet, loading and initializing xillium modules.
      */
     public void init() throws ServletException {
-        ServletContext context = getServletContext();
-        _application = context.getContextPath();
-        if (_application.charAt(0) == '/') _application = _application.substring(1);
+        _application = ((ManagedPlatform)ServicePlatform.getService(ManagedPlatform.INSTANCE)).getName();
 
-        ApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(context);
+        ApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
         if (wac.containsBean("persistence")) { // persistence may not be there if persistent storage is not required
             _persistence = (Persistence)wac.getBean("persistence");
         }

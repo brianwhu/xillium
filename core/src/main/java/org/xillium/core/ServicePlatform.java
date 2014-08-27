@@ -30,7 +30,7 @@ import org.xillium.core.util.ModuleSorter;
  * Service Platform - initialization and termination.
  */
 @WebListener
-public class ServicePlatform extends ContextLoaderListener implements ServletContextListener {
+public class ServicePlatform extends ManagedPlatform {
     private static final String DOMAIN_NAME = "Xillium-Domain-Name";
     private static final String MODULE_NAME = "Xillium-Module-Name";
     private static final String MODULE_BASE = "Xillium-Module-Base";
@@ -60,11 +60,7 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
 
     private final Stack<ObjectName> _manageables = new Stack<ObjectName>();
     private final Stack<List<PlatformLifeCycleAwareDef>> _plca = new Stack<List<PlatformLifeCycleAwareDef>>();
-    private static final Map<String, Service> _services = new HashMap<String, Service>();
     private static final org.xillium.data.validation.Dictionary _dict = new org.xillium.data.validation.Dictionary();
-
-    // Servlet context path without the leading '/'
-    private String _application;
 
     // Wired in spring application context
     private Persistence _persistence;
@@ -75,7 +71,7 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
     }
 
     static Service getService(String id) {
-        return _services.get(id);
+        return _registry.get(id);
     }
 
     static org.xillium.data.validation.Dictionary getDictionary() {
@@ -88,16 +84,13 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
     @Override
     public void contextInitialized(ServletContextEvent event) {
         super.contextInitialized(event);
-
         ServletContext context = event.getServletContext();
-        _application = context.getContextPath();
-        _logger.config("application: " + _application);
-        if (_application.charAt(0) == '/') _application = _application.substring(1);
 
         ApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(context);
         _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
         if (wac.containsBean("persistence")) { // persistence may not be there if persistent storage is not required
             _persistence = (Persistence)wac.getBean("persistence");
+            _statements = _persistence.getStatementMap();
         }
 
         ModuleSorter.Sorted sorted = sortServiceModules(context);
@@ -127,20 +120,15 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
 
         _logger.log(Level.CONFIG, "install service filters");
         for (FiltersInstallation fi: info.filters) {
-            fi.install(_services);
+            fi.install(_registry);
         }
 
         String hide = System.getProperty("xillium.service.HideDescription");
         if (hide == null || hide.length() == 0) {
-            _services.put("x!/desc", new DescService(info.descriptions));
-            _services.put("x!/list", new ListService(_services));
+            _registry.put("x!/desc", new DescService(info.descriptions));
+            _registry.put("x!/list", new ListService(_registry));
         }
-        _services.put("x!/ping", new PingService(wac, _application, _persistence != null ? _persistence.getStatementMap() : null, _services));
-
-        // Tomcat/Catalina special
-        try { ManagementFactory.getPlatformMBeanServer().setAttribute(
-            new ObjectName("Catalina:host=localhost,name=AccessLogValve,type=Valve"), new Attribute("condition", "intrinsic")
-        ); } catch (Exception x) {}
+        _registry.put("x!/ping", new PingService());
     }
 
     @Override
@@ -323,13 +311,13 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
                         info.descriptions.put(fullname, "json:{}");
                     }
                 } catch (Exception t) {
-                    _logger.warning("Service '" + fullname + "' does not expose its request structure" + t.getClass());
+                    _logger.config("Service '" + fullname + "' does not expose its request structure");
                     info.descriptions.put(fullname, "json:{}");
                 }
             }
 
             _logger.config("Service '" + fullname + "' class=" + gac.getBean(id).getClass().getName());
-            _services.put(fullname, (Service)gac.getBean(id));
+            _registry.put(fullname, (Service)gac.getBean(id));
         }
 
         // Filter installations
@@ -364,6 +352,4 @@ public class ServicePlatform extends ContextLoaderListener implements ServletCon
         _logger.config("Done with service modules in ApplicationContext " + gac.getId());
         return gac;
     }
-
-    private static final long serialVersionUID = 1L;
 }

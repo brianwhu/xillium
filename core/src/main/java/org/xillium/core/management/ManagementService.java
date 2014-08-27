@@ -2,14 +2,15 @@ package org.xillium.core.management;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import org.springframework.web.context.ContextLoaderListener;
 import org.xillium.data.DataBinder;
-import org.xillium.core.SecuredService;
+import org.xillium.core.Service;
 
 
 /**
  * An implementation of Service.Secured, this abstract service authorizes invocation using an injected Authorizer.
  */
-public abstract class ManagementService extends SecuredService {
+public abstract class ManagementService extends ContextLoaderListener implements Service {
     protected static final long SYNC_DRIFTING_TOLERANCE = 65537L;
 
     protected boolean sync(String realm, long encoding) {
