@@ -481,7 +481,7 @@ public class Beans {
      * @return the original StringBuilder
      */
     public static StringBuilder print(StringBuilder sb, Object bean, int level) throws IntrospectionException {
-        return print(sb, new HashSet<Object>(), bean, level);
+        return print(sb, Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>()), bean, level);
     }
 
     private static StringBuilder print(StringBuilder sb, Set<Object> objects, Object bean, int level) throws IntrospectionException {
