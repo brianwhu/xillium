@@ -6,43 +6,30 @@ import org.xillium.base.beans.Strings;
 
 /**
  * A String-friendly wrapper of java.util.EnumSet, this bit mask implementation allows its
- * state to be represented as a String of concatenated names.
+ * value to be represented as a String of concatenated enum names.
  * <p/>
  * Beans.setValue() recognizes Flags fields and will perform String to Flags assignment.
  * However due to type erasure Beans can't resolve the enum type associated with the Flags
- * field so the field must be declared and initialized, as following.
+ * field unless the field is annotated with @typeinfo, as following.
  * <xmp>
- *      Flags<MyEnumType> flags = new Flags<MyEnumType>(MyEnumType.class);
+ *      @typeinfo(MyEnumType.class) Flags<MyEnumType> flags;
  * </xmp>
  */
 public class Flags<E extends Enum<E>> {
-    private final Class<E> _enum;
     private final EnumSet<E> _mask;
 
     /**
      * Constructs a Flags with all individual flags cleared.
      */
     public Flags(Class<E> type) {
-        _enum = type;
         _mask = EnumSet.noneOf(type);
     }
 
     /**
-     * Sets a flag corresponding to the given enum literal.
+     * Sets a flag corresponding to the given enum value.
      */
     public Flags<E> set(E e) {
         _mask.add(e);
-        return this;
-    }
-
-    /**
-     * Sets a set of flags as denoted by a String of concatenated enum literal names
-     * separated by any combination of a comma, a colon, or a white space.
-     */
-    public Flags<E> set(String values) {
-        for (String text : values.trim().split("[,:\\s]{1,}")) {
-            _mask.add(Enum.valueOf(_enum, text));
-        }
         return this;
     }
 
@@ -55,23 +42,42 @@ public class Flags<E extends Enum<E>> {
     }
 
     /**
-     * Tests whether a flag corresponding to the given enum literal is set or not.
+     * Tests whether a flag corresponding to the given enum value is set or not.
      */
     public boolean isSet(E e) {
         return _mask.contains(e);
     }
 
     /**
-     * Tests whether none of the flags is set.
+     * Tests whether none of the flags is set or not.
      */
     public boolean isNone() {
         return _mask.size() == 0;
     }
 
     /**
-     * Returns a string representation of all flags, in a format compatible with the set() method.
+     * Returns a string representation of this object, in a format compatible with the static valueOf() method.
      */
     public String toString() {
         return Strings.join(_mask, ':');
+    }
+
+    /**
+     * Returns a string representation of this object, in a format compatible with the static valueOf() method.
+     */
+    public String getText() {
+        return Strings.join(_mask, ':');
+    }
+
+    /**
+     * Returns a Flags with a value represented by a string of concatenated enum literal names
+     * separated by any combination of a comma, a colon, or a white space.
+     */
+    public static <E extends Enum<E>> Flags<E> valueOf(Class<E> type, String values) {
+        Flags<E> flags = new Flags<E>(type);
+        for (String text : values.trim().split("[,:\\s]{1,}")) {
+            flags.set(Enum.valueOf(type, text));
+        }
+        return flags;
     }
 }

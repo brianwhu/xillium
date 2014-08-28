@@ -3,7 +3,7 @@ package org.xillium.base.beans;
 import java.beans.*;
 import java.lang.reflect.*;
 import java.util.*;
-import org.xillium.base.type.Flags;
+import org.xillium.base.type.*;
 
 
 /**
@@ -373,23 +373,7 @@ public class Beans {
                     throw new IllegalArgumentException(t);
                 }
             } else if (value instanceof String) {
-                if (Enum.class.isAssignableFrom(ftype)) {
-                    try {
-                        field.set(object, Enum.valueOf(ftype, (String)value));
-                    } catch (Throwable t) {
-                        throw new IllegalArgumentException(t);
-                    }
-                } else if (Flags.class.isAssignableFrom(ftype)) {
-                    try {
-                        ((Flags<? extends Enum<?>>)field.get(object)).clear().set((String)value);
-                    } catch (NullPointerException t) {
-                        throw new NullPointerException(field.toString());
-                    } catch (Throwable t) {
-                        throw new IllegalArgumentException(t);
-                    }
-                } else {
-                    throw new IllegalArgumentException(x);
-                }
+                field.set(object, valueOf(ftype, (String)value, field.getAnnotation(typeinfo.class)));
             } else {
                 throw new IllegalArgumentException(x);
             }
@@ -398,10 +382,22 @@ public class Beans {
     }
 
     /**
-     * Converts a String representation into a value of a given type.
+     * Converts a String representation into a value of a given type. Conversion attempts are made in the following order:
+     * <ol>
+     * <li>Try to invoke <code>public static SomeClass valueOf(String text)</code>.</li>
+     * <li>Try to invoke <code>public static SomeClass valueOf(Class<SomeClass> type, String text)</code>,
+     *     or <code>public static SomeClass<T> valueOf(Class<T> type, String text)</code> if a @typeinfo annotation exists to
+     *     give argument type <code>T</code>.</li>
+     * <li>Try to invoke <code><init>(String text)</code>.</li>
+     * </ol>
+     *
+     * @param type - the target class
+     * @param value - the string to convert
+     * @param annotation - an optional typeinfo annotation containing additional genetic type information
+     * @throws IllegalArgumentException if all conversion attempts fail
      */
     @SuppressWarnings("unchecked")
-    public static <T> T valueOf(Class<T> type, String value) {
+    public static <T> T valueOf(Class<T> type, String value, typeinfo annotation) {
         if (type.equals(String.class)) {
             return type.cast(value);
         } else {
@@ -411,7 +407,7 @@ public class Beans {
                     return (T)boxed.getMethod("valueOf", String.class).invoke(null, value);
                 } catch (NoSuchMethodException x) {
                     try {
-                        return (T)boxed.getMethod("valueOf", type, String.class).invoke(null, type, value);
+                        return (T)boxed.getMethod("valueOf", Class.class, String.class).invoke(null, annotation != null ? annotation.value()[0] : type, value);
                     } catch (NoSuchMethodException y) {
                         return (T)boxed.getConstructor(String.class).newInstance(value);
                     }
@@ -420,6 +416,14 @@ public class Beans {
                 throw new IllegalArgumentException(x.getMessage(), x);
             }
         }
+    }
+
+    /**
+     * Converts a String representation into a value of a given type. This method calls
+     * <code>valueOf(type, value, null)</code>.
+     */
+    public static <T> T valueOf(Class<T> type, String value) {
+        return valueOf(type, value, null);
     }
 
     /**

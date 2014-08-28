@@ -2,13 +2,13 @@ package lab;
 
 import java.lang.reflect.*;
 
-import org.xillium.base.type.Flags;
+import org.xillium.base.type.*;
 import org.xillium.base.beans.*;
 import org.testng.annotations.*;
 
 
 /**
- * The default implementation of an object factory that creates objects from class names and arguments.
+ * Beans.setValue() tests.
  */
 public class BeansValuesTest {
     @Test(groups={"beans beans-values"})
@@ -38,6 +38,6 @@ public class BeansValuesTest {
         public A s;
         public A m;
         public A t;
-        public Flags<A> x = new Flags<A>(A.class).set(A.MONDAY);
+        @typeinfo(A.class) public Flags<A> x;
     }
 }
