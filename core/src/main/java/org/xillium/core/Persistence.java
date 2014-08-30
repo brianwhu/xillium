@@ -228,6 +228,22 @@ public class Persistence {
         }
     }
 
+    /**
+     * Compile all ParametricStatement registered with this Persistence.
+     */
+    public int compile() throws SQLException {
+        int count = 0;
+        for (Map.Entry<String, ParametricStatement> entry: _statements.entrySet()) {
+            try {
+                DataSourceUtils.getConnection(_dataSource).prepareCall(entry.getValue().getSQL()).close();
+                ++count;
+            } catch (SQLException x) {
+                throw new SQLException(entry.getKey(), x);
+            }
+        }
+        return count;
+    }
+
     public StringBuilder print(StringBuilder sb) {
         return sb.append("Persistence:DataSource=").append(_dataSource.toString());
     }

@@ -90,6 +90,13 @@ public class ServicePlatform extends ManagedPlatform {
         _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
         if (wac.containsBean("persistence")) { // persistence may not be there if persistent storage is not required
             _persistence = (Persistence)wac.getBean("persistence");
+            if (System.getProperty("xillium.persistence.DisablePrecompilation") == null) {
+                try {
+                    _logger.info("parametric statements compiled: " + _persistence.compile());
+                } catch (Exception x) {
+                    throw new RuntimeException("Persistence precompilcation failure", x);
+                }
+            }
             _statements = _persistence.getStatementMap();
         }
 
