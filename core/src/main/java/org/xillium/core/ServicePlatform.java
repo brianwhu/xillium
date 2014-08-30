@@ -90,13 +90,6 @@ public class ServicePlatform extends ManagedPlatform {
         _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
         if (wac.containsBean("persistence")) { // persistence may not be there if persistent storage is not required
             _persistence = (Persistence)wac.getBean("persistence");
-            if (System.getProperty("xillium.persistence.DisablePrecompilation") == null) {
-                try {
-                    _logger.info("parametric statements compiled: " + _persistence.compile());
-                } catch (Exception x) {
-                    throw new RuntimeException("Persistence precompilcation failure", x);
-                }
-            }
             _statements = _persistence.getStatementMap();
         }
 
@@ -136,6 +129,15 @@ public class ServicePlatform extends ManagedPlatform {
             _registry.put("x!/list", new ListService(_registry));
         }
         _registry.put("x!/ping", new PingService());
+
+        if (_persistence != null && System.getProperty("xillium.persistence.DisablePrecompilation") == null) {
+            _persistence.doReadOnly(null, new Persistence.Task<Void, Void>() {
+                public Void run(Void facility, Persistence persistence) throws Exception {
+                    _logger.info("parametric statements compiled: " + persistence.compile());
+                    return null;
+                }
+            });
+        }
     }
 
     @Override
