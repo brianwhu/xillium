@@ -19,10 +19,12 @@ alias restart="${XILLIUM_HOME:-/root/deployment/rt}/bin/stop;sleep 5;${XILLIUM_H
 alias dir='ls -l'
 alias k="ps -e | grep java | awk '{print $1}' | xargs -n 1 kill"
 alias p='ps -aef | grep java'
-alias t='tail -100f ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out'
 alias v='view ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out'
 alias c='cat ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out'
 alias zap='> ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out;find ${CATALINA_HOME:-/usr/tomcat}/webapps -maxdepth 1 -mindepth 1 -not -name '*.war' -exec rm -rf {} \;;ls -l ${CATALINA_HOME:-/usr/tomcat}/webapps'
-g() {
-grep $* ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out
+t() {
+case $# in
+0) tail -100f  ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out;;
+*) tail -fn +1 ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out|grep "$*";;
+esac
 }
