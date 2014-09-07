@@ -1,0 +1,13 @@
+Persistence
+===========
+xillium.persistence.DisablePrecompilation
+
+Services
+========
+xillium.service.ExtensionsRoot
+xillium.service.HideDescription
+xillium.service.PrintStackTrace
+
+System
+======
+xillium.system.PropertiesFile
