@@ -2,6 +2,7 @@ package org.xillium.core;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.net.URL;
 import java.util.*;
 import java.util.jar.*;
 import java.util.logging.*;
@@ -31,9 +32,6 @@ import org.xillium.core.util.ModuleSorter;
  */
 @WebListener
 public class ServicePlatform extends ManagedPlatform {
-    private static final String DOMAIN_NAME = "Xillium-Domain-Name";
-    private static final String MODULE_NAME = "Xillium-Module-Name";
-    private static final String MODULE_BASE = "Xillium-Module-Base";
 
     private static final String VALIDATION_DIC = "validation-dictionary.xml";
     private static final String SERVICE_CONFIG = "service-configuration.xml";
@@ -67,6 +65,7 @@ public class ServicePlatform extends ManagedPlatform {
 
     public ServicePlatform() {
         _logger.log(Level.INFO, "Start HTTP Service Platform " + getClass().getName());
+        _logger.log(Level.INFO, "java.util.logging.config.file=" + System.getProperty("java.util.logging.config.file"));
         _logger.log(Level.INFO, "java.util.logging.config.class=" + System.getProperty("java.util.logging.config.class"));
     }
 
@@ -93,30 +92,13 @@ public class ServicePlatform extends ManagedPlatform {
             _statements = _persistence.getStatementMap();
         }
 
-        ModuleSorter.Sorted sorted = sortServiceModules(context);
-
         ServiceModuleInfo info = new ServiceModuleInfo();
 
-        // scan special modules, configuring and initializing PlatformLifeCycleAware objects as each module is loaded
-        wac = scanServiceModules(context, sorted.specials(), wac, info);
+        _logger.log(Level.CONFIG, "install packaged modules");
+        wac = installServiceModules(context, wac, sort(context, context.getResourcePaths("/WEB-INF/lib/")), info);
 
-        // scan regular modules, collecting all PlatformLifeCycleAware objects
-        info.plcas = new ArrayList<PlatformLifeCycleAwareDef>();
-        scanServiceModules(context, sorted.regulars(), wac, info);
-
-        _logger.info("configure PlatformLifeCycleAware objects in regular modules");
-        for (PlatformLifeCycleAwareDef plca: info.plcas) {
-            _logger.info("Configuring REGULAR PlatformLifeCycleAware " + plca.bean.getClass().getName());
-            plca.bean.configure(_application, plca.module);
-        }
-
-        _logger.info("initialize PlatformLifeCycleAware objects in regular modules");
-        for (PlatformLifeCycleAwareDef plca: info.plcas) {
-            _logger.info("Initalizing REGULAR PlatformLifeCycleAware " + plca.bean.getClass().getName());
-            plca.bean.initialize(_application, plca.module);
-        }
-
-        _plca.push(info.plcas);
+        _logger.log(Level.CONFIG, "install extension modules");
+        wac = installServiceModules(context, wac, sort(context, discover(System.getProperty("xillium.service.ExtensionsRoot"))), info);
 
         _logger.log(Level.CONFIG, "install service filters");
         for (FiltersInstallation fi: info.filters) {
@@ -180,37 +162,30 @@ public class ServicePlatform extends ManagedPlatform {
         super.contextDestroyed(event);
     }
 
-    private ModuleSorter.Sorted sortServiceModules(ServletContext context) {
-        ModuleSorter sorter = new ModuleSorter();
+    private ApplicationContext installServiceModules(ServletContext context, ApplicationContext wac, ModuleSorter.Sorted sorted, ServiceModuleInfo info) {
+        // scan special modules, configuring and initializing PlatformLifeCycleAware objects as each module is loaded
+        info.plcas = null;
+        wac = scanServiceModules(context, sorted.specials(), wac, info);
 
-        try {
-            Set<String> jars = context.getResourcePaths("/WEB-INF/lib/");
-            _logger.config("There are " + jars.size() + " resource paths");
-            for (String jar : jars) {
-                try {
-                    _logger.config("... " + jar);
-                    JarInputStream jis = new JarInputStream(context.getResourceAsStream(jar));
-                    try {
-                        String name = jis.getManifest().getMainAttributes().getValue(MODULE_NAME);
-                        if (name != null) {
-                            sorter.add(new ModuleSorter.Entry(name, jis.getManifest().getMainAttributes().getValue(MODULE_BASE), jar));
-                        }
-                    } finally {
-                        jis.close();
-                    }
-                } catch (IOException x) {
-                    // report this failure and move on
-                    _logger.log(Level.WARNING, "Error during jar inspection, ignored", x);
-                } catch (Exception x) {
-                    // ignore this jar
-                    _logger.config("Unknown resource ignored");
-                }
-            }
-        } catch (Exception x) {
-            throw new RuntimeException("Failed to sort service modules", x);
+        // scan regular modules, collecting all PlatformLifeCycleAware objects
+        info.plcas = new ArrayList<PlatformLifeCycleAwareDef>();
+        scanServiceModules(context, sorted.regulars(), wac, info);
+
+        _logger.info("configure PlatformLifeCycleAware objects in regular modules");
+        for (PlatformLifeCycleAwareDef plca: info.plcas) {
+            _logger.info("Configuring REGULAR PlatformLifeCycleAware " + plca.bean.getClass().getName());
+            plca.bean.configure(_application, plca.module);
         }
 
-        return sorter.sort();
+        _logger.info("initialize PlatformLifeCycleAware objects in regular modules");
+        for (PlatformLifeCycleAwareDef plca: info.plcas) {
+            _logger.info("Initalizing REGULAR PlatformLifeCycleAware " + plca.bean.getClass().getName());
+            plca.bean.initialize(_application, plca.module);
+        }
+
+        _plca.push(info.plcas);
+
+        return wac;
     }
 
     private ApplicationContext scanServiceModules(ServletContext context, Iterator<ModuleSorter.Entry> it, ApplicationContext wac, ServiceModuleInfo info) {
@@ -226,7 +201,9 @@ public class ServicePlatform extends ManagedPlatform {
             while (it.hasNext()) {
                 ModuleSorter.Entry module = it.next();
                 try {
-                    JarInputStream jis = new JarInputStream(context.getResourceAsStream(module.path));
+                    JarInputStream jis = new JarInputStream(
+                        module.path.startsWith("/") ? context.getResourceAsStream(module.path) : new URL(module.path).openStream()
+                    );
                     try {
                         String domain = jis.getManifest().getMainAttributes().getValue(DOMAIN_NAME);
                         _logger.config("Scanning module " + module.name + ", special=" + isSpecial);
