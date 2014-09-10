@@ -10,12 +10,12 @@ find . \( -name '*.java' -o -name 'service-configuration.xml' \) -exec grep -l "
 
 # find a string in any xml source
 fxml() {
-find . -name '*.xml' -exec grep "$1" {} \; -print
+find . -name '*.xml' -not -regex '.*/target/.*' -exec grep "$1" {} \; -print
 }
 
 # find a string in any xml source
 lxml() {
-find . -name '*.xml' -exec grep -l "$1" {} \;
+find . -name '*.xml' -not -regex '.*/target/.*' -exec grep -l "$1" {} \;
 }
 
 # list any .swp files
