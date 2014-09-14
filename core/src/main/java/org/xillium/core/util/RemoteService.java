@@ -90,7 +90,11 @@ public class RemoteService {
             try {
                 Object value = field.get(data);
                 if (value == null) value = "";
-                list.add(field.getName() + '=' + value);
+                try {
+                    list.add(field.getName() + '=' + URLEncoder.encode(value.toString(), "UTF-8"));
+                } catch (UnsupportedEncodingException x) {
+                    _logger.log(Level.WARNING, value.toString(), x);
+                }
             } catch (IllegalAccessException x) {}
         }
         return call(server, service, suppress, list.toArray(new String[list.size()]));
@@ -115,7 +119,11 @@ public class RemoteService {
         for (Map.Entry<String, String> entry: binder.entrySet()) {
             String name = entry.getKey();
             if (name.charAt(0) == '_' || name.charAt(0) == '#') continue;
-            list.add(name + '=' + entry.getValue());
+            try {
+                list.add(name + '=' + URLEncoder.encode(entry.getValue(), "UTF-8"));
+            } catch (UnsupportedEncodingException x) {
+                _logger.log(Level.WARNING, entry.getValue(), x);
+            }
         }
         return call(server, service, suppress, list.toArray(new String[list.size()]));
     }
