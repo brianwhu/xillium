@@ -59,12 +59,12 @@ public class TestSchema extends AbstractTransactionalTestNGSpringContextTests {
 	public void testSchema() throws Exception {
         StringBuilder sb = new StringBuilder();
 
-        String schema = "PUBLIC";
         Connection connection = dataSource.getConnection();
 
 		try {
 			DatabaseMetaData meta = connection.getMetaData();
 			String catalog = connection.getCatalog();
+            String schema = meta.getUserName();
 
             ResultSet tables = meta.getTables(catalog, schema, "%", null);
             while (tables.next()) {

@@ -7,9 +7,10 @@ import javassist.bytecode.*;
 import javassist.bytecode.annotation.MemberValue;
 import javassist.bytecode.annotation.IntegerMemberValue;
 import org.xillium.base.beans.Strings;
-import org.xillium.base.etc.Pair;
+import org.xillium.base.util.Pair;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
+import org.xillium.data.persistence.util.MetaDataHelper;
 
 
 /**
@@ -472,7 +473,7 @@ public class CrudCommand {
                     unique.add(name);
                 }
 
-                CtField field = new CtField(pool.getCtClass(sqlTypeName(rsmeta, idx)), fname, cc);
+                CtField field = new CtField(pool.getCtClass(MetaDataHelper.getClassName(rsmeta, idx)), fname, cc);
                 field.setModifiers(java.lang.reflect.Modifier.PUBLIC);
                 AnnotationsAttribute attr = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
 
@@ -655,38 +656,6 @@ public class CrudCommand {
         return sb.append(pkg).append('.').append(Strings.toCamelCase(action.op.toString(), '_'))
                                          .append(Strings.toCamelCase(tables.replaceAll(" *, *", "_").replaceAll("\\*", ""), '_'))
                                          .append(Integer.toHexString(hash)).toString();
-    }
-
-    private static String sqlTypeName(ResultSetMetaData rsmeta, int index) throws SQLException {
-        switch (rsmeta.getColumnType(index)) {
-        case Types.NUMERIC:
-            int precision = rsmeta.getPrecision(index);
-            if (rsmeta.getScale(index) == 0) {
-                if (precision > 9) {
-                    return "java.lang.Long";
-                } else if (precision > 4) {
-                    return "java.lang.Integer";
-                } else if (precision > 2) {
-                    return "java.lang.Short";
-                } else {
-                    return "java.lang.Byte";
-                }
-            } else {
-                if (precision > 7) {
-                    return "java.lang.Double";
-                } else {
-                    return "java.lang.Float";
-                }
-            }
-        case Types.TIMESTAMP:
-            if (rsmeta.getScale(index) == 0) {
-                return "java.sql.Date";
-            } else {
-                return "java.sql.Timestamp";
-            }
-        default:
-            return rsmeta.getColumnClassName(index);
-        }
     }
 
     private static String fieldName(String table, String column) {
