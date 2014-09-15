@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<conf:storage-configuration xmlns:persist="java://org.xillium.data.persistence" xmlns:conf="java://org.xillium.core.conf">
+
+    <!--
+     | PL/SQL
+    -->
+
+    <persist:object-mapped-query class="org.xillium.gear.util.Progressive.State">
+    <?assemble name="RecallState"?>
+        <![CDATA[
+        SELECT PREVIOUS, STEP FROM MARKET_STATE WHERE MODULE_ID = :moduleId:VARCHAR
+        ]]>
+    </persist:object-mapped-query>
+
+    <persist:parametric-query>
+    <?assemble name="RecallParam"?>
+        <![CDATA[
+        SELECT PARAM FROM MARKET_STATE WHERE MODULE_ID = :moduleId:VARCHAR
+        ]]>
+    </persist:parametric-query>
+
+    <persist:parametric-statement>
+    <?assemble name="CommitState"?>
+        <![CDATA[
+        MERGE INTO MARKET_STATE USING DUAL ON (MODULE_ID = :moduleId:VARCHAR)
+        WHEN MATCHED THEN
+            UPDATE SET STATE = NULL, PREVIOUS = :state:VARCHAR, STEP = :step:INTEGER, PARAM = SUBSTR(:param:VARCHAR, 1, 1024)
+        WHEN NOT MATCHED THEN
+            INSERT (MODULE_ID, PREVIOUS, STEP, PARAM) VALUES (:moduleId:VARCHAR, :state:VARCHAR, :step:INTEGER, SUBSTR(:param:VARCHAR, 1, 1024))
+        ]]>
+    </persist:parametric-statement>
+
+    <persist:parametric-statement>
+    <?assemble name="RecordAttempt"?>
+        <![CDATA[
+        DECLARE
+            PRAGMA AUTONOMOUS_TRANSACTION;
+        BEGIN
+            MERGE INTO MARKET_STATE USING DUAL ON (MODULE_ID = :moduleId:VARCHAR)
+            WHEN MATCHED THEN
+                UPDATE SET STATE = :state:VARCHAR, PARAM = SUBSTR(:param:VARCHAR, 1, 1024)
+            WHEN NOT MATCHED THEN
+                INSERT (MODULE_ID, STATE, PARAM) VALUES (:moduleId:VARCHAR, :state:VARCHAR, SUBSTR(:param:VARCHAR, 1, 1024));
+            COMMIT;
+        END;
+        ]]>
+    </persist:parametric-statement>
+
+</conf:storage-configuration>
+
