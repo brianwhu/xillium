@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.logging.*;
 import java.sql.SQLException;
 import org.springframework.transaction.annotation.*;
-import org.xillium.base.etc.Pair;
+import org.xillium.base.util.Pair;
 import org.xillium.core.*;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;

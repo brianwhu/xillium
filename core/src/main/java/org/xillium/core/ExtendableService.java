@@ -3,7 +3,7 @@ package org.xillium.core;
 import java.util.List;
 import java.util.logging.*;
 import org.xillium.data.*;
-import org.xillium.core.util.CompoundFilter;
+import org.xillium.core.util.CompoundServiceFilter;
 
 
 /**
@@ -19,7 +19,7 @@ public abstract class ExtendableService implements Service.Extendable {
      */
     @Override
     public void setFilter(Service.Filter filter) {
-        _filter = _filter == null ? filter : new CompoundFilter(filter, _filter);
+        _filter = _filter == null ? filter : new CompoundServiceFilter(filter, _filter);
     }
 
     /**

@@ -1,6 +1,6 @@
 package org.xillium.core.util;
 
-import org.xillium.base.etc.Pair;
+import org.xillium.base.util.Pair;
 import org.xillium.data.DataBinder;
 import org.xillium.core.Service;
 import org.xillium.core.ServiceException;
@@ -9,12 +9,12 @@ import org.xillium.core.ServiceException;
 /**
  * A compound service filter that binds together a pair of filters.
  */
-public class CompoundFilter extends Pair<Service.Filter, Service.Filter> implements Service.Filter {
+public class CompoundServiceFilter extends Pair<Service.Filter, Service.Filter> implements Service.Filter {
 
     /**
-     * Constructs a CompoundFilter.
+     * Constructs a CompoundServiceFilter.
      */
-    public CompoundFilter(Service.Filter a, Service.Filter b) {
+    public CompoundServiceFilter(Service.Filter a, Service.Filter b) {
         super(a, b);
     }
 

@@ -50,7 +50,7 @@ public class ServicePlatform extends ManagedPlatform {
     }
 
     private static class ServiceModuleInfo {
-        List<FiltersInstallation> filters = new ArrayList<FiltersInstallation>();
+        List<ServiceAugmentation> augmentations = new ArrayList<ServiceAugmentation>();
         Map<String, String> descriptions = new HashMap<String, String>();
         List<PlatformLifeCycleAwareDef> plcas;
     }
@@ -100,8 +100,8 @@ public class ServicePlatform extends ManagedPlatform {
         _logger.log(Level.CONFIG, "install extension modules");
         wac = installServiceModules(context, wac, sort(context, discover(System.getProperty("xillium.service.ExtensionsRoot"))), info);
 
-        _logger.log(Level.CONFIG, "install service filters");
-        for (FiltersInstallation fi: info.filters) {
+        _logger.log(Level.CONFIG, "install service augmentations");
+        for (ServiceAugmentation fi: info.augmentations) {
             fi.install(_registry);
         }
 
@@ -306,10 +306,10 @@ public class ServicePlatform extends ManagedPlatform {
             _registry.put(fullname, (Service)gac.getBean(id));
         }
 
-        // Filter installations
+        // Service augmentations
 
-        for (String id: gac.getBeanNamesForType(FiltersInstallation.class)) {
-            info.filters.add(gac.getBean(id, FiltersInstallation.class).name(name));
+        for (String id: gac.getBeanNamesForType(ServiceAugmentation.class)) {
+            info.augmentations.add(gac.getBean(id, ServiceAugmentation.class).name(name));
         }
 
         // Platform life cycle aware objects

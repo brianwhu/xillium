@@ -20,6 +20,7 @@ import org.xillium.data.persistence.*;
  */
 public class PersistenceManager {
     private static final String MESSAGE = "persistence.exception";
+    private static final Set<String> _customized = new HashSet<String>();
 
     private final DataBinder _binder;
     private final Map<String, ParametricStatement> _statements;
@@ -69,11 +70,24 @@ public class PersistenceManager {
 
     public PersistenceManager d(String name, String xml) {
         try {
-            if (_statements.get(name) != null) {
-                XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
-                _statements.put(name, (ParametricStatement)assembler.build(new ByteArrayInputStream(xml.getBytes("UTF-8"))));
+            XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
+            if (!_customized.contains(name) && _statements.get(name) == null) {
+                _customized.add(name);
+            }
+            _statements.put(name, (ParametricStatement)assembler.build(new ByteArrayInputStream(xml.getBytes("UTF-8"))));
+        } catch (Exception x) {
+            _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
+        }
+        return this;
+    }
+
+    public PersistenceManager u(String name) {
+        try {
+            if (_customized.contains(name)) {
+                _statements.remove(name);
+                _customized.remove(name);
             } else {
-                _binder.put(MESSAGE, "Unknown: " + name);
+                _binder.put(MESSAGE, "can't undefine internal");
             }
         } catch (Exception x) {
             _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));

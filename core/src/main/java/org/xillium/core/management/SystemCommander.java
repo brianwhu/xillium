@@ -8,7 +8,8 @@ import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
 import org.xillium.core.*;
-import org.xillium.core.util.ScriptableServiceFilter;
+import org.xillium.core.conf.ServiceAugmentation;
+import org.xillium.core.util.*;
 
 
 /**
@@ -23,7 +24,7 @@ public class SystemCommander {
     private static final String MESSAGE = "jos.exception";
     private static final String OUTPUT  = "jos.output";
 
-    private static AtomicInteger _installed = new AtomicInteger();
+    private static List<ServiceAugmentation.Spec> _augmentations = new ArrayList<ServiceAugmentation.Spec>();
     private static AtomicInteger _sequence = new AtomicInteger();
 
     private final DataBinder _binder;
@@ -47,7 +48,11 @@ public class SystemCommander {
     }
 
     public SystemCommander t() {
-        _binder.put("installed", _installed.toString());
+        StringBuilder sb = new StringBuilder("\n");
+        for (int i = 0; i < _augmentations.size(); ++i) {
+            sb.append('(').append(i).append(')').append(_augmentations.get(i).toString()).append('\n');
+        }
+        _binder.put("augmentations", sb.toString());
         return this;
     }
 
@@ -56,7 +61,35 @@ public class SystemCommander {
             ScriptableServiceFilter filter = new ScriptableServiceFilter();
             filter.setAcknowledge(script);
             ((Service.Extendable)_services.get(address)).setFilter(filter);
-            _installed.incrementAndGet();
+            synchronized (_augmentations) { _augmentations.add(new ServiceAugmentation.Spec(address, filter)); }
+        } catch (Exception x) {
+            _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
+        }
+        return this;
+    }
+
+    public SystemCommander m(String address, String name, String script) {
+        try {
+            ScriptableMilestoneEvaluation eval = new ScriptableMilestoneEvaluation(script);
+            ServiceMilestone.install(_services.get(address), name, eval);
+            synchronized (_augmentations) { _augmentations.add(new ServiceAugmentation.Spec(address, name, eval)); }
+        } catch (Exception x) {
+            _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
+        }
+        return this;
+    }
+
+    public SystemCommander u(String index) {
+        try {
+            ServiceAugmentation.Spec spec = _augmentations.get(Integer.parseInt(index));
+            if (spec.milestone != null) {
+                ServiceMilestone.uninstall(_services.get(spec.service), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
+            } else {
+                Service service = _services.get(spec.service);
+                Field field = Beans.getKnownField(service.getClass(), "_filter");
+                field.set(service, CompoundServiceFilter.cleanse(field.get(service), (Service.Filter)spec.augment));
+            }
+            synchronized (_augmentations) { _augmentations.remove(spec); }
         } catch (Exception x) {
             _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
         }

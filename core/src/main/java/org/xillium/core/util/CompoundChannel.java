@@ -1,6 +1,6 @@
 package org.xillium.core.util;
 
-import org.xillium.base.etc.Pair;
+import org.xillium.base.util.Pair;
 
 
 /**

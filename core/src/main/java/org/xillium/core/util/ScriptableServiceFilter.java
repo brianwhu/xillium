@@ -12,27 +12,8 @@ import org.xillium.core.ServiceException;
 /**
  * A Service.Filter that allows its filter methods to be implemented in JavaScript.
  */
-public class ScriptableServiceFilter implements Service.Filter {
-    private static final String JAVASCRIPT_LINE_INFO = " *\\([^()]+\\)$";
-
-    private static final ScriptEngine js = new ScriptEngineManager().getEngineByName("JavaScript");
+public class ScriptableServiceFilter extends Scriptable implements Service.Filter {
     private String _filtrate, _acknowledge, _successful, _aborted, _complete;
-
-    /**
-     * Provides a "system" object to the JavaScript engine.
-     */
-    public void setSystem(Object system) {
-        js.put("system", system);
-    }
-
-    /**
-     * Provides objects to the JavaScript engine under various names.
-     */
-    public void setObjects(Map<String, Object> objects) {
-        for (Map.Entry<String, Object> entry: objects.entrySet()) {
-            js.put(entry.getKey(), entry.getValue());
-        }
-    }
 
     /**
      * Provides a script for the "filtrate" method.
@@ -72,47 +53,58 @@ public class ScriptableServiceFilter implements Service.Filter {
     @Override
     public void filtrate(DataBinder parameters) throws ServiceException {
         if (_filtrate != null) {
-            try {
-                js.put("binder", parameters);
-                js.eval(_filtrate);
-            } catch (Throwable t) {
-                t = Throwables.getRootCause(t);
-                String s = t.getMessage();
-                throw new ServiceException(s != null ? s.replaceAll(JAVASCRIPT_LINE_INFO, "") : "***UnknownError", t);
-            }
+            call(parameters, _filtrate);
         }
     }
 
     @Override
     public void acknowledge(DataBinder parameters) throws Exception {
         if (_acknowledge != null) {
-            js.put("binder", parameters);
-            js.eval(_acknowledge);
+            call(parameters, _acknowledge);
         }
     }
 
     @Override
     public void successful(DataBinder parameters) throws Exception {
         if (_successful != null) {
-            js.put("binder", parameters);
-            js.eval(_successful);
+            call(parameters, _successful);
         }
     }
 
     @Override
     public void aborted(DataBinder parameters, Throwable throwable) throws Exception {
         if (_aborted != null) {
-            js.put("binder", parameters);
             js.put("throwable", throwable);
-            js.eval(_aborted);
+            call(parameters, _aborted);
         }
     }
 
     @Override
     public void complete(DataBinder parameters) throws Exception {
         if (_complete != null) {
-            js.put("binder", parameters);
-            js.eval(_complete);
+            call(parameters, _complete);
         }
     }
+
+    @Override
+    public String toString() {
+        return "ScriptableServiceFilter\n"
+            + "\t   filtrate: " + _filtrate + '\n'
+            + "\tacknowledge: " + _acknowledge + '\n'
+            + "\t successful: " + _successful + '\n'
+            + "\t    aborted: " + _aborted + '\n'
+            + "\t   complete: " + _complete;
+    }
+
+    private void call(DataBinder parameters, String script) {
+        try {
+            js.put("binder", parameters);
+            js.eval(script);
+        } catch (Throwable t) {
+            String message = getScriptingExceptionMessage(t);
+            if (parameters.get("Service.SERVICE_STACK_TRACE") != null) parameters.put("_script_exception_", message);
+            throw new ServiceException(message);
+        }
+    }
+
 }
