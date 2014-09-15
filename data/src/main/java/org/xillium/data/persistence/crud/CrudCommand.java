@@ -56,7 +56,7 @@ public class CrudCommand {
     private static final Map<String, Class<? extends DataObject>> _classes = new HashMap<String, Class<? extends DataObject>>();
 
     private final Operation _oper;
-    private final String _name;
+    private final String _name, _desc;
     private final String[] _opts;
     private final Class<? extends DataObject> _type;
 
@@ -195,7 +195,8 @@ public class CrudCommand {
     public CrudCommand(Connection connection, String prefix, String tables, Action action) throws Exception {
         String[] names = tables.split(" *, *");
         _oper = action.op;
-        _name = action.toString() + " >> " + tables;
+        _name = Strings.toCamelCase(names[names.length-1], '_');
+        _desc = action.toString() + " >> " + tables;
         String cname = className("org.xillium.d.p.c." + prefix, tables, action);
         synchronized (_classes) {
             Class<? extends DataObject> type = _classes.get(cname);
@@ -222,6 +223,10 @@ public class CrudCommand {
 
     public String getName() {
         return _name;
+    }
+
+    public String getDescription() {
+        return _desc;
     }
 
     /**

@@ -238,7 +238,7 @@ public class CrudModelTest extends AbstractTransactionalTestNGSpringContextTests
     private static void printAndValidate(CrudCommand command, Connection connection) throws Exception {
         System.out.println("------------------------------------------------------");
         System.out.println("------------------------------------------------------");
-        System.out.println(command.getName());
+        System.out.println(command.getDescription());
         System.out.println("------------------------------------------------------");
         System.out.println("------------------------------------------------------");
         System.out.println("[class: " + command.getRequestType().getName() + ']');
