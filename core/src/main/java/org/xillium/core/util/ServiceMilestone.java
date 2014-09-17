@@ -14,47 +14,38 @@ import org.xillium.core.Service;
 /**
  * Service milestones and milestone evaluations management.
  * <p/>
- * A milestone is a point in a service call, where disassociated, external objects can be called upon to evaluate the milestone
- * and thus alter and extend the original behavior of the service.
+ * A <i>milestone</i> is a point in a service call, where <i>milestone evaluation</i> objects can be called upon to evaluate the current
+ * state of the service call and thus alter and extend the behavior of the service.
  * <p/>
- * To introduce milestones and allow milestone evaluations to a service, do the following.
+ * To define milestones and allow milestone evaluations in a service, do the following inside the service class.
+ * <ol>
+ * <li>Define an enum type named "Milestone" to enumerate all milestones in this service
  * <xmp>
- *  public class Service101 ... {
- *      // define an enum named "Milestone" to enumerate all milestones in this service
  *      public static enum Milestone {
  *          M1,
  *          M2,
  *          M3,
  *          M4
  *      }
- *
- *      // create a ServiceMilestone instance named "milestone"
+ * </xmp></li>
+ * <li> Define a <i>single</i> <code>ServiceMilestone&lt;Milestone&gt;</code> instance, which may be given any name.
+ * <xmp>
  *      private final ServiceMilestone<Milestone> support = new ServiceMilestone<Milestone>(Milestone.class);
- *
+ * </xmp></li>
+ * <li>Wherever you want to introduce milestone evaluation inside the service's <code>run()</code> method, call <code>support.evaluate</code>.
+ * The return value from a milestone evaluation recommends whether the current service should continue or return immediately, but the caller
+ * has the discretion to either honor or ignore the recommendations.
+ * <xmp>
  *      ...
- *
- *      public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
- *          ...
- *
- *          if (support.evaluate(Milestone.M1, binder, dict, persist)) == ServiceMilestone.Recommendation.COMPLETE) return binder;
- *
- *          ...
- *      }
- *  }
- * </xmp>
+ *      if (support.evaluate(Milestone.M1, binder, dict, persist)) == ServiceMilestone.Recommendation.COMPLETE) return binder;
+ *      ...
+ * </xmp></li>
+ * </ol>
  * To define a service milestone evaluation, implement the ServiceMilestone.Evaluation interface.
  * <xmp>
- *  @registration(service="service/name", milestone="milestoneName")
  *  public class MilestoneEvaluationM1 implements ServiceMilestone.Evaluation {
  *      ...
  *  }
- * </xmp>
- * And declare an evaluation instance
- * <xmp>
- *  ...
- *  <bean class="my.company.package.MilestoneEvaluationM1">
- *  </bean>
- *  ...
  * </xmp>
  */
 public class ServiceMilestone<M extends Enum<M>> {
@@ -74,17 +65,18 @@ public class ServiceMilestone<M extends Enum<M>> {
         /**
          * Evaluates a milestone as identified by the milestone enumeration's type and the milestone's name.
          */
-        public Recommendation evaluate(Class<? extends Enum> type, String name, DataBinder binder, Dictionary dict, Persistence persist);
+        public <M extends Enum<M>> Recommendation evaluate(Class<M> type, String name, DataBinder binder, Dictionary dict, Persistence persist);
     }
 
     /**
      * Installs a ServiceMilestone.Evaluation onto a service.
      */
-    public static void install(Service service, String milestore, ServiceMilestone.Evaluation evaluation) throws Exception {
-        Class<? extends Enum> type = (Class<? extends Enum>)Class.forName(service.getClass().getName() + "$Milestone");
+    @SuppressWarnings("unchecked")
+    public static <M extends Enum<M>> void install(Service service, String milestore, ServiceMilestone.Evaluation evaluation) throws Exception {
+        Class<M> type = (Class<M>)Class.forName(service.getClass().getName() + "$Milestone");
         for (Field field: Beans.getKnownInstanceFields(service.getClass())) {
             if (ServiceMilestone.class.isAssignableFrom(field.getType())) {
-                ((ServiceMilestone)field.get(service)).install(Enum.valueOf(type, milestore), evaluation);
+                ((ServiceMilestone<M>)field.get(service)).install(Enum.valueOf(type, milestore), evaluation);
                 return;
             }
         }
@@ -93,11 +85,12 @@ public class ServiceMilestone<M extends Enum<M>> {
     /**
      * Uninstalls a ServiceMilestone.Evaluation from a service.
      */
-    public static void uninstall(Service service, String milestore, ServiceMilestone.Evaluation evaluation) throws Exception {
-        Class<? extends Enum> type = (Class<? extends Enum>)Class.forName(service.getClass().getName() + "$Milestone");
+    @SuppressWarnings("unchecked")
+    public static <M extends Enum<M>> void uninstall(Service service, String milestore, ServiceMilestone.Evaluation evaluation) throws Exception {
+        Class<M> type = (Class<M>)Class.forName(service.getClass().getName() + "$Milestone");
         for (Field field: Beans.getKnownInstanceFields(service.getClass())) {
             if (ServiceMilestone.class.isAssignableFrom(field.getType())) {
-                ((ServiceMilestone)field.get(service)).uninstall(Enum.valueOf(type, milestore), evaluation);
+                ((ServiceMilestone<M>)field.get(service)).uninstall(Enum.valueOf(type, milestore), evaluation);
                 return;
             }
         }
@@ -127,9 +120,10 @@ public class ServiceMilestone<M extends Enum<M>> {
     /**
      * Executes evaluations at a milestone.
      */
+    @SuppressWarnings("unchecked")
     public Recommendation evaluate(M milestone, DataBinder binder, Dictionary dict, Persistence persist) {
         Evaluation evaluation = _evaluations[milestone.ordinal()];
-        return evaluation != null ? evaluation.evaluate(milestone.getClass(), milestone.toString(), binder, dict, persist) : Recommendation.CONTINUE;
+        return evaluation != null ? evaluation.evaluate((Class<M>)milestone.getClass(), milestone.toString(), binder, dict, persist) : Recommendation.CONTINUE;
     }
 
     private final Evaluation[] _evaluations;

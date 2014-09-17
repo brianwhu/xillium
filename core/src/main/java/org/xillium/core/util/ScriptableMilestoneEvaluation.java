@@ -40,7 +40,7 @@ public class ScriptableMilestoneEvaluation extends Scriptable implements Service
      * Calls the evaluations in order, returning immediately if one returns ServiceMilestone.Recommendation.COMPLETE.
      */
     @Override
-    public ServiceMilestone.Recommendation evaluate(Class<? extends Enum> type, String name, DataBinder binder, Dictionary dict, Persistence persist) {
+    public <M extends Enum<M>> ServiceMilestone.Recommendation evaluate(Class<M> type, String name, DataBinder binder, Dictionary dict, Persistence persist) {
         if (_script != null) {
             try {
                 js.put("type", type);
