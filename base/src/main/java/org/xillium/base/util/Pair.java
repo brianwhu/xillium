@@ -1,5 +1,7 @@
 package org.xillium.base.util;
 
+import org.xillium.base.Functor;
+
 
 /**
  * A pair of elements packed in a single object.
@@ -20,53 +22,57 @@ public class Pair<T, V> {
     public T first;
     public V second;
 
+    /**
+     * Constructs a Pair of 2 elements.
+     */
     public Pair(T f, V s) {
         first = f;
         second = s;
     }
 
     /**
-     * Cleanses an isomorphic list of a particular element.
+     * Cleanses an isomorphic list of a particular element. Only one thread should be updating the list at a time.
      *
      * Usage: feature = Pair.cleanse(feature, f2);
      *
-     * @param pair - the first Pair object that is isomorphic to the elements, or an element
+     * @param list - a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
      * @param element - the element to remove
+     * @return the original isomorphic list with the given element cleansed
      */
-    public static <T> T cleanse(T pair, T element) {
-        if (pair == null || pair == element) {
+    public static <T> T cleanse(T list, T element) {
+        if (list == null || list == element) {
             return null;
-        } else if (pair instanceof Pair) {
-            Pair<T, T> list = (Pair<T, T>)pair;
-            if (list.first == element) {
-                return list.second;
-            } else if (list.second == element) {
-                return list.first;
-            } else if (list.second instanceof Pair) {
-                list.second = cleanse(list.second, element);
+        } else if (list instanceof Pair) {
+            Pair<T, T> pair = (Pair<T, T>)list;
+            if (pair.first == element) {
+                return pair.second;
+            } else if (pair.second == element) {
+                return pair.first;
+            } else if (pair.second instanceof Pair) {
+                pair.second = cleanse(pair.second, element);
             }
         }
 
-        return pair;
+        return list;
     }
 
     /**
      * Tests whether an isomorphic list includes a particular element.
      *
-     * @param pair - the first Pair object that is isomorphic to the elements, or an element
+     * @param list - a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
      * @param element - the element to look for
      */
-    public static <T> boolean includes(T pair, T element) {
-        if (pair == null) {
+    public static <T> boolean includes(T list, T element) {
+        if (list == null) {
             return false;
-        } else if (pair == element) {
+        } else if (list == element) {
             return true;
-        } else if (pair instanceof Pair) {
-            Pair<T, T> list = (Pair<T, T>)pair;
-            if (list.first == element || list.second == element) {
+        } else if (list instanceof Pair) {
+            Pair<T, T> pair = (Pair<T, T>)list;
+            if (pair.first == element || pair.second == element) {
                 return true;
-            } else if (list.second instanceof Pair) {
-                return includes(list.second, element);
+            } else if (pair.second instanceof Pair) {
+                return includes(pair.second, element);
             } else {
                 return false;
             }
@@ -78,14 +84,35 @@ public class Pair<T, V> {
     /**
      * Counts the number of elements in an isomorphic list.
      *
-     * @param pair - the first Pair object that is isomorphic to the elements, or an element
+     * @param list - a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
+     * @return the number of elements discovered
      */
-    public static <T> int count(T pair) {
-        if (pair == null) {
+    public static <T> int count(T list) {
+        if (list == null) {
             return 0;
-        } else if (pair instanceof Pair) {
-            return 1 + count(((Pair<T, T>)pair).second);
+        } else if (list instanceof Pair) {
+            return 1 + count(((Pair<T, T>)list).second);
         } else {
+            return 1;
+        }
+    }
+
+    /**
+     * Traverses an isomorphic list using a Functor. The return values from the functor are discarded.
+     *
+     * @param list - a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
+     * @param func - a functor that will be invoked to inspect the elements, one at a time
+     * @return the number of elements traversed
+     */
+    public static <R, T> int traverse(T list, Functor<R, T> func) {
+        if (list == null) {
+            return 0;
+        } else if (list instanceof Pair) {
+            Pair<T, T> pair = (Pair<T, T>)list;
+            func.invoke(pair.first);
+            return 1 + traverse(pair.second, func);
+        } else {
+            func.invoke(list);
             return 1;
         }
     }
