@@ -113,12 +113,16 @@ public class ServicePlatform extends ManagedPlatform {
         _registry.put("x!/ping", new PingService());
 
         if (_persistence != null && System.getProperty("xillium.persistence.DisablePrecompilation") == null) {
-            _persistence.doReadOnly(null, new Persistence.Task<Void, Void>() {
-                public Void run(Void facility, Persistence persistence) throws Exception {
-                    _logger.info("parametric statements compiled: " + persistence.compile());
-                    return null;
-                }
-            });
+            if (_persistence.getTransactionManager() != null) {
+                _persistence.doReadOnly(null, new Persistence.Task<Void, Void>() {
+                    public Void run(Void facility, Persistence persistence) throws Exception {
+                        _logger.info("parametric statements compiled: " + persistence.compile());
+                        return null;
+                    }
+                });
+            } else {
+                _logger.warning("Persistence precompilation is ON (default) but TransactionManager is not configured");
+            }
         }
     }
 

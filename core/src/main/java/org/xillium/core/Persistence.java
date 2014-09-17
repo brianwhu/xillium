@@ -254,6 +254,10 @@ public class Persistence {
         _readonly.setReadOnly(true);
     }
 
+    public PlatformTransactionManager getTransactionManager() {
+        return _manager;
+    }
+
     public void setIntrinsics(List<String> locations) {
         try {
             BurnedInArgumentsObjectFactory factory = new BurnedInArgumentsObjectFactory(StorageConfiguration.class, _statements, "-");
