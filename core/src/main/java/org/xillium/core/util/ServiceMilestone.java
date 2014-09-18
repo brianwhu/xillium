@@ -3,6 +3,7 @@ package org.xillium.core.util;
 import java.util.Map;
 import java.util.HashMap;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 import org.xillium.base.beans.Beans;
 import org.xillium.data.DataBinder;
@@ -73,7 +74,7 @@ public class ServiceMilestone<M extends Enum<M>> {
      */
     @SuppressWarnings("unchecked")
     public static <M extends Enum<M>> void install(Service service, String milestore, ServiceMilestone.Evaluation evaluation) throws Exception {
-        Class<M> type = (Class<M>)Class.forName(service.getClass().getName() + "$Milestone");
+        Class<M> type = getMilestoneClass(service.getClass());
         for (Field field: Beans.getKnownInstanceFields(service.getClass())) {
             if (ServiceMilestone.class.isAssignableFrom(field.getType())) {
                 ((ServiceMilestone<M>)field.get(service)).install(Enum.valueOf(type, milestore), evaluation);
@@ -87,7 +88,7 @@ public class ServiceMilestone<M extends Enum<M>> {
      */
     @SuppressWarnings("unchecked")
     public static <M extends Enum<M>> void uninstall(Service service, String milestore, ServiceMilestone.Evaluation evaluation) throws Exception {
-        Class<M> type = (Class<M>)Class.forName(service.getClass().getName() + "$Milestone");
+        Class<M> type = getMilestoneClass(service.getClass());
         for (Field field: Beans.getKnownInstanceFields(service.getClass())) {
             if (ServiceMilestone.class.isAssignableFrom(field.getType())) {
                 ((ServiceMilestone<M>)field.get(service)).uninstall(Enum.valueOf(type, milestore), evaluation);
@@ -127,5 +128,18 @@ public class ServiceMilestone<M extends Enum<M>> {
     }
 
     private final Evaluation[] _evaluations;
+
+    @SuppressWarnings("unchecked")
+    private static <M extends Enum<M>> Class<M> getMilestoneClass(Class<?> declaring) throws Exception {
+        while (declaring != Object.class) {
+            for (Class<?> declared: declaring.getDeclaredClasses()) {
+                if (Modifier.isPublic(declared.getModifiers()) && declared.getSimpleName().equals("Milestone") && Enum.class.isAssignableFrom(declared)) {
+                    return (Class<M>)declared;
+                }
+            }
+            declaring = declaring.getSuperclass();
+        }
+        throw new ClassNotFoundException("Milestone");
+    }
 
 }
