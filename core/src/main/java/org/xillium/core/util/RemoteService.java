@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
  */
 public class RemoteService {
     private static final Logger _logger = Logger.getLogger(RemoteService.class.getName());
+    private static final boolean _urlencoding = System.getProperty("xillium.service.remote.DisableURLEncoding") == null;
     private static final ObjectMapper _mapper = new ObjectMapper()
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         .registerModule(new SimpleModule("PureStringDeserializerModule").addDeserializer(String.class, new PureStringDeserializer()));
@@ -90,10 +91,14 @@ public class RemoteService {
             try {
                 Object value = field.get(data);
                 if (value == null) value = "";
-                try {
-                    list.add(field.getName() + '=' + URLEncoder.encode(value.toString(), "UTF-8"));
-                } catch (UnsupportedEncodingException x) {
-                    _logger.log(Level.WARNING, value.toString(), x);
+                if (_urlencoding) {
+                    try {
+                        list.add(field.getName() + '=' + URLEncoder.encode(value.toString(), "UTF-8"));
+                    } catch (UnsupportedEncodingException x) {
+                        _logger.log(Level.WARNING, value.toString(), x);
+                    }
+                } else {
+                    list.add(field.getName() + '=' + value);
                 }
             } catch (IllegalAccessException x) {}
         }
@@ -119,10 +124,14 @@ public class RemoteService {
         for (Map.Entry<String, String> entry: binder.entrySet()) {
             String name = entry.getKey();
             if (name.charAt(0) == '_' || name.charAt(0) == '#') continue;
-            try {
-                list.add(name + '=' + URLEncoder.encode(entry.getValue(), "UTF-8"));
-            } catch (UnsupportedEncodingException x) {
-                _logger.log(Level.WARNING, entry.getValue(), x);
+            if (_urlencoding) {
+                try {
+                    list.add(name + '=' + URLEncoder.encode(entry.getValue(), "UTF-8"));
+                } catch (UnsupportedEncodingException x) {
+                    _logger.log(Level.WARNING, entry.getValue(), x);
+                }
+            } else {
+                list.add(name + '=' + entry.getValue());
             }
         }
         return call(server, service, suppress, list.toArray(new String[list.size()]));
