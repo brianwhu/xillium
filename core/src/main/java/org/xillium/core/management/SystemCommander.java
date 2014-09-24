@@ -71,7 +71,7 @@ public class SystemCommander {
     public SystemCommander m(String address, String name, String script) {
         try {
             ScriptableMilestoneEvaluation eval = new ScriptableMilestoneEvaluation(script);
-            ServiceMilestone.install(_services.get(address), name, eval);
+            ServiceMilestone.attach(_services.get(address), name, eval);
             synchronized (_augmentations) { _augmentations.add(new ServiceAugmentation.Spec(address, name, eval)); }
         } catch (Exception x) {
             _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
@@ -83,7 +83,7 @@ public class SystemCommander {
         try {
             ServiceAugmentation.Spec spec = _augmentations.get(Integer.parseInt(index));
             if (spec.milestone != null) {
-                ServiceMilestone.uninstall(_services.get(spec.service), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
+                ServiceMilestone.detach(_services.get(spec.service), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
             } else {
                 Service service = _services.get(spec.service);
                 Field field = Beans.getKnownField(service.getClass(), "_filter");

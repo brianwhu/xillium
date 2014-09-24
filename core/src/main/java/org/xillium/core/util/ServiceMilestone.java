@@ -48,6 +48,10 @@ import org.xillium.core.Service;
  *      ...
  *  }
  * </xmp>
+ * A milestone evaluation can be attached to a service programmatically.
+ * <xmp>
+ *      ServiceMilestone.attach(service, "M1", new MilestoneEvaluationM1());
+ * </xmp>
  */
 public class ServiceMilestone<M extends Enum<M>> {
 
@@ -70,31 +74,43 @@ public class ServiceMilestone<M extends Enum<M>> {
     }
 
     /**
-     * Installs a ServiceMilestone.Evaluation onto a service.
+     * Attaches a ServiceMilestone.Evaluation onto a service.
      */
     @SuppressWarnings("unchecked")
-    public static <M extends Enum<M>> void install(Service service, String milestore, ServiceMilestone.Evaluation evaluation) throws Exception {
-        Class<M> type = getMilestoneClass(service.getClass());
+    public static <M extends Enum<M>> void attach(Service service, String milestore, ServiceMilestone.Evaluation evaluation) throws Exception {
         for (Field field: Beans.getKnownInstanceFields(service.getClass())) {
             if (ServiceMilestone.class.isAssignableFrom(field.getType())) {
-                ((ServiceMilestone<M>)field.get(service)).install(Enum.valueOf(type, milestore), evaluation);
-                return;
+                try {
+        ((ServiceMilestone<M>)field.get(service)).attach(Enum.valueOf((Class<M>)getMilestoneEnum(field.getDeclaringClass()), milestore), evaluation);
+                    return;
+                } catch (ClassNotFoundException x) { // No Milestone enum class found
+                    // keep looking
+                } catch (IllegalArgumentException x) { // No enum constant as named
+                    // keep looking
+                }
             }
         }
+        throw new IllegalArgumentException("NoSuchMilestone");
     }
 
     /**
-     * Uninstalls a ServiceMilestone.Evaluation from a service.
+     * Detaches a ServiceMilestone.Evaluation from a service.
      */
     @SuppressWarnings("unchecked")
-    public static <M extends Enum<M>> void uninstall(Service service, String milestore, ServiceMilestone.Evaluation evaluation) throws Exception {
-        Class<M> type = getMilestoneClass(service.getClass());
+    public static <M extends Enum<M>> void detach(Service service, String milestore, ServiceMilestone.Evaluation evaluation) throws Exception {
         for (Field field: Beans.getKnownInstanceFields(service.getClass())) {
             if (ServiceMilestone.class.isAssignableFrom(field.getType())) {
-                ((ServiceMilestone<M>)field.get(service)).uninstall(Enum.valueOf(type, milestore), evaluation);
-                return;
+                try {
+        ((ServiceMilestone<M>)field.get(service)).detach(Enum.valueOf((Class<M>)getMilestoneEnum(field.getDeclaringClass()), milestore), evaluation);
+                    return;
+                } catch (ClassNotFoundException x) { // No Milestone enum class found
+                    // keep looking
+                } catch (IllegalArgumentException x) { // No enum constant as named
+                    // keep looking
+                }
             }
         }
+        throw new IllegalArgumentException("NoSuchMilestone");
     }
 
     /**
@@ -105,16 +121,16 @@ public class ServiceMilestone<M extends Enum<M>> {
     }
 
     /**
-     * Installs a ServiceMilestone.Evaluation.
+     * Attaches a ServiceMilestone.Evaluation.
      */
-    public void install(M m, Evaluation eval) {
+    public void attach(M m, Evaluation eval) {
         _evaluations[m.ordinal()] = _evaluations[m.ordinal()] == null ? eval : new CompoundMilestoneEvaluation(eval, _evaluations[m.ordinal()]);
     }
 
     /**
-     * Uninstalls a ServiceMilestone.Evaluation.
+     * Detaches a ServiceMilestone.Evaluation.
      */
-    public void uninstall(M m, Evaluation eval) {
+    public void detach(M m, Evaluation eval) {
         _evaluations[m.ordinal()] = CompoundMilestoneEvaluation.cleanse(_evaluations[m.ordinal()], eval);
     }
 
@@ -129,12 +145,11 @@ public class ServiceMilestone<M extends Enum<M>> {
 
     private final Evaluation[] _evaluations;
 
-    @SuppressWarnings("unchecked")
-    private static <M extends Enum<M>> Class<M> getMilestoneClass(Class<?> declaring) throws Exception {
+    private static Class<?> getMilestoneEnum(Class<?> declaring) throws Exception {
         while (declaring != Object.class) {
             for (Class<?> declared: declaring.getDeclaredClasses()) {
                 if (Modifier.isPublic(declared.getModifiers()) && declared.getSimpleName().equals("Milestone") && Enum.class.isAssignableFrom(declared)) {
-                    return (Class<M>)declared;
+                    return declared;
                 }
             }
             declaring = declaring.getSuperclass();

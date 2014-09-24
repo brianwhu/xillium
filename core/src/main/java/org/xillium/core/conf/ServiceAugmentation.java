@@ -92,7 +92,7 @@ public class ServiceAugmentation {
                                 ((Service.Extendable)service.getValue()).setFilter((Service.Filter)spec.augment);
                             }
                         } else {
-                            ServiceMilestone.install(service.getValue(), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
+                            ServiceMilestone.attach(service.getValue(), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                         }
                     } catch (Exception x) {
                         _logger.log(Level.WARNING, service.getKey(), x);
@@ -106,7 +106,7 @@ public class ServiceAugmentation {
                                 ((Service.Extendable)service.getValue()).setFilter((Service.Filter)spec.augment);
                             }
                         } else {
-                            ServiceMilestone.install(service.getValue(), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
+                            ServiceMilestone.attach(service.getValue(), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                         }
                     } catch (Exception x) {
                         _logger.log(Level.WARNING, service.getKey(), x);
@@ -117,7 +117,7 @@ public class ServiceAugmentation {
                     if (spec.milestone == null) {
                         ((Service.Extendable)services.get(spec.service)).setFilter((Service.Filter)spec.augment);
                     } else {
-                        ServiceMilestone.install(services.get(spec.service), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
+                        ServiceMilestone.attach(services.get(spec.service), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                     }
                 } catch (Exception x) {
                     _logger.log(Level.WARNING, spec.service, x);
@@ -127,7 +127,7 @@ public class ServiceAugmentation {
                     if (spec.milestone == null) {
                         ((Service.Extendable)services.get(_module + '/' + spec.service)).setFilter((Service.Filter)spec.augment);
                     } else {
-                        ServiceMilestone.install(services.get(_module + '/' + spec.service), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
+                        ServiceMilestone.attach(services.get(_module + '/' + spec.service), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                     }
                 } catch (Exception x) {
                     _logger.log(Level.WARNING, spec.service, x);
