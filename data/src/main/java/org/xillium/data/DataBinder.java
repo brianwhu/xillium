@@ -1,6 +1,7 @@
 package org.xillium.data;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.io.*;
 import java.util.*;
 import java.sql.*;
@@ -158,7 +159,24 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     }
 
     /**
-     * Removes all auto-values (those whose name starts and ends with '#').
+     * Fills the data binder with a subset of non-static, non-transient fields of an Object, excluding null values.
+     *
+     * @param names - the names of the fields in the subset
+     */
+    public DataBinder put(Object object, String... names) throws Exception {
+        Class<?> type = object.getClass();
+        Object value;
+        for (String name: names) {
+            Field field = Beans.getKnownField(type, name);
+            if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers()) && (value = field.get(object)) != null) {
+                put(field.getName(), value.toString());
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Removes all auto-values (those whose names start and end with '#').
      *
      * @return the number of auto-values removed
      */
