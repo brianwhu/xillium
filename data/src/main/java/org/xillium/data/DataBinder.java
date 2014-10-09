@@ -163,7 +163,7 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
      *
      * @param names - the names of the fields in the subset
      */
-    public DataBinder put(Object object, String... names) throws Exception {
+    public <T extends DataObject> DataBinder put(T object, String... names) throws Exception {
         Class<?> type = object.getClass();
         Object value;
         for (String name: names) {
