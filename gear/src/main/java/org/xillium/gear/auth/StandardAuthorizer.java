@@ -77,6 +77,11 @@ public class StandardAuthorizer extends ManagedComponent implements Authorizer, 
 		}
     }
 
+    @Override
+    public CacheState getCacheState() {
+        return null;
+    }
+
 	protected void authorize(String deployment, List<Role> roles) throws AuthorizationException {
         int authorization = -1;
         int prerequisite = -1;
