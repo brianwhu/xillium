@@ -33,6 +33,6 @@ public class ExponentialBackoff implements TrialStrategy {
     }
 
     public static long randomizedExponentialSequence(int age) {
-        return INIT_BACKOFF + (long)Math.round(_random.nextDouble() * INIT_BACKOFF * (1L << Math.min(MAX_EXPONENT, age)));
+        return INIT_BACKOFF + Math.round(_random.nextDouble() * INIT_BACKOFF * (1L << Math.min(MAX_EXPONENT, age)));
     }
 }

@@ -65,6 +65,7 @@ public class X509CertificateAuthenticator extends PageAwareAuthenticator {
      * @param locations - a list of roles file locations or location patterns, as supported by
      * org.springframework.core.io.support.PathMatchingResourcePatternResolver
      */
+    @SuppressWarnings("unchecked")
     public X509CertificateAuthenticator(String identityName, List<String> locations) throws Exception {
         _persistence = null;
         _identityName = identityName;
