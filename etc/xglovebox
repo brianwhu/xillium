@@ -1,11 +1,11 @@
 # find a string in any java or service-configuration.xml source
 fjava() {
-find . \( -name '*.java' -o -name 'service-configuration.xml' \) -exec grep "$1" {} \; -print
+find . \( -name '*.java' -o -name 'service-configuration.xml' \) -not -regex '.*/target/.*' -exec grep "$1" {} \; -print
 }
 
 # find a string in any java or service-configuration.xml source
 ljava() {
-find . \( -name '*.java' -o -name 'service-configuration.xml' \) -exec grep -l "$1" {} \;
+find . \( -name '*.java' -o -name 'service-configuration.xml' \) -not -regex '.*/target/.*' -exec grep -l "$1" {} \;
 }
 
 # find a string in any xml source
@@ -38,7 +38,7 @@ find $p -name storage-*.xml -exec grep 'name=' {} \; | awk '{ split($0,a,"name=\
 # find all named args in parametric statements
 args() {
 case $# in 0) p=.;; *) p=$1;; esac
-find $p -name storage-*.xml -exec grep ':[A-Za-z_-]*:[A-Z]*' {} \; | awk '{split($0,a,"[^A-Za-z_-]:");p=2;do{split(a[p],b,"[,) ]");print(b[1]);p=p+1;} while (p in a);}' | sort -u
+find $p -name storage-*.xml -exec grep ':[A-Za-z_0-9-]*:[A-Z]*' {} \; | awk '{split($0,a,"[^A-Za-z_0-9-]:");p=2;do{split(a[p],b,"[,)/|; ]");print(b[1]);p=p+1;} while (p in a);}' | sort -u
 }
 
 # find all beans in service-configuration.xml
