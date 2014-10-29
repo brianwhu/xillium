@@ -1,5 +1,7 @@
 package org.xillium.data.validation;
 
+import java.util.*;
+
 
 /**
  * Assertions to enforce data integrity.
@@ -29,6 +31,23 @@ public interface Assertion {
                 }
             }
         };
+
+        /**
+         * Assertion claiming that a given object is in a predefined set
+         */
+        public static class In implements Assertion {
+            private final Set<Object> _set = new HashSet<Object>();
+
+            public <T> In(T[] values) {
+                for (T value: values) _set.add(value);
+            }
+
+            public void apply(Object value) throws DataValidationException {
+                if (!_set.contains(value)) {
+                    throw new DataValidationException("IN", "", value);
+                }
+            }
+        }
 
         /**
          * Convenience method to apply an assertion to a value. Do nothing if the assertion is null.
