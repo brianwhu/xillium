@@ -1,6 +1,7 @@
 package org.xillium.base.util;
 
 import java.lang.reflect.*;
+import java.util.Arrays;
 import java.util.regex.*;
 import javax.management.*;
 import org.xillium.base.beans.Beans;
@@ -82,5 +83,39 @@ public abstract class Objects {
         } catch (Exception x) {
             throw new BadAttributeValueExpException(text);
         }
+    }
+
+    /**
+     * Concatenates several reference arrays.
+     */
+    public static <T> T[] concat(T[] first, T[]... rest) {
+        int length = first.length;
+        for (T[] array : rest) {
+            length += array.length;
+        }
+        T[] result = Arrays.copyOf(first, length);
+        int offset = first.length;
+        for (T[] array : rest) {
+            System.arraycopy(array, 0, result, offset, array.length);
+            offset += array.length;
+        }
+        return result;
+    }
+
+    /**
+     * Concatenates several int arrays.
+     */
+    public static int[] concat(int[] first, int[]... rest) {
+        int length = first.length;
+        for (int[] array : rest) {
+            length += array.length;
+        }
+        int[] result = Arrays.copyOf(first, length);
+        int offset = first.length;
+        for (int[] array : rest) {
+            System.arraycopy(array, 0, result, offset, array.length);
+            offset += array.length;
+        }
+        return result;
     }
 }
