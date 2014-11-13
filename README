@@ -2,15 +2,12 @@ Xillium Service Platform
 
 Copyright (C) 2012 Brian W. Hu
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-any later version.
+The Xillium Service Platform is put in place to allow fast and quality construction of enterprise solutions that are secure, performant, capacious, agile, and robust, by following a well-chosen set of time-honored approaches and technologies. It does so by staying close and faithful to
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   Service oriented architecture
+   Plain HTTP service invocation + JSON responses
+   A very thin Java-RDBMS interworking layer
+   Most important design patterns and abstractions
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+Xillium is built upon open source frameworks, most notably the Spring Core framework, and leverages the best of the modern Java technologies. It is a platform still in fast evolution but its merits already proven to be viable in creating solutions as large as a real-time mass-assess trading system and as small as an online calculator.
+
