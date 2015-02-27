@@ -6,9 +6,6 @@ import org.xillium.core.util.ModuleSorter;
 import org.testng.annotations.*;
 
 
-/**
- * The default implementation of an object factory that creates objects from class names and arguments.
- */
 public class ModuleSorterTest {
     private static final String[] NAME = {
         "settings",
@@ -89,9 +86,15 @@ public class ModuleSorterTest {
         }
 
         System.out.println("Sorted: " + list.size());
-
         for (int i = 0; i < NAME.length; ++i) {
             System.out.println(list.get(i));
+        }
+
+        if (list.size() != NAME.length) {
+            throw new RuntimeException("Wrong number of outputs: " + list.size());
+        }
+
+        for (int i = 0; i < NAME.length - 2; ++i) {
             if (!NAME[i].equals(list.get(i).name)) {
                 throw new RuntimeException("Not in the right order: " + NAME[i]);
             }
