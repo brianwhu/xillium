@@ -39,6 +39,7 @@ public class Pair<T, V> {
      * @param element - the element to remove
      * @return the original isomorphic list with the given element cleansed
      */
+    @SuppressWarnings("unchecked")
     public static <T> T cleanse(T list, T element) {
         if (list == null || list == element) {
             return null;
@@ -62,6 +63,7 @@ public class Pair<T, V> {
      * @param list - a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
      * @param element - the element to look for
      */
+    @SuppressWarnings("unchecked")
     public static <T> boolean includes(T list, T element) {
         if (list == null) {
             return false;
@@ -87,6 +89,7 @@ public class Pair<T, V> {
      * @param list - a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
      * @return the number of elements discovered
      */
+    @SuppressWarnings("unchecked")
     public static <T> int count(T list) {
         if (list == null) {
             return 0;
@@ -104,6 +107,7 @@ public class Pair<T, V> {
      * @param func - a functor that will be invoked to inspect the elements, one at a time
      * @return the number of elements traversed
      */
+    @SuppressWarnings("unchecked")
     public static <R, T> int traverse(T list, Functor<R, T> func) {
         if (list == null) {
             return 0;

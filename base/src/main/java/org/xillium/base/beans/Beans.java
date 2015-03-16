@@ -3,7 +3,8 @@ package org.xillium.base.beans;
 import java.beans.*;
 import java.lang.reflect.*;
 import java.util.*;
-import org.xillium.base.type.*;
+import org.xillium.base.type.typeinfo;
+import org.xillium.base.util.ValueOf;
 
 
 /**
@@ -65,7 +66,9 @@ public class Beans {
      * Converts a boxed type to its primitive counterpart.
      */
     public static Class<?> toPrimitive(Class<?> type) {
-        if (type == Boolean.class) {
+        if (type.isPrimitive()) {
+            return type;
+        } else if (type == Boolean.class) {
             return Boolean.TYPE;
         } else if (type == Character.class) {
             return Character.TYPE;
@@ -90,7 +93,9 @@ public class Beans {
      * Boxes a primitive type.
      */
     public static Class<?> boxPrimitive(Class<?> type) {
-        if (type == byte.class) {
+        if (!type.isPrimitive()) {
+            return type;
+        } else if (type == byte.class) {
             return Byte.class;
         } else if (type == short.class) {
             return Short.class;
@@ -116,23 +121,7 @@ public class Beans {
      */
     public static Class<?>[] boxPrimitives(Class<?>[] types) {
         for (int i = 0; i < types.length; ++i) {
-            if (types[i] == byte.class) {
-                types[i] = Byte.class;
-            } else if (types[i] == short.class) {
-                types[i] = Short.class;
-            } else if (types[i] == int.class) {
-                types[i] = Integer.class;
-            } else if (types[i] == long.class) {
-                types[i] = Long.class;
-            } else if (types[i] == boolean.class) {
-                types[i] = Boolean.class;
-            } else if (types[i] == float.class) {
-                types[i] = Float.class;
-            } else if (types[i] == double.class) {
-                types[i] = Double.class;
-            } else if (types[i] == char.class) {
-                types[i] = Character.class;
-            }
+            types[i] = boxPrimitive(types[i]);
         }
         return types;
     }
@@ -373,7 +362,7 @@ public class Beans {
                     throw new IllegalArgumentException(t);
                 }
             } else if (value instanceof String) {
-                field.set(object, valueOf(ftype, (String)value, field.getAnnotation(typeinfo.class)));
+                field.set(object, new ValueOf(ftype, field.getAnnotation(typeinfo.class)).invoke((String)value));
             } else {
                 throw new IllegalArgumentException(x);
             }
@@ -396,6 +385,7 @@ public class Beans {
      * @param annotation - an optional typeinfo annotation containing additional genetic type information
      * @throws IllegalArgumentException if all conversion attempts fail
      */
+    @Deprecated
     @SuppressWarnings("unchecked")
     public static <T> T valueOf(Class<T> type, String value, typeinfo annotation) {
         if (type.equals(String.class)) {

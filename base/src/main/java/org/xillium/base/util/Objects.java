@@ -4,7 +4,10 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.regex.*;
 import javax.management.*;
+import org.xillium.base.Functor;
 import org.xillium.base.beans.Beans;
+import org.xillium.base.type.typeinfo;
+import org.xillium.base.util.ValueOf;
 
 
 /**
@@ -75,10 +78,10 @@ public abstract class Objects {
             Matcher matcher = ARRAY_INDEX.matcher(path[path.length - 1]);
             if (matcher.find()) {
                 Field field = Beans.getKnownField(object.getClass(), matcher.group(1));
-                Array.set(field.get(object), Integer.parseInt(matcher.group(2)), Beans.valueOf(field.getType().getComponentType(), text));
+                Array.set(field.get(object), Integer.parseInt(matcher.group(2)), new ValueOf(field.getType().getComponentType(), field.getAnnotation(typeinfo.class)).invoke(text));
             } else {
                 Field field = Beans.getKnownField(object.getClass(), path[path.length - 1]);
-                field.set(object, Beans.valueOf(field.getType(), text));
+                field.set(object, new ValueOf(field.getType()).invoke(text));
             }
         } catch (Exception x) {
             throw new BadAttributeValueExpException(text);
@@ -118,4 +121,45 @@ public abstract class Objects {
         }
         return result;
     }
+
+    /**
+     * Appends more elements into an array to form a new array.
+     */
+//  public static <T> T[] append(T[] array, T... elements) {
+//      T[] result = Arrays.copyOf(array, array.length + elements.length);
+//      System.arraycopy(elements, 0, result, array.length, elements.length);
+//      return result;
+//  }
+
+    /**
+     * Stores array elements along with more individuals into a new Object[].
+     */
+    public static <T> Object[] store(T[] array, Object... elements) {
+        Object[] result = new Object[array.length + elements.length];
+        System.arraycopy(array, 0, result, 0, array.length);
+        System.arraycopy(elements, 0, result, array.length, elements.length);
+        return result;
+    }
+
+    /**
+     * Invokes a functor over all elements in an array, and returns the results in a provided array.
+     * <code>
+     *  result = functor(array)
+     * </code>
+     */
+    public static <T, V> T[] apply(T[] result, V[] array, Functor<T, V> functor) {
+        for (int i = 0; i < array.length; ++i) result[i] = functor.invoke(array[i]);
+        return result;
+    }
+
+    /**
+     * Parses an array of Strings as int's, and returns the produced values in a new array.
+     */
+//  public static int[] parse(String[] text) {
+//      int[] array = new int[text.length];
+//      for (int i = 0; i < array.length; ++i) {
+//          array[i] = Integer.parseInt(text[i]);
+//      }
+//      return array;
+//  }
 }

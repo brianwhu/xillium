@@ -16,6 +16,8 @@ import org.xillium.base.beans.Strings;
  * </xmp>
  */
 public class Flags<E extends Enum<E>> {
+    public static final String MULTI_VALUE_SEPARATOR = "[,:\\s]{1,}";
+
     private final EnumSet<E> _mask;
 
     /**
@@ -75,7 +77,7 @@ public class Flags<E extends Enum<E>> {
      */
     public static <E extends Enum<E>> Flags<E> valueOf(Class<E> type, String values) {
         Flags<E> flags = new Flags<E>(type);
-        for (String text : values.trim().split("[,:\\s]{1,}")) {
+        for (String text : values.trim().split(MULTI_VALUE_SEPARATOR)) {
             flags.set(Enum.valueOf(type, text));
         }
         return flags;

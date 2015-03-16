@@ -11,6 +11,7 @@ import org.xillium.base.util.Pair;
 
 public class PairTest {
 
+    @SuppressWarnings("serial")
     public static class Chain extends Pair<Serializable, Serializable> implements Serializable {
         public Chain(Serializable a, Serializable b) {
             super(a, b);
