@@ -111,6 +111,11 @@ public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable
         }
 
         @Override
+        public int hashCode() {
+            return 37*clock + tag.hashCode();
+        }
+
+        @Override
         public void run() {
             _active = true;
             try {
