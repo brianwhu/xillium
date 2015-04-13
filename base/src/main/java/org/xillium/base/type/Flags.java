@@ -57,6 +57,16 @@ public class Flags<E extends Enum<E>> {
         return _mask.size() == 0;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof Flags) && _mask.equals(((Flags)o)._mask);
+    }
+
+    @Override
+    public int hashCode() {
+        return _mask.hashCode();
+    }
+
     /**
      * Returns a string representation of this object, in a format compatible with the static valueOf() method.
      */
