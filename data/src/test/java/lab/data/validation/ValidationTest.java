@@ -3,6 +3,7 @@ package lab.data.validation;
 import lab.*;
 import org.xillium.base.*;
 import org.xillium.base.beans.*;
+import org.xillium.base.type.*;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
 import org.testng.annotations.*;
@@ -40,5 +41,46 @@ public class ValidationTest {
         long elapsed = System.currentTimeMillis() - now;
         System.err.println("Time = " + elapsed + ", DataObject =");
         System.err.println(Beans.toString(object));
+    }
+
+    public static enum Options {
+        A,
+        B,
+        C
+    }
+
+    public static class Special implements DataObject {
+        public Options single;
+        @range(max="2000") public java.math.BigInteger price;
+        @typeinfo(Options.class) public Flags<Options> multiple;
+
+        public Special() {}
+
+        public Special(Options s, java.math.BigInteger p, Flags<Options> m) {
+            single = s;
+            price = p;
+            multiple = m;
+        }
+    }
+
+    @Test(groups={"validation", "validation-special"})
+    public void testSpecialTypes() throws Exception {
+        DataBinder binder = new DataBinder();
+        binder.put("single", "B");
+        binder.put("multiple", "A, C");
+        binder.put("price", "2015");
+
+        Dictionary dict = (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory()).build(getClass().getResourceAsStream("/validation/dictionary.xml"));
+        try {
+            Special special = dict.collect(new Special(), binder);
+            assert false;
+        } catch (Exception x) {}
+
+        binder.put("price", "2000");
+        Special special = dict.collect(new Special(), binder);
+        Special expected = new Special(Options.B, new java.math.BigInteger("2000"), Flags.valueOf(Options.class, "A, C"));
+        assert expected.single == special.single;
+        assert expected.price.equals(special.price);
+        assert expected.multiple.equals(special.multiple);
     }
 }

@@ -2,6 +2,9 @@ package org.xillium.data.validation;
 
 import org.xillium.base.Trace;
 import org.xillium.base.beans.Beans;
+import org.xillium.base.type.typeinfo;
+import org.xillium.base.util.ValueOf;
+import org.xillium.base.util.Objects;
 import java.lang.reflect.*;
 import java.util.regex.*;
 
@@ -24,8 +27,7 @@ public class Validator {
     }
 
     String _name;
-    Method _valueOf;
-    Constructor<?> _init;
+    ValueOf _valueOf;
     Range<?>[] _ranges;
     Pattern _pattern;
     int _size;
@@ -42,19 +44,17 @@ public class Validator {
     public Validator(String name, Class<?> type, Field field) throws IllegalArgumentException {
         Trace.g.std.note(Validator.class, "Enter Validator.<init>(" + name + ", " + field + ')');
         _name = name;
-        type = Beans.boxPrimitive(type);
 
-        try {
-            _valueOf = type == String.class ? null : getValueOf(type);
-            if (_valueOf == null || (Modifier.isStatic(_valueOf.getModifiers()) && _valueOf.getReturnType() == type)) {
+        typeinfo info = field.getAnnotation(typeinfo.class);
+        _valueOf = info == null ? new ValueOf(type) : new ValueOf(type, info.value());
                 try {
                     ranges s = field.getAnnotation(ranges.class);
                     if (s != null) {
                         _ranges = new Range[s.value().length];
                         for (int i = 0; i < _ranges.length; ++i) {
                             _ranges[i] = new Range(
-                                (Comparable)convert(s.value()[i].min()),
-                                (Comparable)convert(s.value()[i].max()),
+                                (Comparable)_valueOf.invoke(s.value()[i].min()),
+                                (Comparable)_valueOf.invoke(s.value()[i].max()),
                                 s.value()[i].inclusive()
                             );
                         }
@@ -63,8 +63,8 @@ public class Validator {
                         if (r != null) {
                             _ranges = new Range[1];
                             _ranges[0] = new Range(
-                                (Comparable)convert(r.min()),
-                                (Comparable)convert(r.max()),
+                                (Comparable)_valueOf.invoke(r.min()),
+                                (Comparable)_valueOf.invoke(r.max()),
                                 r.inclusive()
                             );
                         }
@@ -77,27 +77,10 @@ public class Validator {
                     _size = (z != null && z.value() > 0) ? z.value() : 0;
 
                     values v = field.getAnnotation(values.class);
-                    _values = v != null ? convert(v.value()) : null;
-                } catch (IllegalAccessException x) {
-                    // should never happen
-                    throw new RuntimeException(name, x);
-                } catch (InvocationTargetException x) {
-                    throw new IllegalArgumentException("Incompatible values in validation rules", x.getCause());
+                    _values = v != null ? (_valueOf.isString() ? v.value() : Objects.apply(new Object[v.value().length], v.value(), _valueOf)) : null;
                 } catch (ClassCastException x) {
                     throw new IllegalArgumentException("Type is not Comparable yet has range specifications");
                 }
-            } else {
-                throw new IllegalArgumentException("'valueOf()' is non-static or returns wrong type");
-            }
-        } catch (NoSuchMethodException x) {
-            try {
-                _init = type.getConstructor(String.class);
-            } catch (NoSuchMethodException y) {
-                throw new IllegalArgumentException("Type has no static method 'valueOf(String)' or <init>(String)");
-            }
-        } catch (Exception x) {
-            throw new IllegalArgumentException(x.getMessage(), x);
-        }
     }
 
     public String getName() {
@@ -112,12 +95,12 @@ public class Validator {
     public Object parse(String text) throws DataValidationException {
         try {
             preValidate(text);
-            Object object = (_valueOf != null || _init != null) ? valueOf(text) : text;
+            Object object = _valueOf.invoke(text);
             postValidate(object);
             return object;
         } catch (DataValidationException x) {
             throw x;
-        } catch (InvocationTargetException x) {
+        } catch (IllegalArgumentException x) {
             // various format errors from valueOf() - ignore the details
             throw new DataValidationException("FORMAT", _name, text);
         } catch (Throwable t) {
@@ -174,55 +157,5 @@ public class Validator {
 
             throw new DataValidationException("VALUES/RANGES", _name, object);
         }
-    }
-
-    /*!
-     * Converts a string into a value of the associated type.
-     * <p>
-     * Note: If the string is the empty string "", it is converted to
-     * <ul>
-     * <li>Empty string "", if the associated type is String
-     * <li>null, otherwise
-     * </li>
-     */
-    private final Object convert(String text) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        return (_valueOf != null || _init != null) ? (text.length() > 0 ? valueOf(text) : null) : text;
-    }
-
-    /*!
-     * Converts an array of strings into an array of values of the associated type.
-     * <p>
-     * Note: If the string is the empty string "", it is converted to
-     * <ul>
-     * <li>Empty string "", if the associated type is String
-     * <li>null, otherwise
-     * </li>
-     */
-    private final Object[] convert(String[] text) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        if (_valueOf != null || _init != null) {
-            Object[] values = new Object[text.length];
-            for (int i = 0; i < values.length; ++i) {
-                values[i] = text[i].length() > 0 ? valueOf(text[i]) : null;
-            }
-            return values;
-        } else {
-            return text;
-        }
-    }
-
-    private final Method getValueOf(Class<?> type) throws NoSuchMethodException {
-        try {
-            return type.getMethod("valueOf", String.class);
-        } catch (NoSuchMethodException x) {
-            return type.getMethod("valueOf", type, String.class);
-        }
-    }
-
-    private final Object valueOf(String text) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        return _valueOf != null ?
-            (_valueOf.getParameterTypes().length == 1 ? _valueOf.invoke(null, text) : _valueOf.invoke(null, _valueOf.getReturnType(), text))
-            :
-            _init.newInstance(text)
-        ;
     }
 }
