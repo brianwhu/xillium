@@ -70,7 +70,7 @@ public class Persistence {
     /**
      * Looks up a ParametricStatement by its name.
      */
-    public ParametricStatement getParametricStatement(String name) throws SQLException {
+    public ParametricStatement getParametricStatement(String name) {
         ParametricStatement statement = _statements.get(name);
         if (statement != null) {
             return statement;
