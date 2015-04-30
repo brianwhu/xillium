@@ -29,6 +29,10 @@ public class XML {
 
     /**
      * Creates a new SAXParser.
+     *
+     * @return the SAX parser
+     * @throws ParserConfigurationException if a parser cannot be created which satisfies the requested configuration
+     * @throws SAXException for SAX errors
      */
     public static SAXParser newSAXParser() throws ParserConfigurationException, SAXException {
         return _factory.newSAXParser();

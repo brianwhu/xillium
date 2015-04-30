@@ -11,9 +11,9 @@ import org.xillium.base.type.typeinfo;
  * A ValueOf is a utility to converts a String representation into a value of a given type. Conversion is
  * possible if the type defines one of the following.
  * <ol>
- * <li>a static method <code>valueOf(String text)</code></li>
- * <li>a static method <code>valueOf(Class<?>... types, String text)</code></li>
- * <li>a constructor <code>&lt;init&gt;(String text)</code></li>
+ * <li>a static method {@code valueOf(String text)}</li>
+ * <li>a static method {@code valueOf(Class<?>... types, String text)}</li>
+ * <li>a constructor {@code <init>(String text)}</li>
  * </ol>
  * If none of these mechanisms are available, construction of ValueOf fails with an IllegalArgumentException.
  */
@@ -25,7 +25,7 @@ public class  ValueOf implements Functor<Object, String> {
     /**
      * Constructs a ValueOf on a simple type.
      *
-     * @param type - the target class
+     * @param type the target class
      * @throws IllegalArgumentException if the type does not support conversion from String texts
      */
     public ValueOf(Class<?> type) {
@@ -35,8 +35,8 @@ public class  ValueOf implements Functor<Object, String> {
     /**
      * Constructs a ValueOf on a parametric type.
      *
-     * @param type - the target class
-     * @param info - a typeinfo annotation that maintains an array of type arguments bound to the parametric type
+     * @param type the target class
+     * @param info a typeinfo annotation that maintains an array of type arguments bound to the parametric type
      * @throws IllegalArgumentException if the type does not support conversion from String texts
      */
     public ValueOf(Class<?> type, typeinfo info) {
@@ -46,8 +46,8 @@ public class  ValueOf implements Functor<Object, String> {
     /**
      * Constructs a ValueOf on a parametric type.
      *
-     * @param type - the target class
-     * @param args - an array of type arguments bound to the parametric type
+     * @param type the target class
+     * @param args an array of type arguments bound to the parametric type
      * @throws IllegalArgumentException if the type does not support conversion from String texts
      */
     public ValueOf(Class<?> type, Class<?>[] args) {
@@ -76,6 +76,8 @@ public class  ValueOf implements Functor<Object, String> {
 
     /**
      * Reports whether the type associated with this ValueOf is String or not.
+     *
+     * @return whether the type associated with this ValueOf is String or not
      */
     public boolean isString() {
         return _valueOf == null && _init == null;
@@ -83,14 +85,15 @@ public class  ValueOf implements Functor<Object, String> {
 
     /**
      * Converts a text into a value.
-     *
+     * <p>
      * Note: If the text is an empty string, it is converted to
      * <ul>
-     * <li>Empty string "", if the associated type is String
-     * <li>null, otherwise
-     * </li>
+     * <li>Empty string "", if the associated type is String</li>
+     * <li>null, otherwise</li>
+     * </ul>
      *
-     * @param text - the string to convert
+     * @param text the string to convert
+     * @return the converted object
      * @throws IllegalArgumentException if the text cannot be converted into a value
      */
     public Object invoke(String text) {

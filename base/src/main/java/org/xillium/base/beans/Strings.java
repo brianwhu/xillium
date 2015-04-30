@@ -34,6 +34,9 @@ public class Strings {
 
     /**
      * Converts a hyphen-separated word sequence into a single camel-case word.
+     *
+     * @param text - a hyphen-separated word sequence
+     * @return a single camel-case word
      */
     public static String toCamelCase(String text) {
         return toCamelCase(text, '-');
@@ -41,6 +44,10 @@ public class Strings {
 
     /**
      * Converts a word sequence into a single camel-case word.
+     *
+     * @param text - a word sequence with the given separator
+     * @param separator - a word separator
+     * @return a single camel-case word
      */
     public static String toCamelCase(String text, char separator) {
         return toCamelCase(text, separator, true);
@@ -49,7 +56,10 @@ public class Strings {
     /**
      * Converts a word sequence into a single camel-case sequence.
      *
+     * @param text - a word sequence with the given separator
+     * @param separator - a word separator
      * @param strict - if true, all letters following the first are forced into lower case in each word
+     * @return a single camel-case word
      */
     public static String toCamelCase(String text, char separator, boolean strict) {
         char[] chars = text.toCharArray();
@@ -78,6 +88,10 @@ public class Strings {
 
     /**
      * Converts a word sequence into a single camel-case word that starts with a lowercase letter.
+     *
+     * @param text - a word sequence with the given separator
+     * @param separator - a word separator
+     * @return a single camel-case word
      */
     public static String toLowerCamelCase(String text, char separator) {
         char[] chars = text.toCharArray();
@@ -102,12 +116,22 @@ public class Strings {
         String.format("%s|%s|%s", "(?<=[A-Z])(?=[A-Z][a-z])", "(?<=[^A-Z])(?=[A-Z])", "(?<=[A-Za-z])(?=[^A-Za-z])")
     );
 
+    /**
+     * Splits a single camel-case word into a word sequence.
+     *
+     * @param text - a single camel-case word
+     * @param separator - a word separator
+     * @return a word sequence with each word separated by the given separator
+     */
     public static String splitCamelCase(String text, String separator) {
         return CAMEL_REGEX.matcher(text).replaceAll(separator);
     }
 
     /**
-     * Capitalizes a word
+     * Capitalizes a text string
+     *
+     * @param text - any text string
+     * @return the same text string with the first letter capitalized
      */
     public static String capitalize(String text) {
         char[] chars = text.toCharArray();
@@ -117,18 +141,29 @@ public class Strings {
 
     /**
      * Generates a secure hash from a given text.
+     *
+     * @param text - any text string
+     * @return the SHA-1 hash as a hexadecimal string
+     * @throws NoSuchAlgorithmException if the Java platform does not support SHA-1 algorithm
+     * @throws UnsupportedEncodingException if the Java platform does not support UTF-8 encoding
      */
     public static String hash(String text) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         return Strings.toHexString(MessageDigest.getInstance("SHA").digest(text.getBytes("UTF-8")));
     }
 
     /**
-     * Extends a string to have at least the given length.
+     * Extends a string to have at least the given length. If the original string is already as long, it is returned
+     * without modification.
+     *
+     * @param text - a text string
+     * @param filler - the filler character
+     * @param length - the specified length
+     * @return the extended string
      */
-    public static String extend(String text, char fill, int length) {
+    public static String extend(String text, char filler, int length) {
         if (text.length() < length) {
             char[] buffer = new char[length];
-            Arrays.fill(buffer, 0, length, fill);
+            Arrays.fill(buffer, 0, length, filler);
             System.arraycopy(text.toCharArray(), 0, buffer, 0, text.length());
             return new String(buffer);
         } else {
@@ -138,6 +173,10 @@ public class Strings {
 
     /**
      * Returns a substring from position 0 up to just before the stopper character.
+     *
+     * @param text - a text string
+     * @param stopper - a stopper character
+     * @return the substring
      */
     public static String substringBefore(String text, char stopper) {
         int p = text.indexOf(stopper);
@@ -146,6 +185,10 @@ public class Strings {
 
     /**
      * Returns the substring following a given character, or the original if the character is not found.
+     *
+     * @param text - a text string
+     * @param match - a match character
+     * @return the substring
      */
     public static String substringAfter(String text, char match) {
         return text.substring(text.indexOf(match)+1);
@@ -160,13 +203,13 @@ public class Strings {
      * <li> Arguments are enclosed between '{' and '}'</li>
      * <li> Optional extra text is allowed at the end of line starting with '#', which is removed before returning</li>
      * </ol>
+     *
+     * @param params - a list to hold extracted arguments in the original string
+     * @param original - a text string
+     * @return the string with arguments replaced with "{}"
      */
     public static String extractArguments(List<String> params, String original) {
-        int eol = original.indexOf('#');
-        if (eol > -1) {
-            original = original.substring(0, eol);
-        }
-        Matcher matcher = PARAM_SYNTAX.matcher(original);
+        Matcher matcher = PARAM_SYNTAX.matcher(substringBefore(original, '#'));
         while (matcher.find()) {
             try {
                 params.add(matcher.group(1));
@@ -179,6 +222,10 @@ public class Strings {
 
     /**
      * Collects object member values into an array of Strings, each prefixed by the field name.
+     *
+     * @param object - an object
+     * @param names - the names of data members of object
+     * @return an array of strings, each in the format of <i>&lt;member-name&gt;:&lt;member-value&gt;</i>
      */
     public static String[] collect(Object object, String... names) {
         return collect(null, 0, "", object, ':', names);
@@ -186,6 +233,11 @@ public class Strings {
 
     /**
      * Collects object member values into an array of Strings, each prefixed by the field name.
+     *
+     * @param object - an object
+     * @param separator - a separator character between the member name and the member value in the output
+     * @param names - the names of data members of object
+     * @return an array of strings, each in the format of <i>&lt;member-name&gt;&lt;separator&gt;&lt;member-value&gt;</i>
      */
     public static String[] collect(Object object, char separator, String... names) {
         return collect(null, 0, "", object, separator, names);
@@ -193,6 +245,14 @@ public class Strings {
 
     /**
      * Collects object member values into an array of Strings, each prefixed by the field name.
+     *
+     * @param storage - an array of strings to store the return values
+     * @param offset - a offset into the storage from which to start storing return values
+     * @param prefix - a string to prepend to each member name in the output
+     * @param object - an object
+     * @param separator - a separator character between the member name and the member value in the output
+     * @param names - the names of data members of object
+     * @return an array of strings, each in the format of <i>&lt;prefix&gt;&lt;member-name&gt;&lt;separator&gt;&lt;member-value&gt;</i>
      */
     public static String[] collect(String[] storage, int offset, String prefix, Object object, char separator, String... names) {
         if (storage == null) {
@@ -212,18 +272,30 @@ public class Strings {
 
     /**
      * Returns a formatted string using the specified format string and object fields.
-     *
      * <ol>
      * <li> Parameter names in the format string are enclosed between '{' and '}'</li>
      * <li> After formatting, each value is added between a parameter name and the closing brace
      * </ol>
+     *
+     * @param pattern - a string pattern with embedded placeholders
+     * @param args - an object to provide arguments
+     * @return the formatted string
      */
     public static String format(String pattern, Object args) {
         return format(pattern, args, false);
     }
 
     /**
+     * Returns a formatted string using the specified format string and object fields.
+     * <ol>
+     * <li> Parameter names in the format string are enclosed between '{' and '}'</li>
+     * <li> After formatting, each value is added between a parameter name and the closing brace
+     * </ol>
+     *
+     * @param pattern - a string pattern with embedded placeholders
+     * @param args - an object to provide arguments
      * @param preserve - preserves original parameter marks
+     * @return the formatted string
      */
     public static String format(String pattern, Object args, boolean preserve) {
         StringBuilder sb = null;
@@ -255,6 +327,10 @@ public class Strings {
 
     /**
      * Concatenates elements in an array into a single String, with elements separated by the given separator.
+     *
+     * @param array - an array
+     * @param separator - a separator character
+     * @return the string from joining elements in the array
      */
     public static String join(Object array, char separator) {
         StringBuilder sb = new StringBuilder();
@@ -268,10 +344,15 @@ public class Strings {
 
     /**
      * Concatenates elements in an Iterable into a single String, with elements separated by the given separator.
+     *
+     * @param <T> - the type of the elements in the iterable
+     * @param iterable - an iterable
+     * @param separator - a separator character
+     * @return the string from joining elements in the iterable
      */
-    public static <T> String join(Iterable<T> list, char separator) {
+    public static <T> String join(Iterable<T> iterable, char separator) {
         StringBuilder sb = new StringBuilder();
-        for (T element: list) {
+        for (T element: iterable) {
             sb.append(element != null ? element.toString() : "null").append(separator);
         }
         if (sb.length() > 0) sb.setLength(sb.length()-1);

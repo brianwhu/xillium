@@ -19,10 +19,11 @@ public abstract class Objects {
     /**
      * Reports a property.
      *
-     * @param object - the target object
-     * @param path - a string array path to the property
-     * @param length - the number of components to consider in the path array
+     * @param object the target object
+     * @param path a string array path to the property
+     * @param length the number of components to consider in the path array
      * @return the property value
+     * @throws AttributeNotFoundException if the attribute is not found
      */
     public static Object getProperty(Object object, String[] path, int length) throws AttributeNotFoundException {
         try {
@@ -44,9 +45,10 @@ public abstract class Objects {
     /**
      * Reports a property.
      *
-     * @param object - the target object
-     * @param path - a string array path to the property
+     * @param object the target object
+     * @param path a string array path to the property
      * @return the property value
+     * @throws AttributeNotFoundException if the attribute is not found
      */
     public static Object getProperty(Object object, String[] path) throws AttributeNotFoundException {
         return getProperty(object, path, path.length);
@@ -55,9 +57,10 @@ public abstract class Objects {
     /**
      * Reports a property.
      *
-     * @param object - the target object
-     * @param name - a dot-separated string path to the property
+     * @param object the target object
+     * @param name a dot-separated string path to the property
      * @return the property value
+     * @throws AttributeNotFoundException if the attribute is not found
      */
     public static Object getProperty(Object object, String name) throws AttributeNotFoundException {
         return getProperty(object, name.split("\\."));
@@ -66,9 +69,11 @@ public abstract class Objects {
     /**
      * Updates a property.
      *
-     * @param object - the target object
-     * @param name - a dot-separated path to the property
-     * @param text - a String representation of the new value
+     * @param object the target object
+     * @param name a dot-separated path to the property
+     * @param text a String representation of the new value
+     * @throws AttributeNotFoundException if the attribute is not found
+     * @throws BadAttributeValueExpException if the value expression is invalid
      */
     public static void setProperty(Object object, String name, String text) throws AttributeNotFoundException, BadAttributeValueExpException {
         String[] path = name.split("\\.");
@@ -90,6 +95,11 @@ public abstract class Objects {
 
     /**
      * Concatenates several reference arrays.
+     *
+     * @param <T> the type of the elements in the array
+     * @param first the first array
+     * @param rest the rest of the arrays
+     * @return a single array containing all elements in all arrays
      */
     public static <T> T[] concat(T[] first, T[]... rest) {
         int length = first.length;
@@ -107,6 +117,10 @@ public abstract class Objects {
 
     /**
      * Concatenates several int arrays.
+     *
+     * @param first the first array
+     * @param rest the rest of the arrays
+     * @return a single array containing all elements in all arrays
      */
     public static int[] concat(int[] first, int[]... rest) {
         int length = first.length;
@@ -133,6 +147,11 @@ public abstract class Objects {
 
     /**
      * Stores array elements along with more individuals into a new Object[].
+     *
+     * @param <T> the type of the elements in the array
+     * @param array an array
+     * @param elements a list of elements
+     * @return an {@code Object} array containing all elements
      */
     public static <T> Object[] store(T[] array, Object... elements) {
         Object[] result = new Object[array.length + elements.length];
@@ -146,8 +165,15 @@ public abstract class Objects {
      * <code>
      *  result = functor(array)
      * </code>
+     *
+     * @param <R> the result type of the functor
+     * @param <T> the type of the elements in the array
+     * @param result an array to store functor return values
+     * @param array an array
+     * @param functor a functor
+     * @return an array containing invocation results
      */
-    public static <T, V> T[] apply(T[] result, V[] array, Functor<T, V> functor) {
+    public static <R, T> R[] apply(R[] result, T[] array, Functor<R, T> functor) {
         for (int i = 0; i < array.length; ++i) result[i] = functor.invoke(array[i]);
         return result;
     }

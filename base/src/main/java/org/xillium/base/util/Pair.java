@@ -5,10 +5,10 @@ import org.xillium.base.Functor;
 
 /**
  * A pair of elements packed in a single object.
- * <p/>
+ * <p>
  * This class can be used as a basis to build an isomorphic list of elements where the the list itself 
  * implements the same interfaces as its elements, a structure very useful in building multicasting functions.
- * <xmp>
+ * <pre>{@code
  *      public interface Feature { ... }
  *
  *      public class CompoundFeature extends Pair<Feature, Feature> implements Feature {
@@ -16,7 +16,7 @@ import org.xillium.base.Functor;
  *      }
  *
  *      Feature feature = new CompoundFeature(f1, new CompoundFeature(f2, new CompoundFeature(f3, f4)));
- * </xmp>
+ * }</pre>
  */
 public class Pair<T, V> {
     public T first;
@@ -24,6 +24,9 @@ public class Pair<T, V> {
 
     /**
      * Constructs a Pair of 2 elements.
+     *
+     * @param f the first element
+     * @param s the second element
      */
     public Pair(T f, V s) {
         first = f;
@@ -33,10 +36,11 @@ public class Pair<T, V> {
     /**
      * Cleanses an isomorphic list of a particular element. Only one thread should be updating the list at a time.
      *
-     * Usage: feature = Pair.cleanse(feature, f2);
+     * Usage: {@code feature = Pair.cleanse(feature, f2);}
      *
-     * @param list - a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
-     * @param element - the element to remove
+     * @param <T> the type of the elements in the isomorphic list
+     * @param list a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
+     * @param element the element to remove
      * @return the original isomorphic list with the given element cleansed
      */
     @SuppressWarnings("unchecked")
@@ -60,8 +64,10 @@ public class Pair<T, V> {
     /**
      * Tests whether an isomorphic list includes a particular element.
      *
-     * @param list - a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
-     * @param element - the element to look for
+     * @param <T> the type of the elements in the isomorphic list
+     * @param list a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
+     * @param element the element to look for
+     * @return whether the list includes the element
      */
     @SuppressWarnings("unchecked")
     public static <T> boolean includes(T list, T element) {
@@ -86,6 +92,7 @@ public class Pair<T, V> {
     /**
      * Counts the number of elements in an isomorphic list.
      *
+     * @param <T> the type of the elements in the isomorphic list
      * @param list - a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
      * @return the number of elements discovered
      */
@@ -103,12 +110,13 @@ public class Pair<T, V> {
     /**
      * Traverses an isomorphic list using a Functor. The return values from the functor are discarded.
      *
+     * @param <T> the type of the elements in the isomorphic list
      * @param list - a list represented by the first Pair object isomorphic to the elements, or an element when the list is trivial
      * @param func - a functor that will be invoked to inspect the elements, one at a time
      * @return the number of elements traversed
      */
     @SuppressWarnings("unchecked")
-    public static <R, T> int traverse(T list, Functor<R, T> func) {
+    public static <T> int traverse(T list, Functor<?, T> func) {
         if (list == null) {
             return 0;
         } else if (list instanceof Pair) {

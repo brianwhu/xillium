@@ -9,6 +9,9 @@ public class XilliumProperty {
 
     /**
      * Constructs a XilliumProperty from a key and a value.
+     *
+     * @param k the key of the property
+     * @param v the value of the property
      */
     public XilliumProperty(String k, String v) {
         key = k;

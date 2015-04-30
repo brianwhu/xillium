@@ -16,6 +16,9 @@ public class XilliumProperties extends Properties {
 
     /**
      * Constructs a XilliumProperties that reads directly from an open Reader.
+     *
+     * @param reader a Reader
+     * @throws IOException if any I/O errors occur
      */
     public XilliumProperties(Reader reader) throws IOException {
         load(reader);
@@ -23,6 +26,8 @@ public class XilliumProperties extends Properties {
 
     /**
      * Sets(adds) a property.
+     *
+     * @param property the property to add
      */
     public void setXilliumProperty(XilliumProperty property) {
         setProperty(property.key, property.value);

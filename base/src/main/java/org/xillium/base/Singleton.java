@@ -17,7 +17,7 @@ public class Singleton<T> {
      *
      * @see <a href="http://en.wikipedia.org/wiki/Double-checked_locking">Double-checked locking</a>
      *
-     * @param callable - a {@link java.util.concurrent.Callable Callable} that can be called to create a new value without arguments
+     * @param callable a {@link java.util.concurrent.Callable Callable} that can be called to create a new value without arguments
      * @return the singleton object
      * @throws Exception if the callable fails to create a new value
      */
@@ -39,7 +39,9 @@ public class Singleton<T> {
      *
      * @see <a href="http://en.wikipedia.org/wiki/Double-checked_locking">Double-checked locking</a>
      *
-     * @param functor - a {@link org.xillium.base.Functor Functor} that can be called to create a new value with 1 argument
+     * @param <V> the argument type to the functor
+     * @param functor a {@link org.xillium.base.Functor Functor} that can be called to create a new value with 1 argument
+     * @param argument the argument to pass to the functor
      * @return the singleton object
      * @throws Exception if the functor fails to create a new value
      */
@@ -61,7 +63,8 @@ public class Singleton<T> {
      *
      * @see <a href="http://en.wikipedia.org/wiki/Double-checked_locking">Double-checked locking</a>
      *
-     * @param factory - a {@link org.xillium.base.Factory Factory} that can be called to create a new value with more than 1 arguments
+     * @param factory a {@link org.xillium.base.Factory Factory} that can be called to create a new value with more than 1 arguments
+     * @param args the arguments to pass to the factory
      * @return the singleton object
      * @throws Exception if the factory fails to create a new value
      */
@@ -78,6 +81,11 @@ public class Singleton<T> {
 
     /**
      * For performance evaluation only - do not use.
+     *
+     * @param p a {@link org.xillium.base.Factory Factory} that can be called to create a new value with more than 1 arguments
+     * @param args the arguments to pass to the factory
+     * @return the singleton object
+     * @throws Exception if the factory fails to create a new value
      */
     public synchronized T slow(Factory<T> p, Object... args) throws Exception {
         T result = _value;

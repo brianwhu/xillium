@@ -13,6 +13,9 @@ import org.xillium.base.util.ValueOf;
 public class Beans {
     /**
      * Tests whether a non-primitive type is directly displayable.
+     *
+     * @param type the class object to test
+     * @return whether the type is displayable
      */
     public static boolean isDisplayable(Class<?> type) {
         return Enum.class.isAssignableFrom(type)
@@ -26,6 +29,10 @@ public class Beans {
 
     /**
      * Class lookup by name, which also accepts primitive type names.
+     *
+     * @param name the full name of the class
+     * @return the class object
+     * @throws ClassNotFoundException if the class is not found
      */
     public static Class<?> classForName(String name) throws ClassNotFoundException {
         if ("void".equals(name)) return void.class;
@@ -48,6 +55,9 @@ public class Beans {
      * <li>Class
      * <li>String
      * </ul>
+     *
+     * @param type the type to test
+     * @return whether the type is primitive
      */
     public static boolean isPrimitive(Class<?> type) {
         return type == Class.class || type == String.class
@@ -64,6 +74,9 @@ public class Beans {
 
     /**
      * Converts a boxed type to its primitive counterpart.
+     *
+     * @param type the type to convert
+     * @return the primitive counterpart
      */
     public static Class<?> toPrimitive(Class<?> type) {
         if (type.isPrimitive()) {
@@ -91,6 +104,9 @@ public class Beans {
 
     /**
      * Boxes a primitive type.
+     *
+     * @param type the primitive type to box
+     * @return the boxed type
      */
     public static Class<?> boxPrimitive(Class<?> type) {
         if (!type.isPrimitive()) {
@@ -118,6 +134,9 @@ public class Beans {
 
     /**
      * Boxes primitive types.
+     *
+     * @param types an array of primitive types to box
+     * @return an array of boxed types
      */
     public static Class<?>[] boxPrimitives(Class<?>[] types) {
         for (int i = 0; i < types.length; ++i) {
@@ -129,6 +148,11 @@ public class Beans {
     /**
      * Returns a known field by name from the given class disregarding its access control setting, looking through
      * all super classes if needed.
+     *
+     * @param type the class to start with
+     * @param name the name of the field
+     * @return a Field object representing the known field
+     * @throws NoSuchFieldException if the field is not found
      */
     public static Field getKnownField(Class<?> type, String name) throws NoSuchFieldException {
         NoSuchFieldException last = null;
@@ -147,6 +171,10 @@ public class Beans {
 
     /**
      * Returns all known fields in the given class and all its super classes.
+     *
+     * @param type the class to start with
+     * @return an array of Field objects representing all known fields
+     * @throws SecurityException if a security manager denies access
      */
     public static Field[] getKnownFields(Class<?> type) throws SecurityException {
         List<Field> fields = new ArrayList<Field>();
@@ -162,6 +190,10 @@ public class Beans {
 
     /**
      * Returns all known fields in the given class and all its super classes.
+     *
+     * @param type the class to start with
+     * @return an array of Field objects representing all known instance fields
+     * @throws SecurityException if a security manager denies access
      */
     public static Field[] getKnownInstanceFields(Class<?> type) throws SecurityException {
         List<Field> fields = new ArrayList<Field>();
@@ -178,6 +210,11 @@ public class Beans {
 
     /**
      * Overrides access control of an AccessibleObject, facilitating fluent coding style.
+     *
+     * @param <T> the type of the accessible object
+     * @param object the object to start with
+     * @return the same object with its access control overridden to allow all access
+     * @throws SecurityException if a security manager denies access
      */
     public static <T extends AccessibleObject> T accessible(T object) throws SecurityException {
         object.setAccessible(true);
@@ -186,6 +223,15 @@ public class Beans {
 
     /**
      * Creates an instance of a given type by choosing the best constructor that matches the given list of arguments.
+     *
+     * @param <T> the type of the object to create
+     * @param type the type of the object to create
+     * @param args the arguments to pass to the constructor
+     * @return the object created
+     * @throws NoSuchMethodException if an appropriate constructor cannot be found
+     * @throws IllegalAccessException if an appropriate constructor cannot be accessed
+     * @throws InvocationTargetException if errors occur while invoking the constructor
+     * @throws InstantiationException if the constructor itself fails in any way
      */
     public static <T> T create(Class<T> type, Object... args) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
@@ -198,6 +244,17 @@ public class Beans {
 
     /**
      * Creates an instance of a given type by choosing the best constructor that matches the given list of arguments.
+     *
+     * @param <T> the type of the object to create
+     * @param type the type of the object to create
+     * @param args the arguments to pass to the constructor
+     * @param offset the offset into the args array from which to retrieve arguments
+     * @param count the number of arguments from the args array to pass to the constructor
+     * @return the object created
+     * @throws NoSuchMethodException if an appropriate constructor cannot be found
+     * @throws IllegalAccessException if an appropriate constructor cannot be accessed
+     * @throws InvocationTargetException if errors occur while invoking the constructor
+     * @throws InstantiationException if the constructor itself fails in any way
      */
     public static <T> T create(Class<T> type, Object[] args, int offset, int count) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
@@ -210,6 +267,16 @@ public class Beans {
 
     /**
      * Invokes a bean method by choosing the best method that matches the given name and the list of arguments.
+     *
+     * @param bean the invocation target
+     * @param name the name of the method to invoke
+     * @param args the arguments to pass to the method
+     * @param offset the offset into the args array from which to retrieve arguments
+     * @param count the number of arguments from the args array to pass to the method
+     * @return the return value from the method
+     * @throws NoSuchMethodException if an appropriate method cannot be found
+     * @throws IllegalAccessException if an appropriate method cannot be accessed
+     * @throws InvocationTargetException if errors occur while invoking the method
      */
     public static Object invoke(Object bean, String name, Object[] args, int offset, int count) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -222,6 +289,14 @@ public class Beans {
 
     /**
      * Invokes a bean method by choosing the best method that matches the given name and the list of arguments.
+     *
+     * @param bean the invocation target
+     * @param name the name of the method to invoke
+     * @param args the arguments to pass to the method
+     * @return the return value from the method
+     * @throws NoSuchMethodException if an appropriate method cannot be found
+     * @throws IllegalAccessException if an appropriate method cannot be accessed
+     * @throws InvocationTargetException if errors occur while invoking the method
      */
     public static Object invoke(Object bean, String name, Object... args) throws
     NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -235,10 +310,13 @@ public class Beans {
     /**
      * Chooses a method/constructor of a given name, whose signature best matches the given list of argument types.
      *
-     * @param candidates - the list of method/constructor candidates to choose from
-     * @param pe - the ParameterExtractor
-     * @param name - the name of the method/constructor
-     * @param argumentTypes - the argument types
+     * @param <T> the type of the member/constructor to return
+     * @param candidates the list of method/constructor candidates to choose from
+     * @param pe the ParameterExtractor
+     * @param name the name of the method/constructor
+     * @param argumentTypes the argument types
+     * @return the method/constructor
+     * @throws NoSuchMethodException if an appropriate method/constructor cannot be found
      */
     public static <T extends AccessibleObject & Member> T choose(T[] candidates, ParameterExtractor pe, String name, Class<?>[] argumentTypes)
     throws NoSuchMethodException {
@@ -317,6 +395,12 @@ public class Beans {
 
     /**
      * Assigns a value to the field in an object, converting value type as necessary.
+     *
+     * @param object an object
+     * @param field a field of the object
+     * @param value a value to set to the field
+     * @throws IllegalArgumentException if the value is not acceptable by the field
+     * @throws IllegalAccessException if a security manager denies access
      */
     @SuppressWarnings("unchecked")
     public static void setValue(Object object, Field field, Object value) throws IllegalArgumentException, IllegalAccessException {
@@ -373,16 +457,18 @@ public class Beans {
     /**
      * Converts a String representation into a value of a given type. Conversion attempts are made in the following order:
      * <ol>
-     * <li>Try to invoke <code>public static SomeClass valueOf(String text)</code>.</li>
-     * <li>Try to invoke <code>public static SomeClass valueOf(Class<SomeClass> type, String text)</code>,
-     *     or <code>public static SomeClass<T> valueOf(Class<T> type, String text)</code> if a @typeinfo annotation exists to
-     *     give argument type <code>T</code>.</li>
-     * <li>Try to invoke <code><init>(String text)</code>.</li>
+     * <li>Try to invoke {@code public static SomeClass valueOf(String text)}.</li>
+     * <li>Try to invoke {@code public static SomeClass valueOf(Class<SomeClass> type, String text)},
+     *     or {@code public static SomeClass<T, V, ...> valueOf(Class<T> type1, Class<V> type2, ..., String text)} if a @typeinfo annotation exists to
+     *     give argument types {@code T}, {@code V}, ...</li>
+     * <li>Try to invoke {@code <init>(String text)}.</li>
      * </ol>
      *
-     * @param type - the target class
-     * @param value - the string to convert
-     * @param annotation - an optional typeinfo annotation containing additional genetic type information
+     * @param <T> the target class
+     * @param type the target class
+     * @param value the string to convert
+     * @param annotation an optional typeinfo annotation containing type arguments to {@code type}, which should be a generic type in this case
+     * @return the converted value
      * @throws IllegalArgumentException if all conversion attempts fail
      */
     @Deprecated
@@ -410,7 +496,13 @@ public class Beans {
 
     /**
      * Converts a String representation into a value of a given type. This method calls
-     * <code>valueOf(type, value, null)</code>.
+     * {@code>valueOf(type, value, null)}.
+     *
+     * @param <T> the target class
+     * @param type the target class
+     * @param value the string to convert
+     * @return the converted value
+     * @throws IllegalArgumentException if all conversion attempts fail
      */
     public static <T> T valueOf(Class<T> type, String value) {
         return valueOf(type, value, null);
@@ -418,6 +510,11 @@ public class Beans {
 
     /**
      * Fills empty, identically named public fields with values from another object.
+     *
+     * @param <T> the class of the destination object
+     * @param destination a destination object
+     * @param source a source object
+     * @return the same destination object with fields filled by source
      */
     public static <T> T fill(T destination, Object source) {
         if (destination != source) {
@@ -437,6 +534,11 @@ public class Beans {
 
     /**
      * Overrides identically named public fields with non-empty values from another object.
+     *
+     * @param <T> the class of the destination object
+     * @param destination a destination object
+     * @param source a source object
+     * @return the same destination object with fields overridden by source
      */
     public static <T> T override(T destination, Object source) {
         if (destination != source) {
@@ -456,6 +558,9 @@ public class Beans {
 
     /**
      * A convenience utility method to convert a bean to a formatted string.
+     *
+     * @param bean an object
+     * @return a string representation of the object
      */
     public static String toString(Object bean) {
         try {
@@ -468,7 +573,11 @@ public class Beans {
     /**
      * Prints a bean to the StringBuilder.
      *
+     * @param sb a StringBuilder
+     * @param bean an object
+     * @param level indentation level
      * @return the original StringBuilder
+     * @throws IntrospectionException if bean introspection fails by {@link java.beans.Introspector Introspector}
      */
     public static StringBuilder print(StringBuilder sb, Object bean, int level) throws IntrospectionException {
         return print(sb, Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>()), bean, level);

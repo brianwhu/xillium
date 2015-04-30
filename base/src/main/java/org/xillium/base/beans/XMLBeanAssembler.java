@@ -28,6 +28,10 @@ public class XMLBeanAssembler extends DefaultHandler {
 
     /**
      * Constructs an XMLBeanAssembler that uses the given ObjectFactory to create objects during assembly.
+     *
+     * @param factory an ObjectFactory
+     * @throws ParserConfigurationException if the internal SAX parser can't be properly configured
+     * @throws SAXException if the internal SAX parser fails
      */
     public XMLBeanAssembler(ObjectFactory factory) throws ParserConfigurationException, SAXException {
         _factory = factory;
@@ -36,6 +40,9 @@ public class XMLBeanAssembler extends DefaultHandler {
 
     /**
      * Tells XMLBeanAssembler to use a default Java package when a package can't be derived from namespace specification.
+     *
+     * @param pkg a Java package name
+     * @return the XMLBeanAssembler itself
      */
     public XMLBeanAssembler setPackage(String pkg) {
         _jpkg = pkg;
@@ -44,42 +51,78 @@ public class XMLBeanAssembler extends DefaultHandler {
 
     /**
      * Assembles a bean from an XML file.
+     *
+     * @param <T> the expected object type
+     * @param file the path to the XML file
+     * @return an object assembled from this XML file
+     * @throws SAXException if the internal SAX parser fails
+     * @throws IOException if any IO errors occur
      */
     @SuppressWarnings("unchecked")
-    public <T> T build(String file) throws ParserConfigurationException, SAXException, IOException {
+    public <T> T build(String file) throws SAXException, IOException {
         _parser.parse(new File(file), this);
         return (T)getBean();
     }
 
     /**
      * Assembles a bean from an XML file.
+     *
+     * @param <T> the expected object type
+     * @param file the path to the XML file
+     * @param type the expected object type
+     * @return an object assembled from this XML file
+     * @throws SAXException if the internal SAX parser fails
+     * @throws IOException if any IO errors occur
      */
-    public <T> T build(String file, Class<T> type) throws ParserConfigurationException, SAXException, IOException {
+    public <T> T build(String file, Class<T> type) throws SAXException, IOException {
         _parser.parse(new File(file), this);
         return type.cast(getBean());
     }
 
     /**
      * Assembles a bean from an XML stream.
+     *
+     * @param <T> the expected object type
+     * @param stream the XML input stream
+     * @return an object assembled from this XML stream
+     * @throws SAXException if the internal SAX parser fails
+     * @throws IOException if any IO errors occur
      */
     @SuppressWarnings("unchecked")
-    public <T> T build(InputStream stream) throws ParserConfigurationException, SAXException, IOException {
+    public <T> T build(InputStream stream) throws SAXException, IOException {
         _parser.parse(stream, this);
         return (T)getBean();
     }
 
     /**
      * Assembles a bean from an XML stream.
+     *
+     * @param <T> the expected object type
+     * @param stream the XML input stream
+     * @param type the expected object type
+     * @return an object assembled from this XML stream
+     * @throws SAXException if the internal SAX parser fails
+     * @throws IOException if any IO errors occur
      */
-    public <T> T build(InputStream stream, Class<T> type) throws ParserConfigurationException, SAXException, IOException {
+    public <T> T build(InputStream stream, Class<T> type) throws SAXException, IOException {
         _parser.parse(stream, this);
         return type.cast(getBean());
     }
 
+    /**
+     * Reports whether this XMLBeanAssembler is lenient on object creation failures.
+     *
+     * @return whether this XMLBeanAssembler is lenient on object creation failures
+     */
     public boolean isLenient() {
         return _lenient;
     }
 
+    /**
+     * Sets whether this XMLBeanAssembler should be lenient on object creation failures.
+     *
+     * @param lenient whether this XMLBeanAssembler should be lenient on object creation failures
+     */
     public void setLenient(boolean lenient) {
         _lenient = lenient;
     }
@@ -406,6 +449,11 @@ public class XMLBeanAssembler extends DefaultHandler {
 
     private Object _top;
 
+    /**
+     * Returns the last assembled object.
+     *
+     * @return the last assembled object
+     */
     public Object getBean() {
         return _top;
     }
