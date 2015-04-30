@@ -10,36 +10,37 @@ import org.xillium.base.beans.*;
 /**
  * This class models the top-level element of a sql-rs XML document. It also provides
  * static methods to coalesce (deserialize) an sql-rs XML document from a stream.
- *
+ * <p>
  * To coalesce a compliant sql-rs XML document, do the following.
  * <ol>
- * <li> Define a <code>DataObject</code> <code>R</code> that matches the row structure of the XML document.
- *      <xmp>
+ * <li> Define an implementation of {@link org.xillium.data.DataObject DataObject} that matches the row structure of the XML document.
+ *      <pre>{@code
  *      public class R implements DataObject {
  *          ...
  *      }
- *      </xmp>
+ *      }</pre>
  *      </li>
- * <li> Define an implementation <code>P</code> of <code>Collector&lt;R&gt;</code>, which processes the row objects.
- *      <xmp>
+ * <li> Define an implementation of {@link org.xillium.data.Collector Collector&lt;R&gt;} to process the row objects.
+ *      <pre>{@code
  *      public class P implements Collector<R> {
  *          public boolean add(R row) {
  *              ...
  *          }
  *          ...
  *      }
- *      </xmp>
+ *      }</pre>
  *      </li>
- * <li> <xmp>
+ * <li> <pre>{@code
  *      P proc = Data.coalesce(inputStream, R.class, new P());
- *      </xmp>
+ *      }
+ *      </pre>
  *      </li>
  * </ol>
- * If a simple java.util.List is all that is desired, the second step can be skipped and the last step becomes
+ * If a simple {@link java.util.List List} is all that is desired, the second step can be skipped and the last step becomes
  * <ol start="3">
- * <li> <xmp>
+ * <li> <pre>{@code
  *      List<R> list = Data.coalesce(inputStream, R.class);
- *      </xmp>
+ *      }</pre>
  *      </li>
  * </ol>
  */
