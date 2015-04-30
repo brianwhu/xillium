@@ -4,9 +4,9 @@ import java.util.Random;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
-import org.xillium.base.Singleton;
+import org.xillium.base.*;
 import org.xillium.base.beans.*;
-import org.testng.annotations.*;
+import org.testng.annotations.Test;
 
 
 /**
@@ -14,8 +14,19 @@ import org.testng.annotations.*;
  */
 public class SingletonTest {
     private static final int SIZE = 64;
-    private static final int COST = 64;
+    private static final int COST = 128;
+    private static final int SEED = 256;
 
+    static enum Strategy {
+        DCL_ARG0,
+        DCL_ARG1,
+        DCL_ARG2,
+        SYN_FULL
+    }
+
+    static int VARIETY = Strategy.values().length;
+
+    static Random random = new Random();
     static AtomicInteger sequence = new AtomicInteger();
     static Singleton<S> singleton = new Singleton<S>();
 
@@ -28,24 +39,68 @@ public class SingletonTest {
         }
     }
 
-    public static class Provider implements Callable<S> {
+    private static final Callable<S> provider0 = new Callable<S>() {
         public S call() throws Exception {
             return new S(sequence.incrementAndGet());
         }
-    }
+    };
 
-    static Provider provider = new Provider();
+    private static final Functor<S, Integer> provider1 = new Functor<S, Integer>() {
+        public S invoke(Integer base) {
+            try {
+                return new S(sequence.incrementAndGet());
+            } catch (Exception x) {
+                throw new RuntimeException(x.getMessage(), x);
+            }
+        }
+    };
+
+    private static final Factory<S> provider2 = new Factory<S>() {
+        public S make(Object... args) {
+            try {
+                return new S(sequence.incrementAndGet());
+            } catch (Exception x) {
+                throw new RuntimeException(x.getMessage(), x);
+            }
+        }
+    };
 
     public static class Runner implements Runnable {
+        final Strategy strategy;
+        long cost;
+
+        public Runner(Strategy s) {
+            strategy = s;
+        }
+
         public void run() {
             sequence.incrementAndGet();
             try {
                 synchronized(singleton) {
                     singleton.wait();
                 }
-                S s = singleton.get(provider);
+                S s = null;
+                int r1 = random.nextInt(SEED), r2 = random.nextInt(SEED);
+                long t = System.nanoTime();
+for (int i = 0; i < SIZE; ++i) {
+                switch (strategy) {
+                case DCL_ARG0:
+                    s = singleton.get(provider0);
+                    break;
+                case DCL_ARG1:
+                    s = singleton.get(provider1, r1);
+                    break;
+                case DCL_ARG2:
+                    s = singleton.get(provider2, r1, r2);
+                    break;
+                default:
+                    s = singleton.slow(provider2, r1);
+                    break;
+                }
+}
+                cost += System.nanoTime() - t;
                 assert s != null;
-                assert s.value == SIZE + 1;
+                assert s.value == VARIETY*SIZE + 1;
             } catch (Exception x) {
                 throw new RuntimeException(x.getMessage(), x);
             }
@@ -54,13 +109,32 @@ public class SingletonTest {
 
     @Test(groups={"singleton"})
     public void testSingleton() throws Exception {
-        Thread[] runners = new Thread[SIZE];
-        for (int i = 0; i < runners.length; ++i) {
-            runners[i] = new Thread(new Runner());
-            runners[i].start();
+        run();
+
+        assert singleton.get(provider0).value == VARIETY*SIZE + 1;
+        assert sequence.get() == VARIETY*SIZE + 1;
+
+        sequence.set(0);
+
+        System.out.println(String.format("Singleton tests with %d threads", VARIETY*SIZE));
+        double[] cost = run();
+        for (int i = 0; i < cost.length; ++i) {
+            System.out.println(String.format("Strategy: %s, cost = %12.2f", Strategy.values()[i].toString(), cost[i]));
+        }
+    }
+
+    private double[] run() throws Exception {
+        Runner[] runners = new Runner[VARIETY*SIZE];
+        Thread[] threads = new Thread[VARIETY*SIZE];
+        for (int i = 0; i < VARIETY; ++i) {
+            for (int j = 0; j < SIZE; ++j) {
+                runners[i*SIZE + j] = new Runner(Strategy.values()[i]);
+                threads[i*SIZE + j] = new Thread(runners[i*SIZE + j]);
+                threads[i*SIZE + j].start();
+            }
         }
 
-        while (sequence.get() < SIZE) {
+        while (sequence.get() < threads.length) {
             Thread.sleep(100);
         }
 
@@ -68,11 +142,20 @@ public class SingletonTest {
             singleton.notifyAll();
         }
 
-        for (int i = 0; i < runners.length; ++i) {
-            runners[i].join();
+        for (int i = 0; i < threads.length; ++i) {
+            threads[i].join();
         }
 
-        assert singleton.get(provider).value == SIZE + 1;
-        assert sequence.get() == SIZE + 1;
+        long[] cost = new long[VARIETY];
+        for (int i = 0; i < runners.length; ++i) {
+            cost[runners[i].strategy.ordinal()] += runners[i].cost;
+        }
+
+        double[] average = new double[VARIETY];
+        for (int i = 0; i < average.length; ++i) {
+            average[i] = ((double)cost[i]) / ((double)SIZE);
+        }
+
+        return average;
     }
 }
