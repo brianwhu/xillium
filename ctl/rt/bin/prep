@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ -f ${CATALINA_HOME:-/usr/tomcat}/webapps-not-deployed ]; then
+if [ -d ${CATALINA_HOME:-/usr/tomcat}/webapps-not-deployed ]; then
     echo Already prepared
 else
     cd ${CATALINA_HOME:-/usr/tomcat}

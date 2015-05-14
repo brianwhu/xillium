@@ -4,7 +4,7 @@
 # $2 = number of seconds to wait
 wait4process() {
   w=$2
-  while expr $w \> 0 > /dev/null && ps -e | grep $1 > /dev/null; do
+  while expr $w \> 0 > /dev/null && ps -e | grep $1 | grep ${CATALINA_HOME} > /dev/null; do
     echo -n '.'
     w=`expr $w - 1`
     sleep 1
