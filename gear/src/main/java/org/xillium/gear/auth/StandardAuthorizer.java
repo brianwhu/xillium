@@ -108,7 +108,7 @@ public class StandardAuthorizer extends ManagedComponent implements Authorizer, 
         } else if (authorization < 1) {
             throw new AuthorizationException("PasswordExpired");
         } else if (prerequisite < 1) {
-            throw new AuthorizationException("AgreementNotSigned");
+            throw new AuthorizationException("PrerequisiteNotMet");
         }
 	}
 
