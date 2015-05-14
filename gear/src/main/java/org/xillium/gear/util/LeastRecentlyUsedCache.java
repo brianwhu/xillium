@@ -1,79 +1,102 @@
 package org.xillium.gear.util;
 
-import java.util.Map;
-import java.util.LinkedHashMap;
+import java.util.concurrent.Callable;
+import org.xillium.base.*;
 import org.xillium.core.management.WithCache;
 
 
 /**
- * A cache with a maximum capacity and the LRU replacement policy.
+ * LeastRecentlyUsedCache is a thread-safe cache with a maximum capacity and the LRU replacement policy.
  */
-public class LeastRecentlyUsedCache<K, V> extends LinkedHashMap<K, V> {
-    private final int _limit;
-    private long _get, _hit, _rep;
-    private int _max;
+public class LeastRecentlyUsedCache<K, V> {
+    private final LeastRecentlyUsedMap<K, Singleton<V>> _cache;
 
     /**
      * Constructs a LeastRecentlyUsedCache with the given capacity limit and a load factor of 0.75.
+     *
+     * @param limit the cache limit
      */
     public LeastRecentlyUsedCache(int limit) {
-        this(limit, 0.75f);
+        _cache = new LeastRecentlyUsedMap<K, Singleton<V>>(limit);
     }
 
     /**
      * Constructs a LeastRecentlyUsedCache with the given capacity limit and load factor.
+     *
+     * @param limit the cache limit
+     * @param load the load factor
      */
     public LeastRecentlyUsedCache(int limit, float load) {
-        super((int)Math.ceil(limit/load), load, true);
-        _limit = limit;
+        _cache = new LeastRecentlyUsedMap<K, Singleton<V>>(limit, load);
     }
 
     /**
      * Reports the cumulative statistics of this cache.
+     *
+     * @return the current cache state encapsulated in a WithCache.CacheState object
      */
     public WithCache.CacheState getCacheState() {
-        return new WithCache.CacheState(size(), _max, _get, _hit, _rep);
-    }
-
-    @Override
-    public V get(Object key) {
-        ++_get;
-        V value = super.get(key);
-        if (value != null) ++_hit;
-        return value;
-    }
-
-    @Override
-    public V put(K key, V value) {
-        V old = super.put(key, value);
-        if (size() > _max) _max = size();
-        return old;
-    }
-
-    @Override
-    public V remove(Object key) {
-        V old = super.remove(key);
-        ++_rep;
-        return old;
+        return _cache.getCacheState();
     }
 
     /**
-     * Invalidates an entry in the cache. Compared to "remove()", this operation does not constitute a cache replacement.
+     * Fetches an object from the cache. Synchronization at cache level is kept to minimum. The provider is called upon cache miss.
+     *
+     * @param key the identity of the object
+     * @param callable a callable to provide the object upon cache miss
+     * @return the object requested
+     * @throws Exception if the provider fails to create a new object
      */
-    public V invalidate(Object key) {
-        return super.remove(key);
+    public V fetch(K key, Callable<V> callable) throws Exception {
+        return locate(key).get(callable);
     }
 
-    @Override
-    public void clear() {
-        super.clear();
-        _get = _hit = _max = 0;
+    /**
+     * Fetches an object from the cache. Synchronization at cache level is kept to minimum. The provider is called upon cache miss.
+     *
+     * @param key the identity of the object
+     * @param functor a functor to provide the object upon cache miss
+     * @param argument the sole argument to pass to the functor
+     * @return the object requested
+     * @throws Exception if the provider fails to create a new object
+     */
+    public <T> V fetch(K key, Functor<V, T> functor, T argument) throws Exception {
+        return locate(key).get(functor, argument);
     }
 
-    @Override
-    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-        return size() > _limit;
+    /**
+     * Fetches an object from the cache. Synchronization at cache level is kept to minimum. The provider is called upon cache miss.
+     *
+     * @param key the identity of the object
+     * @param factory a factory to provide the object upon cache miss
+     * @param args arguments to pass to the factory
+     * @return the object requested
+     * @throws Exception if the provider fails to create a new object
+     */
+    public V fetch(K key, Factory<V> factory, Object... args) throws Exception {
+        return locate(key).get(factory, args);
     }
 
-    static final long serialVersionUID = -5226569682411174431L;
+    /**
+     * Invalidates an entry in the cache. This operation does not constitute a cache replacement.
+     *
+     * @param key the identity of the object
+     * @return the matching object that is being discarded, if any
+     */
+    public synchronized V invalidate(K key) {
+        Singleton<V> singleton = _cache.get(key);
+        if (singleton != null) {
+            return singleton.clear();
+        } else {
+            return null;
+        }
+    }
+
+    private synchronized final Singleton<V> locate(K key) {
+        Singleton<V> singleton = _cache.get(key);
+        if (singleton == null) {
+            _cache.put(key, singleton = new Singleton<V>());
+        }
+        return singleton;
+    }
 }
