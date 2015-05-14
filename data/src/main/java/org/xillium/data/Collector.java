@@ -1,9 +1,5 @@
 package org.xillium.data;
 
-//import java.lang.reflect.*;
-//import java.util.*;
-//import org.xillium.data.validation.*;
-
 
 /**
  * An object collector.
@@ -11,6 +7,9 @@ package org.xillium.data;
 public interface Collector<T> {
     /**
      * returns false to stop data collection.
+     *
+     * @param object the object to add to the collection
+     * @return whether the collection should continue
      */
     public boolean add(T object);
 }

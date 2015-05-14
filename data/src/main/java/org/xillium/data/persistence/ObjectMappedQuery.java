@@ -93,6 +93,11 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
         }
     }
 
+    /**
+     * Constructs an ObjectMappedQuery that retrieves objects of a given type.
+     *
+     * @param classname the name of the object class
+     */
     @SuppressWarnings("unchecked")
     public ObjectMappedQuery(String classname) throws IllegalArgumentException {
         try {
@@ -103,6 +108,15 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
     }
 
     /**
+     * Constructs an ObjectMappedQuery that retrieves objects of a given type.
+     *
+     * @param type the object class
+     */
+    public ObjectMappedQuery(Class<T> type) {
+        _type = type;
+    }
+
+    /**
      * Executes the query and returns the results as a list of objects.
      */
     public List<T> getResults(Connection conn, DataObject object) throws Exception {
@@ -110,7 +124,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
     }
 
     /**
-     * Executes the query and returns the results as a list of objects.
+     * Executes the query and returns the first row of the results as a single object.
      */
     public T getObject(Connection conn, DataObject object) throws Exception {
         return executeSelect(conn, object, new ResultSetMapper<SingleObjectCollector<T>>(new SingleObjectCollector<T>())).value;
