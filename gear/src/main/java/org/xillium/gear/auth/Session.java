@@ -1,6 +1,7 @@
 package org.xillium.gear.auth;
 
 import org.xillium.data.DataObject;
+import org.xillium.core.AuthorizationException;
 
 
 /**
@@ -19,6 +20,7 @@ public class Session implements DataObject {
 
     public Session(String authcode) {
         int at = authcode.indexOf(AT);
+        if (at < 0) throw new AuthorizationException("***InvalidSession");
         this.id = authcode.substring(0, at);
         this.token = authcode.substring(at + 1);
     }

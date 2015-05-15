@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<conf:storage-configuration xmlns:persist="java://org.xillium.data.persistence" xmlns:conf="java://org.xillium.core.conf">
+	<!--
+	 | DatabaseBackedAuthority
+	-->
+
+    <persist:object-mapped-query class="org.xillium.gear.auth.Permission">
+    <?assemble name="RetrieveRoleAuthorizations"?>
+        <![CDATA[
+		SELECT ROLE_ID, FUNCTION, PERMISSION FROM ROLE_AUTHORIZATION ORDER BY ROLE_ID
+        ]]>
+    </persist:object-mapped-query>
+
+	<!--
+	 | DatabaseBackedAuthenticator
+	-->
+
+    <!-- USERS -->
+
+    <persist:object-mapped-query class="org.xillium.gear.auth.Role">
+    <?assemble name="RetrieveUserRolesByCredential"?>
+		<![CDATA[
+        SELECT
+			U.USER_ID ID, R.ROLE_ID, 1 PERMISSION, 1 PREREQUISITE
+		FROM
+			USERS U, USER_ROLES R
+		WHERE
+			U.USER_ID = R.USER_ID
+			AND
+			U.USER_ID = :id:VARCHAR
+			AND
+			U.PASSWORD = :password:CHAR
+		]]>
+    </persist:object-mapped-query>
+
+	<!-- MEMBERS -->
+
+    <persist:object-mapped-query class="org.xillium.gear.auth.Role">
+    <?assemble name="RetrieveMemberRolesByCredential"?>
+		<![CDATA[
+        SELECT
+			MEMBER_ID ID, LOWER(MEMBER_ROLE) ROLE_ID, PW_UPDATED PERMISSION, DECODE(AGREE_TIME, NULL, 0, 1) PREREQUISITE
+		FROM
+			MEMBERS
+		WHERE
+			MEMBER_ID = :id:VARCHAR
+			AND
+			PASSWORD = :password:CHAR
+            AND
+            TERMINATE_DATE IS NULL
+		]]>
+    </persist:object-mapped-query>
+
+    <!--
+     | Secure Sessions of both Members and Users
+     -->
+
+	<persist:object-mapped-query class="org.xillium.gear.auth.Role">
+	<?assemble name="RetrieveMemberRolesBySession"?>
+		<![CDATA[
+		SELECT
+			ID, LOWER(MEMBER_ROLE) ROLE_ID, PW_UPDATED PERMISSION, DECODE(AGREE_TIME, NULL, 0, 1) PREREQUISITE
+		FROM    
+			SECURE_SESSIONS S, MEMBERS M
+		WHERE
+            S.ID = M.MEMBER_ID
+            AND
+			ID = :id:VARCHAR
+			AND 
+			TOKEN = :token:VARCHAR
+			AND 
+			(:clock:NUMERIC - CLOCK) < :maxAge:NUMERIC
+		]]>
+	</persist:object-mapped-query>
+
+    <persist:object-mapped-query class="org.xillium.gear.auth.Role">
+    <?assemble name="RetrieveUserRolesBySession"?>
+        <![CDATA[
+        SELECT
+            ID, ROLE_ID, 1 PERMISSION, 1 PREREQUISITE
+        FROM
+            SECURE_SESSIONS S, USER_ROLES U
+        WHERE
+            S.ID = U.USER_ID
+            AND
+            ID = :id:VARCHAR
+            AND
+            TOKEN = :token:VARCHAR
+            AND
+            (:clock:NUMERIC - CLOCK) < :maxAge:NUMERIC
+        ]]>
+    </persist:object-mapped-query>
+
+    <persist:parametric-statement>
+    <?assemble name="UpdateSecureSession"?>
+        <![CDATA[
+        MERGE INTO
+            SECURE_SESSIONS USING DUAL ON (ID = :id:VARCHAR)
+        WHEN MATCHED THEN
+            UPDATE SET TOKEN = :token:VARCHAR, CLOCK = :clock:NUMERIC
+        WHEN NOT MATCHED THEN
+            INSERT (ID, TOKEN, CLOCK) VALUES(:id:VARCHAR, :token:VARCHAR, :clock:NUMERIC)
+        ]]>
+    </persist:parametric-statement>
+
+</conf:storage-configuration>
+
