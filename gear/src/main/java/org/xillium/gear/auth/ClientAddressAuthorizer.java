@@ -12,25 +12,23 @@ import org.xillium.core.management.ManagedComponent;
 
 /**
  * An Authorizer that authorizes by matching client addresses against authorized patterns.
- * <p/>
- * Accepted IP address patterns include:
+ * <p>Accepted IP address patterns include:</p>
  * <ul>
  * <li> "192.168.1.*",
  * <li> "172.21.*.*",
  * <li> "234.66.*.10",
  * <li> "0:0:0:0:0:0:0:1"
  * </ul>
- * Zero-compression in IPv6 addresses is not permitted in address patterns. This restriction does not apply to
- * client addresses to be authorized.
- * <p/>
- * You can also use the <code>allowingPrivate</code> property to authorize all private IP addresses, as shown
- * in this Spring bean definition.
- * <xmp>
+ * <p>Zero-compression in IPv6 addresses is not permitted in address patterns. This restriction does not apply to
+ * client addresses to be authorized.</p>
+ * <p>You can also use the {@code allowingPrivate} property to authorize all private IP addresses, as shown
+ * in this Spring bean definition.</p>
+ * <pre>{@code
  *  <bean id="ipguard" class="org.xillium.gear.auth.ClientAddressAuthorizer">
  *      <property name="allowingPrivate" value="true"/>
  *      ...
  *  </bean>
- * </xmp>
+ * }</pre>
  */
 public class ClientAddressAuthorizer extends ManagedComponent implements Authorizer {
 	private static final Logger _logger = Logger.getLogger(ClientAddressAuthorizer.class.getName());

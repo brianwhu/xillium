@@ -103,6 +103,13 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     }
 
     /**
+     * Retrieves the set of all named object names.
+     */
+    public Set<String> getNamedObjectNames() {
+        return _named.keySet();
+    }
+
+    /**
      * Introduces a HashMap under the given name if one does not exist yet.
      */
     @Deprecated

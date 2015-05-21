@@ -99,14 +99,14 @@ _logger.log(Level.FINE, "got password = {0}", password);
 */
         String token = parameters.get(AUTHCODE);
         if (token != null && token.length() > 0) {
-_logger.info("found session in binder: " + token);
+_logger.log(Level.FINE, "found session in binder: " + token);
             session = new Session(token);
             parameters.put(IdentityName, session.id);
         } else {
             Cookie[] cookies = (Cookie[])parameters.getNamedObject(Service.REQUEST_HTTP_COOKIE);
             if (cookies != null) for (int i = 0; i < cookies.length; ++i) {
                 if (cookies[i].getName().equals(AUTHCODE)) {
-_logger.info("found session in cookie: " + cookies[i].getValue());
+_logger.log(Level.FINE, "found session in cookie: " + cookies[i].getValue());
                     session = new Session(URLDecoder.decode(cookies[i].getValue(), "UTF-8"));
                     parameters.put(IdentityName, session.id);
                     break;

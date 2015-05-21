@@ -40,7 +40,7 @@ public class X509CertificateAuthenticator extends PageAwareAuthenticator {
      * @param identityName - the name of the identity parameter in the data binder
      * @param qRolesByCredential - a ParametricStatement that retrieves roles by an id (the identity obtained from a request
      *        parameter in the data binder) and a password (the identity obtained from the client certificate). e.g.
-     *  <xmp>
+     *  <pre>{@code
      *  SELECT
      *      MARKET_ID ID, 'market' ROLE_ID, 1 PERMISSION, 1 PREREQUISITE
      *  FROM
@@ -49,7 +49,7 @@ public class X509CertificateAuthenticator extends PageAwareAuthenticator {
      *      MARKET_ID = :id:VARCHAR
      *      AND
      *      SUBJECT_NAME = :password:VARCHAR
-     *  </xmp>
+     *  }</pre>
      */
 	public X509CertificateAuthenticator(Persistence persist, String identityName, String qRolesByCredential) {
 		_persistence = persist;

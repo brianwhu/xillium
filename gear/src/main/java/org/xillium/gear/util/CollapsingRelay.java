@@ -25,7 +25,7 @@ public class CollapsingRelay<T> extends Thread {
      * @param laziness - number of milliseconds, defining a minimal time gap between 2 consecutive requests on the back end resource
      * @param collection - a Callable that produces the collection to use to collapse incoming requests
      * @param worker - the functor that performs the actual update
-     * @throws any exception that is thrown from the Callable while creating a collection
+     * @throws Exception that is thrown from the Callable while creating a collection
      */
     public CollapsingRelay(long laziness, Callable<Collection<T>> collection, Functor<Void, Collection<T>> worker) throws Exception {
         super("CollapsingRelay["+worker.getClass().getName()+']');

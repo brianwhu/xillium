@@ -135,9 +135,8 @@ public class BeanNode implements TreeNode {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Object Inspector");
-        //JTree tree = new JTree(new BeanNode(java.util.prefs.Preferences.systemRoot()));
-        //JTree tree = new JTree(new BeanNode(new java.io.File("http.conf")));
-        JTree tree = new JTree(new BeanNode(new JButton("OK")));
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JTree tree = new JTree(new BeanNode(frame).setFieldsVisible(true));
         frame.getContentPane().add(new JScrollPane(tree), java.awt.BorderLayout.CENTER);
         frame.pack();
         frame.setVisible(true);

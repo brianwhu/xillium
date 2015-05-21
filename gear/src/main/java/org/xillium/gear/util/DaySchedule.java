@@ -17,29 +17,29 @@ import org.xillium.core.management.*;
  *
  * <p>The "logical midnight" can be defined at any given minute within the 24 hours. For example, a day can start at 4:05 am, which
  * corresponds to</p>
- * <xmp>
+ * <pre>{@code
  *  midnight_hour = 4
  *  midnight_minute = 5
  *  calendar_offset = 0
- * </xmp>
+ * }</pre>
  * <p>If a logical day starts at 8:30 pm the day before, then</p>
- * <xmp>
+ * <pre>{@code
  *  midnight_hour = 20
  *  midnight_minute = 30
  *  calendar_offset = 1
- * </xmp>
+ * }</pre>
  * <p>Limitations: no activity can be scheduled at about 1 second after "midnight". Also, activities usually start about 1 milliseconds later than
  * scheduled.</p>
  *
  * <p>To use DaySchedule, create a new instance and then call the start method to let it run as a background thread.</p>
- * <xmp>
+ * <pre>{@code
  *      DaySchedule schedule = new DaySchedule(...);
  *      schedule.start();
- * </xmp>
+ * }</pre>
  * <p>To stop a running DaySchedule, call its shutdown method. This should be done only during web app termination.</p>
- * <xmp>
+ * <pre>{@code
  *      schedule.shutdown();
- * </xmp>
+ * }</pre>
  */
 public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable {
     private static final Logger _logger = Logger.getLogger(DaySchedule.class.getName());

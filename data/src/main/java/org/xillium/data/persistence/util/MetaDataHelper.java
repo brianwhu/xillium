@@ -90,9 +90,9 @@ public class MetaDataHelper {
 
     /**
      * Returns a table's foreign keys and their columns as a Map from the key name to the ForeignKey object.
-     * <p/>
-     * A foreign key may not have a name. On such a database, 2 foreign keys must reference 2 different tables. Otherwise
-     * there's no way to tell them apart and the foreign key information reported by DatabaseMetaData becomes ill-formed.
+     *
+     * <p>A foreign key may not have a name. On such a database, 2 foreign keys must reference 2 different tables. Otherwise
+     * there's no way to tell them apart and the foreign key information reported by DatabaseMetaData becomes ill-formed.</p>
      */
     public static Map<String, ForeignKey> getForeignKeys(DatabaseMetaData metadata, String tableName) throws Exception {
         ResultSet keys = metadata.getImportedKeys(metadata.getConnection().getCatalog(), metadata.getUserName(), tableName);

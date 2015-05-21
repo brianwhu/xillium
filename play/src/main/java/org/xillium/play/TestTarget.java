@@ -2,8 +2,9 @@ package org.xillium.play;
 
 /**
  * Subclass must define a public constructor with the following signature
- * 
+ * <pre>{@code
  *  <init>(TestSuite suite, String[] args, int offset)
+ * }</pre>
  */
 public interface TestTarget {
     public static interface Request {

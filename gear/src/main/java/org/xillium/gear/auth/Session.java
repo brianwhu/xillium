@@ -20,7 +20,7 @@ public class Session implements DataObject {
 
     public Session(String authcode) {
         int at = authcode.indexOf(AT);
-        if (at < 0) throw new AuthorizationException("***InvalidSession");
+        if (at < 0) throw new AuthorizationException("AuthenticationRequired");
         this.id = authcode.substring(0, at);
         this.token = authcode.substring(at + 1);
     }

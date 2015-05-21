@@ -21,9 +21,9 @@ public class DatabaseBackedAuthority implements Authority {
      * @param persist - a Persistence object
      * @param qRoleAuthorizations - an ObjectMappedQuery that retrieves a list of Permission objects (role authorizations)
      * from the database, e.g.
-     * <xmp>
+     * <pre>{@code
      *    SELECT ROLE_ID, FUNCTION, PERMISSION FROM ROLE_AUTHORIZATION ORDER BY ROLE_ID
-     * </xmp>
+     * }</pre>
      */
 	public DatabaseBackedAuthority(Persistence persist, String qRoleAuthorizations) {
 		_persistence = persist;

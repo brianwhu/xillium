@@ -14,18 +14,18 @@ import org.xillium.core.Service;
  * in service-configuration.xml of each service module, but may affect services in other modules as well.
  * Service augmentation happens collectively at the end of service platform assembly, after all
  * PlatformLifeCycleAware objects in all modules have been initialized.
- * <xmp>
- *  <bean class="org.xillium.core.conf.ServiceAugmentation">
- *      <constructor-arg index="0"><list>
- *          <bean class="org.xillium.core.conf.ServiceAugmentation.Spec">
- *              <constructor-arg index="0" value="service1"/><constructor-arg index="1" ref="filter1"/>
- *          </bean>
- *          <bean class="org.xillium.core.conf.ServiceAugmentation.Spec">
- *              <constructor-arg index="0" value="service2"/><constructor-arg index="1" value="milestone1"/><constructor-arg index="2" ref="evaluation1"/>
- *          </bean>
- *      </list></constructor-arg>
- *  </bean>
- * </xmp>
+ * <pre>
+ *  {@code <bean class="org.xillium.core.conf.ServiceAugmentation">}
+ *  {@code   <constructor-arg index="0"><list>}
+ *  {@code     <bean class="org.xillium.core.conf.ServiceAugmentation.Spec">}
+ *  {@code       <constructor-arg index="0" value="service1"/><constructor-arg index="1" ref="filter1"/>}
+ *  {@code     </bean>}
+ *  {@code     <bean class="org.xillium.core.conf.ServiceAugmentation.Spec">}
+ *  {@code       <constructor-arg index="0" value="service2"/><constructor-arg index="1" value="milestone1"/><constructor-arg index="2" ref="evaluation1"/>}
+ *  {@code     </bean>}
+ *  {@code   </list></constructor-arg>}
+ *  {@code </bean>}
+ * </pre>
  * Service names in a specification can take any of the following forms.
  * <ul>
  * <li><code>*</code>, indicating all services defined in all modules</li>

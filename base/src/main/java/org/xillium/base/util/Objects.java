@@ -101,6 +101,7 @@ public abstract class Objects {
      * @param rest the rest of the arrays
      * @return a single array containing all elements in all arrays
      */
+    @SafeVarargs
     public static <T> T[] concat(T[] first, T[]... rest) {
         int length = first.length;
         for (T[] array : rest) {

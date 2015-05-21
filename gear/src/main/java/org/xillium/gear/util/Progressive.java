@@ -8,18 +8,18 @@ import org.xillium.core.Persistence;
  * <p>Progressive is a facility that supports stepwise, progressive processes. To use it, follow these steps.</p>
  * <ol>
  *  <li><p>Create a "PROGRESSIVE_STATES" database table with the following columns, of which MODULE_ID column is the primary key:</p>
- *      <xmp>
+ *      <pre>{@code
  *      MODULE_ID VARCHAR2 (32 CHAR) NOT NULL
  *      STATE     VARCHAR2 (40 CHAR)
  *      PREVIOUS  VARCHAR2 (40 CHAR)
  *      PARAM     VARCHAR2 (1024 CHAR)
  *      STEP      NUMBER (5)
- *      </xmp>
+ *      }</pre>
  *  </li>
  *  <li><p>Define parametric statements that read and write state information in the database, and pass these statement
  *      names to the constructor of a Progressive implementation. Read the constructor description for more details. The following gives
  *      an example implementation on Oracle database.</p>
- *      <xmp>
+ *      <pre>{@code
  *  <persist:object-mapped-query class="org.xillium.gear.util.Progressive$State">
  *  <?assemble name="RecallState"?>
  *      <![CDATA[
@@ -60,10 +60,10 @@ import org.xillium.core.Persistence;
  *      END;
  *      ]]>
  *  </persist:parametric-statement>
- *      </xmp>
+ *      }</pre>
  *  </li>
  *  <li><p>Define a "progressive" bean in a Spring context, using the implementation class of Progressive, Progression:</p>
- *      <xmp>
+ *      <pre>{@code
  *  <bean id="progressive" class="org.xillium.gear.util.Progression">
  *      <constructor-arg index="0"><ref bean="persistence"/></constructor-arg>
  *      <constructor-arg index="1"><value>module1/RecallState</value></constructor-arg>
@@ -71,11 +71,11 @@ import org.xillium.core.Persistence;
  *      <constructor-arg index="3"><value>module1/CommitState</value></constructor-arg>
  *      <constructor-arg index="4"><value>module1/MarkAttempt</value></constructor-arg>
  *  </bean>
- *      </xmp>
+ *      }</pre>
  *  </li>
  * </ol>
  * Java code example:
- * <xmp>
+ * <pre>{@code
  *  // the steps to go through, defined as values in an enum type.
  *  public enum OperationState {
  *      STATE1,
@@ -122,7 +122,7 @@ import org.xillium.core.Persistence;
  *          });
  *      }
  *  }.runAsInterruptible();
- * </xmp>
+ * }</pre>
  */
 public interface Progressive {
     /**

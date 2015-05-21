@@ -14,44 +14,43 @@ import org.xillium.core.Service;
 
 /**
  * Service milestones and milestone evaluations management.
- * <p/>
- * A <i>milestone</i> is a point in a service call, where <i>milestone evaluation</i> objects can be called upon to evaluate the current
- * state of the service call and thus alter and extend the behavior of the service.
- * <p/>
- * To define milestones and allow milestone evaluations in a service, do the following inside the service class.
+ *
+ * <p>A <i>milestone</i> is a point in a service call, where <i>milestone evaluation</i> objects can be called upon to evaluate the current
+ * state of the service call and thus alter and extend the behavior of the service.</p>
+ * <p>To define milestones and allow milestone evaluations in a service, do the following inside the service class.</p>
  * <ol>
  * <li>Define an enum type named "Milestone" to enumerate all milestones in this service
- * <xmp>
+ * <pre>{@code
  *      public static enum Milestone {
  *          M1,
  *          M2,
  *          M3,
  *          M4
  *      }
- * </xmp></li>
+ * }</pre></li>
  * <li> Define a <i>single</i> <code>ServiceMilestone&lt;Milestone&gt;</code> instance, which may be given any name.
- * <xmp>
+ * <pre>{@code
  *      private final ServiceMilestone<Milestone> support = new ServiceMilestone<Milestone>(Milestone.class);
- * </xmp></li>
+ * }</pre></li>
  * <li>Wherever you want to introduce milestone evaluation inside the service's <code>run()</code> method, call <code>support.evaluate</code>.
  * The return value from a milestone evaluation recommends whether the current service should continue or return immediately, but the caller
  * has the discretion to either honor or ignore the recommendations.
- * <xmp>
+ * <pre>{@code
  *      ...
  *      if (support.evaluate(Milestone.M1, binder, dict, persist)) == ServiceMilestone.Recommendation.COMPLETE) return binder;
  *      ...
- * </xmp></li>
+ * }</pre></li>
  * </ol>
  * To define a service milestone evaluation, implement the ServiceMilestone.Evaluation interface.
- * <xmp>
- *  public class MilestoneEvaluationM1 implements ServiceMilestone.Evaluation {
- *      ...
- *  }
- * </xmp>
+ * <pre>{@code
+ *      public class MilestoneEvaluationM1 implements ServiceMilestone.Evaluation {
+ *          ...
+ *      }
+ * }</pre>
  * A milestone evaluation can be attached to a service programmatically.
- * <xmp>
+ * <pre>{@code
  *      ServiceMilestone.attach(service, "M1", new MilestoneEvaluationM1());
- * </xmp>
+ * }</pre>
  */
 public class ServiceMilestone<M extends Enum<M>> {
 
