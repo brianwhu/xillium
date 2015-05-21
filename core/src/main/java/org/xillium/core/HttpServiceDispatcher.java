@@ -27,7 +27,6 @@ import org.xillium.core.management.ManagedPlatform;
  *      /[context]/[module]/[service]?[params]=...
  * </pre>
  * When a request URI matches the above pattern, this servlet looks up a Service instance registered under the name 'module/service'.
- * <p/>
  */
 @WebServlet(name="dispatcher", value="/x!/*", loadOnStartup=1)
 public class HttpServiceDispatcher extends HttpServlet {
@@ -113,10 +112,15 @@ public class HttpServiceDispatcher extends HttpServlet {
                     throw new RuntimeException("Failed to parse multipart content", x);
                 }
             } else {
+                String method = req.getMethod().toLowerCase();
+                if (service instanceof DataBinder.WithCodec && "post".equals(method)) {
+                    ((DataBinder.WithCodec)service).getDataBinderCodec().decode(binder, req.getInputStream()).close();
+                } else {
                 String content = req.getContentType();
-                if (content != null && isPostedXML(req.getMethod().toLowerCase(), content.toLowerCase())) {
+                if (content != null && isPostedXML(method, content.toLowerCase())) {
                     XDBCodec.decode(binder, req.getInputStream()).close();
                     binder.put(Service.SERVICE_XML_CONTENT, Service.SERVICE_XML_CONTENT);
+                }
                 }
                 Enumeration<String> en = req.getParameterNames();
                 while (en.hasMoreElements()) {
@@ -274,14 +278,29 @@ public class HttpServiceDispatcher extends HttpServlet {
                     } catch (Exception x) {}
                 }
 
+                String status;
+
                 // return status only?
-                String status = binder.get(Service.SERVICE_HTTP_STATUS);
-                if (status != null) {
+                if ((status = binder.get(Service.SERVICE_DO_REDIRECT)) != null) {
+                    try {
+                        res.sendRedirect(status);
+                    } catch (Exception x) {
+                        // nothing can be done now, so just log it
+                        _logger.log(Level.WARNING, x.getMessage(), x);
+                    }
+                } else if ((status = binder.get(Service.SERVICE_HTTP_STATUS)) != null) {
                     try { res.setStatus(Integer.parseInt(status)); } catch (Exception x) {}
                 } else {
                     String page = binder.get(Service.SERVICE_PAGE_TARGET);
 
                     if (page == null) {
+                        if (service instanceof DataBinder.WithCodec) {
+                            binder.clearAutoValues();
+                            res.setContentType("application/xml;charset=utf-8");
+                            try {
+                                ((DataBinder.WithCodec)service).getDataBinderCodec().encode(res.getWriter(), binder).flush();
+                            } catch (Exception x) {}
+                        } else
                         if (binder.find(Service.SERVICE_XML_CONTENT) != null) {
                             binder.clearAutoValues();
                             res.setContentType("application/xml;charset=utf-8");
@@ -289,8 +308,12 @@ public class HttpServiceDispatcher extends HttpServlet {
                                 XDBCodec.encode(res.getWriter(), binder).flush();
                             } catch (Exception x) {}
                         } else {
+                            String callback = binder.get(Service.REQUEST_JS_CALLBACK);
+
                             binder.clearAutoValues();
-                            if (id.endsWith(".html")) {
+                            if (callback != null) {
+                                res.setContentType("application/javascript;charset=utf-8");
+                            } else if (id.endsWith(".html")) {
                                 res.setContentType("text/html;charset=utf-8");
                             } else if (id.endsWith(".text")) {
                                 res.setContentType("text/plain;charset=utf-8");
@@ -303,7 +326,11 @@ public class HttpServiceDispatcher extends HttpServlet {
                                 json = binder.toJSON();
                             }
 
-                            res.getWriter().append(json).flush();
+                            if (callback != null) {
+                                res.getWriter().append(callback).append('(').append(json).append(");").flush();
+                            } else {
+                                res.getWriter().append(json).flush();
+                            }
                         }
                     } else {
                         _logger.fine("\t=> " + getServletContext().getResource(page));

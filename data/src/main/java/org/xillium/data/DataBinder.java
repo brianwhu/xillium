@@ -315,5 +315,36 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
         return jb;
     }
 
+    /**
+     * A data binder codec.
+     */
+    public static interface Codec {
+        /**
+         * Encodes a DataBinder and writes the text into a Writer.
+         *
+         * @return the Writer.
+         */
+        public <T extends Writer> T encode(T sink, DataBinder binder) throws Exception;
+
+        /**
+         * Decodes an InputStream and collects data parameters into a DataBinder.
+         *
+         * @return the InputStream.
+         */
+        public InputStream decode(DataBinder binder, InputStream stream) throws Exception;
+    }
+
+    /**
+     * An object equipped with a DataBinder.Codec.
+     */
+    public static interface WithCodec {
+        /**
+         * Returns a DataCodec.
+         *
+         * @return the Codec.
+         */
+        public Codec getDataBinderCodec();
+    }
+
     private static final long serialVersionUID = -4575511652015221913L;
 }

@@ -19,6 +19,7 @@ public interface Service {
     public static final String REQUEST_HTTP_METHOD = "#http_method#";
     public static final String REQUEST_HTTP_COOKIE = "#http_cookie#";
     public static final String REQUEST_HTTP_SECURE = "#http_secure#";
+    public static final String REQUEST_JS_CALLBACK = "_js_callback_";
     public static final String REQUEST_HTTP_STATUS = "_http_status_";
 
     public static final String SERVICE_DATA_BINDER = "#data_binder#";
@@ -27,6 +28,7 @@ public interface Service {
     public static final String SERVICE_JSON_TUNNEL = "_json_tunnel_";
     public static final String SERVICE_HTTP_HEADER = "#http_header#";
     public static final String SERVICE_HTTP_STATUS = "#http_status#";
+    public static final String SERVICE_DO_REDIRECT = "#do_redirect#";
     public static final String SERVICE_STACK_TRACE = "#stack_trace#";
     public static final String SERVICE_XML_CONTENT = "#xml_content#";
 
