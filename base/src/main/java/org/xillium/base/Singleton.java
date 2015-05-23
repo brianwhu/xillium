@@ -11,6 +11,13 @@ public class Singleton<T> {
     private volatile T _value;
 
     /**
+     * Tests whether the referenced object is missing. This implementation simply tests reference nullity.
+     */
+    protected boolean isMissing(T result) {
+        return result == null;
+    }
+
+    /**
      * Retrieves the singleton object, creating it by calling a provider if it is not created yet. This method uses
      * double-checked locking to ensure that only one instance will ever be created, while keeping retrieval cost at
      * minimum.
@@ -23,9 +30,9 @@ public class Singleton<T> {
      */
     public T get(Callable<T> callable) throws Exception {
         T result = _value;
-        if (result == null) synchronized(this) {
+        if (isMissing(result)) synchronized(this) {
             result = _value;
-            if (result == null) {
+            if (isMissing(result)) {
                 _value = result = callable.call();
             }
         }
@@ -47,9 +54,9 @@ public class Singleton<T> {
      */
     public <V> T get(Functor<T, V> functor, V argument) throws Exception {
         T result = _value;
-        if (result == null) synchronized(this) {
+        if (isMissing(result)) synchronized(this) {
             result = _value;
-            if (result == null) {
+            if (isMissing(result)) {
                 _value = result = functor.invoke(argument);
             }
         }
@@ -70,9 +77,9 @@ public class Singleton<T> {
      */
     public T get(Factory<T> factory, Object... args) throws Exception {
         T result = _value;
-        if (result == null) synchronized(this) {
+        if (isMissing(result)) synchronized(this) {
             result = _value;
-            if (result == null) {
+            if (isMissing(result)) {
                 _value = result = factory.make(args);
             }
         }
@@ -89,7 +96,7 @@ public class Singleton<T> {
      */
     public synchronized T slow(Factory<T> p, Object... args) throws Exception {
         T result = _value;
-        if (result == null) {
+        if (isMissing(result)) {
             _value = result = p.make(args);
         }
         return result;
