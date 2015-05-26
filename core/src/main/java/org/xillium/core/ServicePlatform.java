@@ -114,7 +114,7 @@ public class ServicePlatform extends ManagedPlatform {
 
         if (_persistence != null && System.getProperty("xillium.persistence.DisablePrecompilation") == null) {
             if (_persistence.getTransactionManager() != null) {
-                _persistence.doReadOnly(null, new Persistence.Task<Void, Void>() {
+                _persistence.doReadWrite(null, new Persistence.Task<Void, Void>() {
                     public Void run(Void facility, Persistence persistence) throws Exception {
                         _logger.info("parametric statements compiled: " + persistence.compile());
                         return null;
