@@ -124,6 +124,7 @@ public class StandardAuthorizer extends ManagedComponent implements Authorizer, 
         } catch (AuthorizationException x) {
             throw x;
         } catch (Exception x) {
+            _logger.log(Level.WARNING, "Unexpected", x);
             throw new AuthorizationException(x.getMessage(), x);
         }
     }
