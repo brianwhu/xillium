@@ -68,6 +68,10 @@
               <name>java.util.logging.config.class</name>
               <value>org.xillium.base.etc.ClassPathLoggerConfiguration</value>
             </systemProperty>
+            <systemProperty>
+              <name>xillium.deployment.profile</name>
+              <value>etc</value>
+            </systemProperty>
           </systemProperties>
           <webAppConfig>
             <contextPath>/${symbol_dollar}{project.artifactId}</contextPath>

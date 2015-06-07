@@ -19,7 +19,7 @@
   <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
     <property name="locations">
       <list>
-        <value>classpath:${symbol_dollar}{xillium.deployment.location}db.properties</value>
+        <value>classpath:db.properties</value>
         <value>file:${symbol_dollar}{xillium.deployment.profile}/db.properties</value>
         <value>file:${symbol_dollar}{xillium.deployment.profile}/${deploy1name}.db.properties</value>
       </list>
