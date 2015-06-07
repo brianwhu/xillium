@@ -1,6 +1,7 @@
 package lab;
 
 import java.util.*;
+import javax.xml.bind.DatatypeConverter;
 import org.xillium.base.beans.*;
 //import org.xillium.base.etc.*;
 //import org.xillium.base.*;
@@ -38,5 +39,31 @@ public class StringsTest {
         for (String s: Strings.collect(args, 2, "p.", new B(), '=', "q", "a", "b", "c")) {
             System.err.println(s);
         }
+    }
+
+    @Test(groups={"hex-string"})
+    public void testHexString() throws Exception {
+        Random random = new Random();
+        byte[] bytes = new byte[1024];
+        for (int i = 0; i < 64; ++i) {
+            random.nextBytes(bytes);
+            String s1 = Strings.toHexString(bytes).toUpperCase();
+            String s2 = DatatypeConverter.printHexBinary(bytes);
+            assert s1.equals(s2);
+        }
+
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 40960; ++i) {
+            Strings.toHexString(bytes);
+        }
+        long gap = System.currentTimeMillis() - start;
+        System.out.println("             Strings.toHexString: " + gap);
+
+        start = System.currentTimeMillis();
+        for (int i = 0; i < 40960; ++i) {
+            DatatypeConverter.printHexBinary(bytes);
+        }
+        gap = System.currentTimeMillis() - start;
+        System.out.println("DatatypeConverter.printHexBinary: " + gap);
     }
 }

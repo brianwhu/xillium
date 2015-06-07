@@ -21,6 +21,11 @@ public class Strings {
         return object != null ? object.toString() : "";
     }
 
+    /**
+     * Converts an array of bytes into a hexadecimal representation.
+     *
+     * This implementation is significantly faster than DatatypeConverter.printHexBinary().
+     */
     public static String toHexString(byte[] raw) throws java.io.UnsupportedEncodingException {
         byte[] hex = new byte[2 * raw.length];
         int index = 0;

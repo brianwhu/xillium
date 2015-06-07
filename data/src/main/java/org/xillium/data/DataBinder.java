@@ -15,6 +15,13 @@ import org.xillium.data.persistence.ResultSetWorker;
  * A data binder
  */
 public class DataBinder extends HashMap<String, String> implements ResultSetWorker<DataBinder> {
+    /**
+     * The recommended name for a "response" DataBinder when placed within another DataBinder.
+     *
+     * @see #DataBinder(DataBinder, String)
+     */
+    public static final String RESPONSE = "[RESPONSE]";
+
     private final Map<String, CachedResultSet> _rsets = new HashMap<String, CachedResultSet>();
     private final Map<String, Object> _named = new HashMap<String, Object>();
     private final DataBinder _lower;
