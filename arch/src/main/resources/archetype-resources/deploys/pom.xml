@@ -70,7 +70,7 @@
             </systemProperty>
             <systemProperty>
               <name>xillium.deployment.profile</name>
-              <value>etc</value>
+              <value>etc/conf</value>
             </systemProperty>
           </systemProperties>
           <webAppConfig>

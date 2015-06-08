@@ -11,7 +11,9 @@
     <property name="locations">
       <list>
         <value>classpath:${rootArtifactId}-${module1name}.properties</value>
+        <value>classpath:${rootArtifactId}-${module1name}.xml</value>
         <value>file:${symbol_dollar}{xillium.deployment.profile}/${rootArtifactId}-${module1name}.properties</value>
+        <value>file:${symbol_dollar}{xillium.deployment.profile}/${rootArtifactId}-${module1name}.xml</value>
       </list>
     </property>
     <property name="ignoreResourceNotFound" value="true"/>
