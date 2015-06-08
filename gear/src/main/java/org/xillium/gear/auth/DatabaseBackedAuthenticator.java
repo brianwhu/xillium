@@ -68,12 +68,13 @@ public class DatabaseBackedAuthenticator extends PageAwareAuthenticator {
 */
 
 	protected Credential collectCredential(DataBinder parameters) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-_logger.log(Level.FINE, "looking for {0} in data binder", USERNAME);
-        String id = parameters.get(USERNAME);
-        if (id != null && id.length() > 0) {
-            if (parameters.get(IdentityName) == null) {
-                parameters.put(IdentityName, id);
-            }
+        // allow clients to use either <IdentityName> or USERNAME; if both are present <IdentityName> takes precedence
+_logger.log(Level.FINE, "looking for {0} in data binder", IdentityName);
+        String id = null;
+        if ((id = parameters.get(IdentityName)) != null && id.length() > 0) {
+            parameters.put(USERNAME, id);
+        } else if ((id = parameters.get(USERNAME)) != null && id.length() > 0) {
+            parameters.put(IdentityName, id);
         } else {
             return null;
         }
@@ -100,18 +101,14 @@ _logger.log(Level.FINE, "got password = {0}", password);
         if (token != null && token.length() > 0) {
 _logger.log(Level.FINE, "found session in binder: " + token);
             session = new Session(token);
-            if (parameters.get(IdentityName) == null) {
-                parameters.put(IdentityName, session.id);
-            }
+            parameters.put(IdentityName, session.id);
         } else {
             Cookie[] cookies = (Cookie[])parameters.getNamedObject(Service.REQUEST_HTTP_COOKIE);
             if (cookies != null) for (int i = 0; i < cookies.length; ++i) {
                 if (cookies[i].getName().equals(AUTHCODE)) {
 _logger.log(Level.FINE, "found session in cookie: " + cookies[i].getValue());
                     session = new Session(URLDecoder.decode(cookies[i].getValue(), "UTF-8"));
-                    if (parameters.get(IdentityName) == null) {
-                        parameters.put(IdentityName, session.id);
-                    }
+                    parameters.put(IdentityName, session.id);
                     break;
                 }
             }
