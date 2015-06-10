@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 public class CrudService extends ExtendableAndSecured implements DynamicService {
     private static final Logger _logger = Logger.getLogger(CrudService.class.getName());
-    private static final Pattern CONSTRAINT = Pattern.compile("\\([A-Z_]+\\.([A-Z_]+)\\)");
+    private static final Pattern CONSTRAINT = Pattern.compile("\\([A-Z0-9_]+\\.([A-Z0-9_]+)\\)");
 
     private final CrudCommand _command;
     private boolean _isUnique;

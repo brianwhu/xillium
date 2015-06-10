@@ -91,7 +91,7 @@ public class DatabaseService extends ExtendableAndSecured implements DynamicServ
     @Override
     @Transactional
     public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
-		try {
+        try {
             if (_renames != null) for (Pair<String, String> pair: _renames) {
                 binder.put(pair.second, binder.get(pair.first));
             }
@@ -107,15 +107,18 @@ public class DatabaseService extends ExtendableAndSecured implements DynamicServ
                     binder.putResultSet(_rset != null ? _rset : RSET, persist.executeSelect(_statement, request, CachedResultSet.BUILDER));
                 }
             } else {
-                persist.executeProcedure(_statement, request);
+                int affected = persist.executeProcedure(_statement, request);
+                if (_missing != null && affected == 0) {
+                    throw new ServiceException(_missing);
+                }
             }
-		} catch (SQLException x) {
+        } catch (SQLException x) {
             throw new org.springframework.transaction.TransactionSystemException(x.getMessage(), x);
-		} catch (ServiceException x) {
-			throw x;
-		} catch (Exception x) {
-			throw new ServiceException(x.getMessage(), x);
-		} finally {
+        } catch (ServiceException x) {
+            throw x;
+        } catch (Exception x) {
+            throw new ServiceException(x.getMessage(), x);
+        } finally {
             if (_page != null) {
                 binder.map(Service.SERVICE_HTTP_HEADER, String.class, String.class).put("Content-Type", "text/html; charset=utf-8");
                 binder.put(Service.SERVICE_PAGE_TARGET, _page);

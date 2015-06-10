@@ -92,6 +92,18 @@ public class Persistence {
     }
 
     /**
+     * Executes an UPDATE/DELETE statement with data from an array of DataObjects.
+     */
+    public int executeUpdate(String name, DataObject[] objects) throws SQLException {
+        ParametricStatement statement = _statements.get(name);
+        if (statement != null) {
+            return statement.executeUpdate(DataSourceUtils.getConnection(_dataSource), objects);
+        } else {
+            throw new RuntimeException("ParametricStatement '" + name + "' not found");
+        }
+    }
+
+    /**
      * Executes an UPDATE/DELETE statement with data from a collection of DataObjects.
      */
     public int executeUpdate(String name, Collection<? extends DataObject> objects) throws SQLException {
