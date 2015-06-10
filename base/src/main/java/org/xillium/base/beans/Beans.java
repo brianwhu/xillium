@@ -566,7 +566,7 @@ public class Beans {
         try {
             return bean != null ? print(new StringBuilder(), bean, 0).toString() : null;
         } catch (IntrospectionException x) {
-            return bean.toString() + "(***" + x.getMessage() + ')';
+            return String.valueOf(bean) + "(***" + x.getMessage() + ')';
         }
     }
 
@@ -617,7 +617,7 @@ public class Beans {
                 while (it.hasNext()) {
                     Object key = it.next();
                     indent(sb, level);
-                    printNameValue(sb, objects, key.toString(), ((Map<?, ?>)bean).get(key), level+1);
+                    printNameValue(sb, objects, String.valueOf(key), ((Map<?, ?>)bean).get(key), level+1);
                 }
             } else if (Iterable.class.isInstance(bean)) {
                 Iterator<?> it = ((Iterable<?>)bean).iterator();
