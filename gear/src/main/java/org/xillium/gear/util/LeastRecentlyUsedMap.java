@@ -53,7 +53,7 @@ public class LeastRecentlyUsedMap<K, V> extends LinkedHashMap<K, V> {
     @Override
     public V remove(Object key) {
         V old = super.remove(key);
-        ++_rep;
+        if (old != null) ++_rep;
         return old;
     }
 

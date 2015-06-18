@@ -26,7 +26,7 @@ public class Strings {
      *
      * This implementation is significantly faster than DatatypeConverter.printHexBinary().
      */
-    public static String toHexString(byte[] raw) throws java.io.UnsupportedEncodingException {
+    public static String toHexString(byte[] raw) {
         byte[] hex = new byte[2 * raw.length];
         int index = 0;
         for (byte b : raw) {
@@ -34,7 +34,11 @@ public class Strings {
             hex[index++] = HEX_CHARS[v >>> 4];
             hex[index++] = HEX_CHARS[v & 0xf];
         }
-        return new String(hex, "ASCII");
+        try {
+            return new String(hex, "ASCII");
+        } catch (java.io.UnsupportedEncodingException x) {
+            throw new RuntimeException(x.getMessage(), x);
+        }
     }
 
     /**

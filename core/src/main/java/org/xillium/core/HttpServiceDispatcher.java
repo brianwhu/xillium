@@ -113,8 +113,8 @@ public class HttpServiceDispatcher extends HttpServlet {
                 }
             } else {
                 String method = req.getMethod().toLowerCase();
-                if (service instanceof DataBinder.WithCodec && "post".equals(method)) {
-                    ((DataBinder.WithCodec)service).getDataBinderCodec().decode(binder, req.getInputStream()).close();
+                if (service instanceof DataBinder.WithDecoder && "post".equals(method)) {
+                    ((DataBinder.WithDecoder)service).getDataBinderDecoder().decode(binder, req.getInputStream()).close();
                 } else {
                 String content = req.getContentType();
                 if (content != null && isPostedXML(method, content.toLowerCase())) {
@@ -294,11 +294,12 @@ public class HttpServiceDispatcher extends HttpServlet {
                     String page = binder.get(Service.SERVICE_PAGE_TARGET);
 
                     if (page == null) {
-                        if (service instanceof DataBinder.WithCodec) {
+                        if (service instanceof DataBinder.WithEncoder) {
+                            DataBinder.Encoder encoder = ((DataBinder.WithEncoder)service).getDataBinderEncoder();
                             binder.clearAutoValues();
-                            res.setContentType("application/xml;charset=utf-8");
+                            res.setContentType(encoder.getContentType(binder));
                             try {
-                                ((DataBinder.WithCodec)service).getDataBinderCodec().encode(res.getWriter(), binder).flush();
+                                encoder.encode(res.getWriter(), binder).flush();
                             } catch (Exception x) {}
                         } else
                         if (binder.find(Service.SERVICE_XML_CONTENT) != null) {

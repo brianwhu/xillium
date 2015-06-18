@@ -342,15 +342,58 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     }
 
     /**
-     * An object equipped with a DataBinder.Codec.
+     * A data binder decoder.
      */
-    public static interface WithCodec {
+    public static interface Decoder {
         /**
-         * Returns a DataCodec.
+         * Decodes an InputStream and collects data parameters into a DataBinder.
          *
-         * @return the Codec.
+         * @return the InputStream.
          */
-        public Codec getDataBinderCodec();
+        public InputStream decode(DataBinder binder, InputStream stream) throws Exception;
+    }
+
+    /**
+     * A data binder encoder.
+     */
+    public static interface Encoder {
+        /**
+         * Returns the MIME content type of this encoder's output.
+         *
+         * @return the MIME content type
+         */
+        public String getContentType(DataBinder binder);
+
+        /**
+         * Encodes a DataBinder and writes the data into a Writer.
+         *
+         * @return the Writer.
+         */
+        public <T extends Writer> T encode(T sink, DataBinder binder) throws Exception;
+    }
+
+    /**
+     * An object equipped with a DataBinder.Decoder.
+     */
+    public static interface WithDecoder {
+        /**
+         * Returns a DataBinder.Decoder
+         *
+         * @return the Decoder
+         */
+        public Decoder getDataBinderDecoder();
+    }
+
+    /**
+     * An object equipped with a DataBinder.Encoder.
+     */
+    public static interface WithEncoder {
+        /**
+         * Returns a DataBinder.Encoder
+         *
+         * @return the Encoder.
+         */
+        public Encoder getDataBinderEncoder();
     }
 
     private static final long serialVersionUID = -4575511652015221913L;
