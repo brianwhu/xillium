@@ -61,6 +61,8 @@ public interface Perishable {
         protected boolean removeEldestEntry(java.util.Map.Entry<K,V> eldest) {
             return eldest.getValue().hasExpired();
         }
+
+        private static final long serialVersionUID = -6985350606842037376L;
     }
 
 }
