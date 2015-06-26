@@ -322,24 +322,6 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
         return jb;
     }
 
-    /**
-     * A data binder codec.
-     */
-    public static interface Codec {
-        /**
-         * Encodes a DataBinder and writes the text into a Writer.
-         *
-         * @return the Writer.
-         */
-        public <T extends Writer> T encode(T sink, DataBinder binder) throws Exception;
-
-        /**
-         * Decodes an InputStream and collects data parameters into a DataBinder.
-         *
-         * @return the InputStream.
-         */
-        public InputStream decode(DataBinder binder, InputStream stream) throws Exception;
-    }
 
     /**
      * A data binder decoder.
@@ -348,7 +330,7 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
         /**
          * Decodes an InputStream and collects data parameters into a DataBinder.
          *
-         * @return the InputStream.
+         * @return the InputStream
          */
         public InputStream decode(DataBinder binder, InputStream stream) throws Exception;
     }
@@ -365,11 +347,11 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
         public String getContentType(DataBinder binder);
 
         /**
-         * Encodes a DataBinder and writes the data into a Writer.
+         * Encodes a DataBinder and writes the bytes into an OutputStream.
          *
-         * @return the Writer.
+         * @return the OutputStream
          */
-        public <T extends Writer> T encode(T sink, DataBinder binder) throws Exception;
+        public <T extends OutputStream> T encode(T sink, DataBinder binder) throws Exception;
     }
 
     /**

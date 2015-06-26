@@ -282,14 +282,9 @@ public class HttpServiceDispatcher extends HttpServlet {
 
                 // return status only?
                 if ((status = binder.get(Service.SERVICE_DO_REDIRECT)) != null) {
-                    try {
-                        res.sendRedirect(status);
-                    } catch (Exception x) {
-                        // nothing can be done now, so just log it
-                        _logger.log(Level.WARNING, x.getMessage(), x);
-                    }
+                    try { res.sendRedirect(status); } catch (Exception x) { _logger.log(Level.WARNING, x.getMessage(), x); }
                 } else if ((status = binder.get(Service.SERVICE_HTTP_STATUS)) != null) {
-                    try { res.setStatus(Integer.parseInt(status)); } catch (Exception x) {}
+                    try { res.setStatus(Integer.parseInt(status)); } catch (Exception x) { _logger.log(Level.WARNING, x.getMessage(), x); }
                 } else {
                     String page = binder.get(Service.SERVICE_PAGE_TARGET);
 
@@ -299,15 +294,21 @@ public class HttpServiceDispatcher extends HttpServlet {
                             binder.clearAutoValues();
                             res.setContentType(encoder.getContentType(binder));
                             try {
-                                encoder.encode(res.getWriter(), binder).flush();
-                            } catch (Exception x) {}
+                                encoder.encode(res.getOutputStream(), binder).flush();
+                            } catch (Exception x) {
+                                // bugs in the encoder?
+                                _logger.log(Level.FINE, x.getMessage(), x);
+                            }
                         } else
                         if (binder.find(Service.SERVICE_XML_CONTENT) != null) {
                             binder.clearAutoValues();
                             res.setContentType("application/xml;charset=utf-8");
                             try {
                                 XDBCodec.encode(res.getWriter(), binder).flush();
-                            } catch (Exception x) {}
+                            } catch (Exception x) {
+                                // bugs in the codec?
+                                _logger.log(Level.FINE, x.getMessage(), x);
+                            }
                         } else {
                             String callback = binder.get(Service.REQUEST_JS_CALLBACK);
 
