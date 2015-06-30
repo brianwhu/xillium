@@ -1,10 +1,11 @@
 package lab;
 
-import java.util.Random;
-import java.util.Arrays;
+import java.lang.reflect.Array;
+import java.util.*;
 import java.math.BigDecimal;
 import org.xillium.base.Functor;
 import org.xillium.base.util.*;
+import org.xillium.base.type.typeinfo;
 import org.testng.annotations.*;
 
 
@@ -12,13 +13,25 @@ import org.testng.annotations.*;
  * Objects tests
  */
 public class ObjectsTest {
-    static class S {
+    public static class S {
         public String t;
         public int[] i = new int[8];
+        public List<int[]> j = Arrays.asList(new int[8], new int[5], new int[2]);
+        @SuppressWarnings("unchecked") @typeinfo(Integer.class) public List<Integer>[] k = (List<Integer>[])Array.newInstance(List.class, 3);
+        public S() {
+            k[0] = new ArrayList<Integer>(); k[0].add(0);
+            k[1] = new ArrayList<Integer>(); k[1].add(0);
+            k[2] = new ArrayList<Integer>(); k[2].add(0);
+        }
     }
 
-    static class T {
-        S s = new S();
+    public static class T {
+        public S s = new S();
+        public S[] a = new S[] { new S(), new S() };
+        public S[][] b = new S[][] {
+            { new S(), new S() },
+            { new S() }
+        };
     }
 
     /**
@@ -29,16 +42,37 @@ public class ObjectsTest {
         String Good = "GOOD";
         String OneK = "1024";
         String TwoK = "2048";
+        String Nice = "4096";
 
         T data = new T();
-        Objects.setProperty(data, "s.t", Good);
-        assert Objects.getProperty(data, "s.t").equals(Good);
+        org.xillium.base.util.Objects.setProperty(data, "s.t", Good);
+        assert org.xillium.base.util.Objects.getProperty(data, "s.t").equals(Good);
 
-        Objects.setProperty(data, "s.i[5]", OneK);
-        assert Objects.getProperty(data, "s.i[5]").equals(Integer.parseInt(OneK));
+        org.xillium.base.util.Objects.setProperty(data, "s.i[5]", OneK);
+        assert org.xillium.base.util.Objects.getProperty(data, "s.i[5]").equals(Integer.parseInt(OneK));
 
-        Objects.setProperty(data, "s.i[2]", TwoK);
-        assert Objects.getProperty(data, "s.i[2]").equals(Integer.parseInt(TwoK));
+        org.xillium.base.util.Objects.setProperty(data, "s.i[2]", TwoK);
+        assert org.xillium.base.util.Objects.getProperty(data, "s.i[2]").equals(Integer.parseInt(TwoK));
+
+        org.xillium.base.util.Objects.setProperty(data, "a[1].i[2]", TwoK);
+        assert org.xillium.base.util.Objects.getProperty(data, "s.i[2]").equals(Integer.parseInt(TwoK));
+
+        org.xillium.base.util.Objects.setProperty(data, "b[0][1].i[2]", TwoK);
+        assert org.xillium.base.util.Objects.getProperty(data, "b[0][1].i[2]").equals(Integer.parseInt(TwoK));
+
+        org.xillium.base.util.Objects.setProperty(data, "b[0][1].j[1][3]", TwoK);
+        org.xillium.base.util.Objects.setProperty(data, "b[0][1].j[1][4]", Nice);
+        assert org.xillium.base.util.Objects.getProperty(data, "b[0][1].j[1][3]").equals(Integer.parseInt(TwoK));
+        assert org.xillium.base.util.Objects.getProperty(data, "b[0][1].j[1][4]").equals(Integer.parseInt(Nice));
+
+        org.xillium.base.util.Objects.setProperty(data, "b[0][1].k[2][0]", TwoK);
+        assert org.xillium.base.util.Objects.getProperty(data, "b[0][1].k[2][0]").equals(Integer.parseInt(TwoK));
+
+        try {
+            org.xillium.base.util.Objects.getProperty(data, "b[0][1].notThere[2][0]");
+            assert false;
+        } catch (NoSuchFieldException x) {
+        }
     }
 
     /**
@@ -54,7 +88,7 @@ public class ObjectsTest {
         String[] c = new String[1 + random.nextInt(64)];
         for (int i = 0; i < c.length; ++i) c[i] = String.valueOf(random.nextInt());
 
-        String[] o = Objects.concat(a, b, c);
+        String[] o = org.xillium.base.util.Objects.concat(a, b, c);
 
         assert o.length == a.length + b.length + c.length;
         assert Arrays.equals(a, Arrays.copyOfRange(o, 0,                   a.length));
@@ -75,7 +109,7 @@ public class ObjectsTest {
         int[] c = new int[1 + random.nextInt(64)];
         for (int i = 0; i < c.length; ++i) c[i] = random.nextInt();
 
-        int[] o = Objects.concat(a, b, c);
+        int[] o = org.xillium.base.util.Objects.concat(a, b, c);
 
         assert o.length == a.length + b.length + c.length;
         assert Arrays.equals(a, Arrays.copyOfRange(o, 0,                   a.length));
@@ -95,13 +129,13 @@ public class ObjectsTest {
         }
         BigDecimal extra = new BigDecimal(random.nextDouble());
 
-        Object[] objects = Objects.store(decimals, extra);
+        Object[] objects = org.xillium.base.util.Objects.store(decimals, extra);
         for (int i = 0; i < decimals.length; ++i) {
             assert objects[i] == decimals[i];
         }
         assert objects[decimals.length] == extra;
 
-        Double[] doubles = Objects.apply(new Double[decimals.length], decimals, new Functor<Double, BigDecimal>() {
+        Double[] doubles = org.xillium.base.util.Objects.apply(new Double[decimals.length], decimals, new Functor<Double, BigDecimal>() {
             public Double invoke(BigDecimal decimal) {
                 return decimal.doubleValue();
             }

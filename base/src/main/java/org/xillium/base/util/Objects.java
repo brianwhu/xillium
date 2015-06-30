@@ -2,12 +2,11 @@ package org.xillium.base.util;
 
 import java.lang.reflect.*;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.*;
-import javax.management.*;
 import org.xillium.base.Functor;
 import org.xillium.base.beans.Beans;
 import org.xillium.base.type.typeinfo;
-import org.xillium.base.util.ValueOf;
 
 
 /**
@@ -20,50 +19,33 @@ public abstract class Objects {
      * Reports a property.
      *
      * @param object the target object
-     * @param path a string array path to the property
-     * @param length the number of components to consider in the path array
+     * @param name a dot-separated path to the property
      * @return the property value
-     * @throws AttributeNotFoundException if the attribute is not found
+     * @throws NoSuchFieldException if the property is not found
      */
-    public static Object getProperty(Object object, String[] path, int length) throws AttributeNotFoundException {
+    public static Object getProperty(Object object, String name) throws NoSuchFieldException {
         try {
-            for (int i = 0; i < length; ++i) {
-                Matcher matcher = ARRAY_INDEX.matcher(path[i]);
-                if (matcher.find()) {
-                    object = Array.get(Beans.getKnownField(object.getClass(), matcher.group(1)).get(object), Integer.parseInt(matcher.group(2)));
+            Matcher matcher = ARRAY_INDEX.matcher(name);
+            if (matcher.matches()) {
+                object = getProperty(object, matcher.group(1));
+                if (object.getClass().isArray()) {
+                    return Array.get(object, Integer.parseInt(matcher.group(2)));
                 } else {
-                    object = Beans.getKnownField(object.getClass(), path[i]).get(object);
+                    return ((List)object).get(Integer.parseInt(matcher.group(2)));
                 }
+            } else {
+                int dot = name.lastIndexOf('.');
+                if (dot > 0) {
+                    object = getProperty(object, name.substring(0, dot));
+                    name = name.substring(dot + 1);
+                }
+                return Beans.getKnownField(object.getClass(), name).get(object);
             }
+        } catch (NoSuchFieldException x) {
+            throw x;
         } catch (Exception x) {
-            throw new AttributeNotFoundException(x.getMessage());
+            throw new IllegalArgumentException(x.getMessage() + ": " + name, x);
         }
-
-        return object;
-    }
-
-    /**
-     * Reports a property.
-     *
-     * @param object the target object
-     * @param path a string array path to the property
-     * @return the property value
-     * @throws AttributeNotFoundException if the attribute is not found
-     */
-    public static Object getProperty(Object object, String[] path) throws AttributeNotFoundException {
-        return getProperty(object, path, path.length);
-    }
-
-    /**
-     * Reports a property.
-     *
-     * @param object the target object
-     * @param name a dot-separated string path to the property
-     * @return the property value
-     * @throws AttributeNotFoundException if the attribute is not found
-     */
-    public static Object getProperty(Object object, String name) throws AttributeNotFoundException {
-        return getProperty(object, name.split("\\."));
     }
 
     /**
@@ -72,24 +54,41 @@ public abstract class Objects {
      * @param object the target object
      * @param name a dot-separated path to the property
      * @param text a String representation of the new value
-     * @throws AttributeNotFoundException if the attribute is not found
-     * @throws BadAttributeValueExpException if the value expression is invalid
+     * @throws NoSuchFieldException if the property is not found
+     * @throws IllegalArgumentException if the value expression is invalid or can't be assigned to the property
      */
-    public static void setProperty(Object object, String name, String text) throws AttributeNotFoundException, BadAttributeValueExpException {
-        String[] path = name.split("\\.");
-        object = getProperty(object, path, path.length - 1);
-
+    @SuppressWarnings("unchecked")
+    public static void setProperty(Object object, String name, String text) throws NoSuchFieldException {
         try {
-            Matcher matcher = ARRAY_INDEX.matcher(path[path.length - 1]);
-            if (matcher.find()) {
-                Field field = Beans.getKnownField(object.getClass(), matcher.group(1));
-                Array.set(field.get(object), Integer.parseInt(matcher.group(2)), new ValueOf(field.getType().getComponentType(), field.getAnnotation(typeinfo.class)).invoke(text));
-            } else {
-                Field field = Beans.getKnownField(object.getClass(), path[path.length - 1]);
-                field.set(object, new ValueOf(field.getType()).invoke(text));
+            // need to get to the field for any typeinfo annotation, so here we go ...
+            int length = name.lastIndexOf('.');
+            if (length > 0) {
+                object = getProperty(object, name.substring(0, length));
+                name = name.substring(length + 1);
             }
+            length = name.length();
+
+            Matcher matcher = ARRAY_INDEX.matcher(name);
+            for (Matcher m = matcher; m.matches(); m = ARRAY_INDEX.matcher(name)) {
+                name = m.group(1);
+            }
+            Field field = Beans.getKnownField(object.getClass(), name);
+
+            if (name.length() != length) {
+                int index = Integer.parseInt(matcher.group(2));
+                object = getProperty(object, matcher.group(1));
+                if (object.getClass().isArray()) {
+                    Array.set(object, index, new ValueOf(object.getClass().getComponentType(), field.getAnnotation(typeinfo.class)).invoke(text));
+                } else {
+                    ((List)object).set(index, new ValueOf(field.getAnnotation(typeinfo.class).value()[0]).invoke(text));
+                }
+            } else {
+                field.set(object, new ValueOf(field.getType(), field.getAnnotation(typeinfo.class)).invoke(text));
+            }
+        } catch (NoSuchFieldException x) {
+            throw x;
         } catch (Exception x) {
-            throw new BadAttributeValueExpException(text);
+            throw new IllegalArgumentException(x.getMessage() + ": " + name, x);
         }
     }
 
