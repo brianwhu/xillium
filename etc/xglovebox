@@ -1,3 +1,13 @@
+# find a string in any of the given type of files
+ff() {
+find . \( -name "*.$1" \) -exec grep "$2" {} \; -print
+}
+
+# find a string in any of the given type of files
+lf() {
+find . \( -name "*.$1" \) -exec grep -l "$2" {} \;
+}
+
 # find a string in any java or service-configuration.xml source
 fjava() {
 find . \( -name '*.java' -o -name 'service-configuration.xml' \) -not -regex '.*/target/.*' -exec grep "$1" {} \; -print
@@ -79,7 +89,12 @@ esac
 mt() {
 case $# in
 0) ;;
-1) mvn -f deploys/$1/pom.xml install jetty:run-war -Djava.util.logging.config.file=etc/logging.properties -Dxillium.service.PrintStackTrace=true -Dxillium.deployment.location=dev- -Dxillium.deployment.profile=$PWD/etc;;
+1) if [ -f etc/conf/logging.properties ]
+   then
+      mvn -f deploys/$1/pom.xml jetty:run-war -Djava.util.logging.config.file=etc/conf/logging.properties -Dxillium.service.PrintStackTrace=true
+   else
+      mvn -f deploys/$1/pom.xml jetty:run-war -Dxillium.service.PrintStackTrace=true
+   fi;;
 *) p=$1; shift; mvn -f modules/$p/pom.xml install && mt $*;;
 esac
 }

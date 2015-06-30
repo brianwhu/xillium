@@ -1,11 +1,14 @@
 #!/bin/sh
 
-if [ -d ${CATALINA_HOME:-/usr/tomcat}/webapps-not-deployed ]; then
+. $HOME/.xilliumrc
+
+if [ -d ${CATALINA_BASE:-/usr/tomcat}/webapps-tomcat ]; then
     echo Already prepared
 else
-    cd ${CATALINA_HOME:-/usr/tomcat}
     chmod +x ${CATALINA_HOME:-/usr/tomcat}/bin/*.sh
-    mkdir webapps-not-deployed
-    mv webapps/docs webapps/examples webapps/host-manager webapps/manager webapps/ROOT webapps-not-deployed
+    cd ${CATALINA_BASE:-/usr/tomcat}
+    mkdir -p webapps-tomcat
+    mv webapps/* webapps-tomcat
     for d in `ls -1 ~/deployment|grep '\.war$'`; do ln -sf ~/deployment/$d webapps/`expr $d : '\([^-]*\)-.*'`.war; done
+    mkdir -p secured
 fi

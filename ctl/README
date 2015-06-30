@@ -1,0 +1,69 @@
+Service Deployment and Remote Management
+
+
+HTTP and HTTPS
+--------------
+
+  HTTP and HTTPS applications can be deployed on a single Tomcat server. A convention is established to place HTTP service
+  applications under $CATALINA_BASE/webapps, and HTTPS service applications under $CATALINA_BASE/secured.
+
+  To indicate that an application should go under $CATALINA_BASE/secured, define a "deployment.target" property in the webapps'
+  pom.xml file:
+
+    <properties>
+      <deployment.target>secured</deployment.target>
+    </properties>
+
+  On tomcat, server.xml should contain:
+
+    <Service name="Catalina">
+        <Connector port="80" .../>
+        ...
+        <Engine name="Catalina" ...>
+            <Host ... appBase="webapps">
+                ...
+            </Host>
+        </Engine>
+    </Service>
+    <Service name="Secured">
+        <Connector port="443" .../>
+        ...
+        <Engine name="Secured" ...>
+            <Host ... appBase="secured">
+                ...
+            </Host>
+        </Engine>
+    </Service>
+
+
+New Application Servers
+-----------------------
+
+  Installing runtime tools from build management server:
+
+    $ bin/inst @ENV
+
+  Preparing Tomcat on target server:
+
+    $ deployment/rt/bin/prep
+
+
+Application Deployment
+----------------------
+
+    $ bin/deploy @ENV
+
+  Redeploying active applications:
+
+    $ bin/redeploy @ENV
+
+
+Applications Control
+--------------------
+
+    $ bin/xctl stop @ENV
+
+    $ bin/xctl start @ENV
+
+    $ bin/restart @ENV
+

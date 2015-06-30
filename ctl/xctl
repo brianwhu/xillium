@@ -9,10 +9,10 @@ _R_=$(cd $(dirname $0)/.. && grep '<global.version>' pom.xml|awk 'BEGIN{FS="[<>]
 
 ctrl() {
   case $1 in
-  log) ssh root@$2 '/usr/bin/tail -100f ${CATALINA_HOME:-/usr/tomcat}/logs/localhost.`date +"%Y-%m-%d"`.log 2> /dev/null';;
-  out) ssh root@$2 '/usr/bin/tail -100f ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out 2> /dev/null';;
+  log) ssh root@$2 '/usr/bin/tail -100f ${CATALINA_BASE:-/usr/tomcat}/logs/localhost.`date +"%Y-%m-%d"`.log 2> /dev/null';;
+  out) ssh root@$2 '/usr/bin/tail -100f ${CATALINA_BASE:-/usr/tomcat}/logs/catalina.out 2> /dev/null';;
   rov) ssh root@$2 '/bin/rm -f $(ls -1 deployment/*.war 2>/dev/null | grep -v '$_R_')';;
-  *)   echo "Sending command '$1' to '$2'..." && ssh root@$2 /bin/bash -l '${XILLIUM_HOME:-/deployment/rt}/bin/'$1;;
+  *)   echo "Sending command '$1' to '$2'..." && ssh root@$2 /bin/bash '${HOME:-/root}/deployment/rt/bin/'$1;;
   esac
 }
 

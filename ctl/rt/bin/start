@@ -1,3 +1,5 @@
 #!/bin/sh
 
+. $HOME/.xilliumrc
+
 ${CATALINA_HOME:-/usr/tomcat}/bin/startup.sh > /dev/null 2>&1

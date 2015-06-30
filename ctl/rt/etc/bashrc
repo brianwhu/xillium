@@ -7,24 +7,25 @@ export MEM="-Xmx${XILLIUM_MEM:-6g} -Xms${XILLIUM_MEM:-6g} -XX:+UseConcMarkSweepG
 #export JMX='-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=8689 -Dcom.sun.management.jmxremote.rmi.port=8689 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false' # -Djava.rmi.server.hostname=58.215.219.166'
 export XLM="-Dxillium.service.HideDescription=$XILLIUM_HIDE"
 #export XLM="-Dxillium.service.HideDescription=true"
-export ENV="-Dxillium.deployment.environ=$XILLIUM_ENV -Dxillium.deployment.instance=$XILLIUM_INS -Dxillium.deployment.location=$XILLIUM_LOC -Dxillium.deployment.profile=/root/deployment/conf"
+export ENV="-Dxillium.deployment.environ=$XILLIUM_ENV -Dxillium.deployment.instance=$XILLIUM_INS -Dxillium.deployment.profile=/root/deployment/conf -Dxillium.deployment.data=/root/deployment/data"
 
-export JAVA_OPTS="$MEM $JMX $XLM $JDB $ENV -Dcom.yizheng.yep.location=dev-"
+export JAVA_OPTS="$MEM $JMX $XLM $JDB $ENV"
 
 alias start=${CATALINA_HOME:-/usr/tomcat}/bin/startup.sh
-alias stop=${XILLIUM_HOME:-/root/deployment/rt}/bin/stop
-alias clean=${XILLIUM_HOME:-/root/deployment/rt}/bin/clean
-alias shut=${XILLIUM_HOME:-/root/deployment/rt}/bin/shut
-alias restart="${XILLIUM_HOME:-/root/deployment/rt}/bin/stop;sleep 5;${XILLIUM_HOME:-/root/deployment/rt}/bin/clean;${CATALINA_HOME:-/usr/tomcat}/bin/startup.sh"
+alias stop=${HOME:-/root}/deployment/rt/bin/stop
+alias clean=${HOME:-/root}/deployment/rt/bin/clean
+alias shut=${HOME:-/root}/deployment/rt/bin/shut
+alias restart="${HOME:-/root}/deployment/rt/bin/stop;sleep 5;${HOME:-/root}/deployment/rt/bin/clean;${CATALINA_HOME:-/usr/tomcat}/bin/startup.sh"
 alias dir='ls -l'
-alias k="ps -e | grep java | awk '{print $1}' | xargs -n 1 kill"
-alias p='ps -aef | grep java'
-alias v='view ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out'
-alias c='cat ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out'
-alias zap='> ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out;find ${CATALINA_HOME:-/usr/tomcat}/webapps -maxdepth 1 -mindepth 1 -not -name '*.war' -exec rm -rf {} \;;ls -l ${CATALINA_HOME:-/usr/tomcat}/webapps'
+alias k='ps -aef|grep java|grep ${CATALINA_BASE}|awk '\''{print $2}'\''|xargs -n 1 kill'
+alias p='ps -aef|grep java|grep ${CATALINA_BASE}'
+alias v='view ${CATALINA_BASE:-/usr/tomcat}/logs/catalina.out'
+alias c='cat ${CATALINA_BASE:-/usr/tomcat}/logs/catalina.out'
+alias zap='> ${CATALINA_BASE:-/usr/tomcat}/logs/catalina.out;find ${CATALINA_BASE:-/usr/tomcat}/webapps -maxdepth 1 -mindepth 1 -not -name '*.war' -exec rm -rf {} \;;ls -l ${CATALINA_BASE:-/usr/tomcat}/webapps'
 t() {
 case $# in
-0) tail -100f  ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out;;
-*) tail -fn +1 ${CATALINA_HOME:-/usr/tomcat}/logs/catalina.out|grep "$*";;
+0) tail -100f  ${CATALINA_BASE:-/usr/tomcat}/logs/catalina.out;;
+*) tail -fn +1 ${CATALINA_BASE:-/usr/tomcat}/logs/catalina.out|grep "$*";;
 esac
 }
+alias l='tail -100f ${CATALINA_BASE:-/usr/tomcat}/logs/localhost.`date +%Y-%m-%d`.log'

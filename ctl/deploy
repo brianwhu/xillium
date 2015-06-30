@@ -6,20 +6,24 @@ case $# in
 esac
 
 # project revision to deploy
-r=$(cd $(dirname $0)/.. && grep '<global.version>' pom.xml|awk 'BEGIN{FS="[<>]"}{print $3}')
-g=$(cd $(dirname $0)/.. && grep '<groupId>' pom.xml|head -1|awk 'BEGIN{FS="[<>]"}{print $3}'|sed 's/\./\//g')
-
-echo $r
-echo $g
+TOP=$(dirname $0)/..
+REV=$(cd $TOP && grep '<global.version>' pom.xml|awk 'BEGIN{FS="[<>]"}{print $3}')
+GRP=$(cd $TOP && grep '<groupId>' pom.xml|head -1|awk 'BEGIN{FS="[<>]"}{print $3}'|sed 's/\./\//g')
 
 ctrl() {
+    local m
     if m=`expr "$2" : '\(.*[^.0-9]\)[0-9]*\..*'` > /dev/null
     then
+        local p=`expr "$m" : '[^-][^-]*-\(.*\)'` > /dev/null
+        local t=$(cd $TOP/deploys/$p && grep '<deployment.target>' pom.xml|head -1|awk 'BEGIN{FS="[<>]"}{print $3}')
+        if [ -z "$t" ]; then
+            t=webapps
+        fi
+        echo "Preparing server '$2' ..."
+        ssh root@$2 '$HOME/deployment/rt/bin/deploy_prep' $m $t
         echo "Deploying '$m' to server '$2' ..."
-        ssh root@$2 /bin/rm -rf '${CATALINA_HOME:-/usr/tomcat}/webapps/'$m
-        ssh root@$2 /bin/mkdir -p /root/deployment
-        echo "put ${M2_REPO:-$HOME/.m2/repository}/$g/$m/$r/$m-$r.war deployment" | sftp -oBatchMode=yes -b - root@$2 > /dev/null
-        ssh root@$2 /bin/ln -sf /root/deployment/$m-$r.war '${CATALINA_HOME:-/usr/tomcat}/webapps/'$m.war
+        echo "put ${M2_REPO:-$HOME/.m2/repository}/$GRP/$m/$REV/$m-$REV.war deployment" | sftp -oBatchMode=yes -b - root@$2 > /dev/null
+        ssh root@$2 '$HOME/deployment/rt/bin/deploy_link' $m $t $REV
     else
         echo "Unknown server: $2"
     fi

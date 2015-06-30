@@ -6,33 +6,44 @@ case $# in
    ;;
 esac
 
-if ! grep CATALINA_HOME ~/.bashrc > /dev/null 2>&1; then
-    catalina=`find /usr -name catalina.sh|awk 'BEGIN{FS="/bin/"}{print $1}'`
+if ! [ -f $HOME/.xilliumrc ]; then
+    catalina=`find /usr -name catalina.sh 2>/dev/null|head -1|awk 'BEGIN{FS="/bin/"}{print $1}'`
     if [ -n $catalina ]; then
-        echo "export CATALINA_HOME=$catalina" >> ~/.bashrc
+        echo "export CATALINA_HOME=$catalina" >> $HOME/.xilliumrc
+        instance=`find / -name webapps -type d 2>/dev/null|head -1|awk 'BEGIN{FS="/webapps"}{print $1}'`
+        if [ -n $instance ]; then
+            echo "export CATALINA_BASE=$instance" >> $HOME/.xilliumrc
+        else
+            echo "export CATALINA_BASE=$catalina" >> $HOME/.xilliumrc
+        fi
+    else
+        echo "export CATALINA_HOME=/please/provide/tomcat/installation/path" >> $HOME/.xilliumrc
+        echo "export CATALINA_BASE=/please/provide/tomcat/instance/path" >> $HOME/.xilliumrc
+    fi
+
+    if ! grep XILLIUM_ENV $HOME/.xilliumrc > /dev/null 2>&1; then
+        e=`echo $1|tr '[:lower:]' '[:upper:]'`;
+        echo "export XILLIUM_ENV=$e"  >> $HOME/.xilliumrc
+    fi
+#   if ! grep XILLIUM_LOC $HOME/.xilliumrc > /dev/null 2>&1; then
+#       echo "export XILLIUM_LOC=$1-" >> $HOME/.xilliumrc
+#   fi
+    if ! grep XILLIUM_INS $HOME/.xilliumrc > /dev/null 2>&1; then
+        echo "export XILLIUM_INS=0"   >> $HOME/.xilliumrc
+    fi
+    if ! grep XILLIUM_MEM $HOME/.xilliumrc > /dev/null 2>&1; then
+        echo "#export XILLIUM_MEM=6g" >> $HOME/.xilliumrc
+    fi
+
+    if ! grep $HOME/deployment/rt/etc/bashrc $HOME/.xilliumrc > /dev/null 2>&1; then
+        echo ". $HOME/deployment/rt/etc/bashrc" >> $HOME/.xilliumrc
     fi
 fi
 
-if ! grep XILLIUM_ENV ~/.bashrc > /dev/null 2>&1; then
-    e=`echo $1|tr '[:lower:]' '[:upper:]'`;
-    echo "export XILLIUM_ENV=$e"  >> ~/.bashrc
+if ! grep .xilliumrc $HOME/.bashrc > /dev/null 2>&1; then
+    cat >> $HOME/.bashrc <<"EOF_HOME_BASHRC"
+if [ -f $HOME/.xilliumrc ]; then
+. $HOME/.xilliumrc
 fi
-if ! grep XILLIUM_LOC ~/.bashrc > /dev/null 2>&1; then
-    echo "export XILLIUM_LOC=$1-" >> ~/.bashrc
+EOF_HOME_BASHRC
 fi
-if ! grep XILLIUM_INS ~/.bashrc > /dev/null 2>&1; then
-    echo "export XILLIUM_INS=0"   >> ~/.bashrc
-fi
-if ! grep XILLIUM_MEM ~/.bashrc > /dev/null 2>&1; then
-    echo "#export XILLIUM_MEM=6g" >> ~/.bashrc
-fi
-
-if ! grep XILLIUM_HOME ~/.bashrc > /dev/null 2>&1; then
-    cat >> ~/.bashrc <<"EOF_XILLIUM_HOME"
-export XILLIUM_HOME=/root/deployment/rt
-if [ -f $XILLIUM_HOME/etc/bashrc ]; then
-    . $XILLIUM_HOME/etc/bashrc
-fi
-EOF_XILLIUM_HOME
-fi
-

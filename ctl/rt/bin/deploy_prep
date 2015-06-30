@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#
+# $1 = base name
+# $2 = target directory
+#
+
+. $HOME/.xilliumrc
+rm -rf ${CATALINA_BASE:-/usr/tomcat}/$2/$1
+mkdir -p $HOME/deployment
+

@@ -7,14 +7,15 @@
 #   where the 3rd argument: '-' for only the physical servers, '+' for all application servers
 #
 apply() {
+    local e d h
     case $# in
     3)  case $2 in
-        @*) if e=`expr "$2" : '@\([a-z][a-z]*\)$'` > /dev/null; then
+        @*) if e=`expr "$2" : '@\([a-z][a-z0-9]*\)$'` > /dev/null; then
                 echo "Applying '$0 $1' to environment '$e' ..."
-                if [ "$3" == "+" ]; then
-                    p='\([^+]*\)+\{0,1\}$'
+                if [ "$3" = "+" ]; then
+                    local p='\([^+]*\)+\{0,1\}$'
                 else
-                    p='\([^+]*[^+]\)$'
+                    local p='\([^+]*[^+]\)$'
                 fi
                 for d in `eval echo '$'$e`; do
                     if h=`expr $d : "$p"` > /dev/null; then
@@ -41,3 +42,4 @@ apply() {
 # servers in each environment
 #
 cd `dirname $0`/.. && if [ -f etc/environment ]; then . etc/environment; fi
+echo $d
