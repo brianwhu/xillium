@@ -45,5 +45,5 @@ public interface Manageable {
     /**
      * Updates a component property.
      */
-    public void setProperty(String name, String value) throws AttributeNotFoundException, BadAttributeValueExpException;
+    public void setProperty(String name, String value) throws AttributeNotFoundException, IllegalArgumentException;
 }
