@@ -258,12 +258,20 @@ public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable
 
     @Override
     public String getProperty(String name) throws AttributeNotFoundException {
-        return String.valueOf(Objects.getProperty(this, name));
+        try {
+            return String.valueOf(Objects.getProperty(this, name));
+        } catch (NoSuchFieldException x) {
+            throw new AttributeNotFoundException(x.getMessage() + ": " + name);
+        }
     }
 
     @Override
-    public void setProperty(String name, String value) throws AttributeNotFoundException, BadAttributeValueExpException {
-        Objects.setProperty(this, name, value);
+    public void setProperty(String name, String value) throws AttributeNotFoundException, IllegalArgumentException {
+        try {
+            Objects.setProperty(this, name, value);
+        } catch (NoSuchFieldException x) {
+            throw new AttributeNotFoundException(x.getMessage() + ": " + name);
+        }
     }
 
     @Override
