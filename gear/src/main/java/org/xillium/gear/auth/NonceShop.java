@@ -34,7 +34,19 @@ public class NonceShop {
     }
 
     /**
-     * Produces a new nonce that is associated with the given state.
+     * Produces a nonce of an arbitrary size in bytes, which is not to be proved later.
+     *
+     * @param size the size of the nonce in bytes
+     * @return the new nonce as a hexadecimal string
+     */
+    public String produce(int size) {
+        byte bytes[] = new byte[size];
+        _random.nextBytes(bytes);
+        return Strings.toHexString(bytes);
+    }
+
+    /**
+     * Produces a nonce that is associated with the given state and is to be proved within a time limit.
      *
      * @param state an arbitrary state to be associated with the new nonce.
      * @param time the TTL of the new nonce, in milliseconds. If this parameter is 0 or negative, the default TTL is used instead.
