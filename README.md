@@ -1,0 +1,18 @@
+Xillium Service Platform
+========================
+
+The Xillium Service Platform is put in place to allow fast and quality construction
+of service oriented enterprise solutions that are secure, performant, capacious, agile, and robust,
+by following a well-chosen set of time-honored approaches and technologies. It does
+so by staying true and faithful to
+
+   * Service oriented architecture
+   * Plain HTTP service invocation + JSON responses
+   * A very thin Java-SQL interworking layer
+   * The most important design patterns and abstractions
+
+Xillium is built upon open source frameworks, most notably the Spring Core framework,
+and leverages the best of the modern Java technologies. It is a platform still in
+fast evolution but its merits already proven to be viable in creating solutions as
+large as a real-time mass-assess trading system and as small as an online calculator.
+
