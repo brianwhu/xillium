@@ -8,6 +8,7 @@ import java.sql.*;
 import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.Strings;
 import org.xillium.base.beans.JSONBuilder;
+import org.xillium.base.util.Multimap;
 import org.xillium.data.persistence.ResultSetWorker;
 
 
@@ -119,19 +120,18 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     /**
      * Introduces a HashMap under the given name if one does not exist yet.
      */
-    @Deprecated
-    public <K, V> Map<K, V> useHashMap(String name, Class<K> ktype, Class<V> vtype) {
+    public <K, V> Map<K, V> map(String name, Class<K> ktype, Class<V> vtype) {
         Map<K, V> map = getNamedObject(name);
         if (map == null) putNamedObject(name, map = new HashMap<K, V>());
         return map;
     }
 
     /**
-     * Introduces a HashMap under the given name if one does not exist yet.
+     * Introduces a Multimap under the given name if one does not exist yet.
      */
-    public <K, V> Map<K, V> map(String name, Class<K> ktype, Class<V> vtype) {
-        Map<K, V> map = getNamedObject(name);
-        if (map == null) putNamedObject(name, map = new HashMap<K, V>());
+    public <K, V> Multimap<K, V> mul(String name, Class<K> ktype, Class<V> vtype) {
+        Multimap<K, V> map = getNamedObject(name);
+        if (map == null) putNamedObject(name, map = new Multimap<K, V>());
         return map;
     }
 

@@ -30,14 +30,14 @@ public class ParametricStatement {
 
         /**
          * Constructs a named formal parameter with name <code>n</code> and type <code>t</code>.
-         * <p/>
-         * A single-character prefix of either '-' or '+' before the name marks the parameter as either an OUT
-         * or IN/OUT parameter, respectively.  Without any prefix, a parameter is regarded as an IN parameter.
-         * <p/>
-         * A single-character suffix of '?' after the name marks the parameter as accepting null values. Without
-         * the suffix the parameter is non-null.
-         * <p/>
-         * Neither the prefix nor the suffix is part of the actual parameter name.
+         *
+         * <p>A single-character prefix of either '-' or '+' before the name marks the parameter as either an OUT
+         * or IN/OUT parameter, respectively.  Without any prefix, a parameter is regarded as an IN parameter.</p>
+         *
+         * <p>A single-character suffix of '?' after the name marks the parameter as accepting null values. Without
+         * the suffix the parameter is non-null.</p>
+         *
+         * <p>Neither the prefix nor the suffix is part of the actual parameter name.</p>
          */
         public Param(String n, int t) {
             if (n.charAt(0) == '-') {

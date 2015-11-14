@@ -6,6 +6,7 @@ import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.annotation.MemberValue;
 import javassist.bytecode.annotation.IntegerMemberValue;
+import javassist.bytecode.annotation.StringMemberValue;
 import org.xillium.base.beans.Strings;
 import org.xillium.base.util.Pair;
 import org.xillium.data.*;
@@ -23,21 +24,20 @@ import org.xillium.data.persistence.util.MetaDataHelper;
  * <li><code>SEARCH</code> - SELECT rows from a single table by conditions on a variety of columns</li>
  * </ul>
  *
- * <h4>General Features</h4>
- * CREATE, RETRIEVE, UPDATE, DELETE operations on multiple tables associated with ISA relations are supported. SEARCH operation must operate on
- * a single table/view.
- * <p/>
+ * <h1>General Features</h1>
+ * <p>CREATE, RETRIEVE, UPDATE, DELETE operations on multiple tables associated with ISA relations are supported. SEARCH operation must operate on
+ * a single table/view.</p>
  *
- * <h4>Dominant Tables</h4>
- * In RETRIEVE and SEARCH operations, dominant tables can be specified so that only their columns are selected.
+ * <h1>Dominant Tables</h1>
+ * <p>In RETRIEVE and SEARCH operations, dominant tables can be specified so that only their columns are selected.</p>
  *
- * <h4>Specified Column List</h4>
+ * <h1>Specified Column List</h1>
  * <p>A CREATE operation can be given a set of columns to exclude from the INSERT statement.</p>
  * <p>An UPDATE operation can target a specified set of columns. If this set of columns is not specified, the statement updates all
  * non-key columns.</p>
  * <p>To a SEARCH operation, a specified set of columns forms the search condition and therefore must be specified.</p>
  *
- * <h4>Column Value Restrictions</h4>
+ * <h1>Column Value Restrictions</h1>
  * <p>It is possible to specify restriction values for specific columns; a value starting with '!' indicates a negative restriction.</p>
  * <ul>
  * <li><code>CREATE</code> - only positive restrictions make sense; negative restriction values are ignored</li>
@@ -117,7 +117,7 @@ public class CrudCommand {
 
         /**
          * An Action with both column list (args) and restriction list.
-         * </p>
+         *
          * The column list applies to UPDATE and SEARCH operations. A leading asterisk before a column name indicates a required fields.
          * <ul>
          * <li>UPDATE - in this case, the columns are used in the SET clause.</li>
@@ -493,6 +493,8 @@ public class CrudCommand {
                 if (rsmeta.getPrecision(idx) != 0) {
                     addAnnotation(attr, cp, "org.xillium.data.validation.size", "value", new IntegerMemberValue(cp, rsmeta.getPrecision(idx)));
                 }
+
+                addAnnotation(attr, cp, "org.xillium.data.persistence.crud.tablename", "value", new StringMemberValue(tablenames[i], cp));
 
                 field.getFieldInfo().addAttribute(attr);
                 cc.addField(field);

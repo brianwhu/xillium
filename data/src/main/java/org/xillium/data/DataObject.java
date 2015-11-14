@@ -2,6 +2,7 @@ package org.xillium.data;
 
 import java.lang.reflect.*;
 import org.xillium.data.validation.*;
+import org.xillium.data.persistence.crud.tablename;
 
 
 /**
@@ -18,7 +19,7 @@ public interface DataObject {
         /**
          * Formulates a JSON representation of the structure of a DataObject.
          *
-         * @param type - a DataObject class
+         * @param type a DataObject class
          * @return a string that contains the JSON representation of the structure of the DataObject
          */
         public static String describe(Class<? extends DataObject> type) {
@@ -28,14 +29,21 @@ public interface DataObject {
         /**
          * Formulates a JSON representation of the structure of a DataObject.
          *
-         * @param type - a DataObject class
-         * @param prefix - a prefix to be placed before the JSON string
+         * @param type a DataObject class
+         * @param prefix a prefix to be placed before the JSON string
          * @return a string that contains the JSON representation of the structure of the DataObject
          */
         public static String describe(Class<? extends DataObject> type, String prefix) {
             return describe(new StringBuilder(prefix), type).toString();
         }
 
+        /**
+         * Formulates a JSON representation of the structure of a DataObject.
+         *
+         * @param sb a StringBuilder to hold the generated JSON string
+         * @param type a DataObject class
+         * @return the same StringBuilder passed as the first argument, which contains the JSON representation of the structure of the DataObject
+         */
         public static StringBuilder describe(StringBuilder sb, Class<? extends DataObject> type) {
             int existing = sb.length();
             sb.append("[");
@@ -107,6 +115,11 @@ public interface DataObject {
                     required r = field.getAnnotation(required.class);
                     if (r != null) {
                         sb.append(",\"required\":true");
+                    }
+
+                    tablename n = field.getAnnotation(tablename.class);
+                    if (n != null) {
+                        sb.append(",\"tablename\":\"").append(n.value()).append('"');
                     }
 
                     sb.append("},");
