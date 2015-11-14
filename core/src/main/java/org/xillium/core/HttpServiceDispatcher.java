@@ -13,6 +13,7 @@ import org.apache.commons.fileupload.util.Streams;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.xillium.base.beans.*;
+import org.xillium.base.util.Multimap;
 import org.xillium.data.*;
 import org.xillium.data.persistence.crud.CrudConfiguration;
 import org.xillium.data.xml.*;
@@ -269,11 +270,11 @@ public class HttpServiceDispatcher extends HttpServlet {
             try {
                 // HTTP headers
                 @SuppressWarnings("unchecked")
-                Map<String, String> headers = binder.getNamedObject(Service.SERVICE_HTTP_HEADER, Map.class);
+                Multimap<String, String> headers = binder.getNamedObject(Service.SERVICE_HTTP_HEADER, Multimap.class);
                 if (headers != null) {
                     try {
-                        for (Map.Entry<String, String> e: headers.entrySet()) {
-                            res.setHeader(e.getKey(), e.getValue());
+                        for (Map.Entry<String, List<String>> e: headers.entrySet()) {
+                            for (String value: e.getValue()) res.setHeader(e.getKey(), value);
                         }
                     } catch (Exception x) {}
                 }

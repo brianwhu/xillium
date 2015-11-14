@@ -120,7 +120,7 @@ public class DatabaseService extends ExtendableAndSecured implements DynamicServ
             throw new ServiceException(x.getMessage(), x);
         } finally {
             if (_page != null) {
-                binder.map(Service.SERVICE_HTTP_HEADER, String.class, String.class).put("Content-Type", "text/html; charset=utf-8");
+                binder.mul(Service.SERVICE_HTTP_HEADER, String.class, String.class).add("Content-Type", "text/html; charset=utf-8");
                 binder.put(Service.SERVICE_PAGE_TARGET, _page);
             }
         }
