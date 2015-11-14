@@ -3,13 +3,16 @@ package org.xillium.core.util;
 import java.io.*;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.*;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.xillium.base.beans.Beans;
 
 
 /**
  * A class of implementations that are configured by Properties or properties files.
  */
 public abstract class PropertiesConfigured {
+
     /**
      * Constructs a PropertiesConfigured that is to be configured later.
      */
@@ -70,7 +73,7 @@ public abstract class PropertiesConfigured {
      */
     protected abstract void configure(Properties properties);
 
-    private static Properties load(Properties properties, PathMatchingResourcePatternResolver resolver, String location) {
+    private Properties load(Properties properties, PathMatchingResourcePatternResolver resolver, String location) {
         try {
             Reader reader = new InputStreamReader(resolver.getResource(location).getInputStream(), "UTF-8");
             try {
@@ -79,7 +82,11 @@ public abstract class PropertiesConfigured {
             } finally {
                 reader.close();
             }
-        } catch (Exception x) {}
+        } catch (Exception x) {
+            try {
+                ((Logger)Beans.getKnownField(getClass(), "_logger").get(null)).warning("Ignoring failure in loading '" + location + "': " + x.getMessage());
+            } catch (Throwable t) {}
+        }
         return properties;
     }
 }

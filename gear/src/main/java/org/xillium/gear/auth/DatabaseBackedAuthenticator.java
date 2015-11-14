@@ -9,6 +9,7 @@ import java.security.SecureRandom;
 import java.security.NoSuchAlgorithmException;
 import javax.servlet.http.Cookie;
 import org.xillium.base.beans.Strings;
+import org.xillium.base.util.Multimap;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
 import org.xillium.data.persistence.*;
@@ -126,7 +127,7 @@ _logger.log(Level.FINE, "found session in cookie: " + cookies[i].getValue());
 /*
     private void redirectToAuthenticationPage(DataBinder binder) {
         if (_page != null) {
-            binder.map(Service.SERVICE_HTTP_HEADER, String.class, String.class).put("Content-Type", "text/html; charset=utf-8");
+            binder.mul(Service.SERVICE_HTTP_HEADER, String.class, String.class).add("Content-Type", "text/html; charset=utf-8");
             binder.put(Service.SERVICE_PAGE_TARGET, _page + "?_redirect_=" + binder.get(Service.REQUEST_TARGET_PATH));
 _logger.log(Level.FINE, "redirecting to {0}", binder.get(Service.SERVICE_PAGE_TARGET));
         }
@@ -152,11 +153,11 @@ _logger.log(Level.FINE, "updating session {0}", org.xillium.base.beans.Beans.toS
                         parameters.put(AUTHCODE, ticket);
                         // place the new authcode in a session cookie for the client
 _logger.log(Level.FINE, "Sending ticket in cookie: {0}", ticket);
-                        Map<String, String> headers = parameters.map(Service.SERVICE_HTTP_HEADER, String.class, String.class);
+                        Multimap<String, String> headers = parameters.mul(Service.SERVICE_HTTP_HEADER, String.class, String.class);
                         if (parameters.get(Service.REQUEST_HTTP_SECURE) != null) {
-                            headers.put("Set-Cookie", AUTHCODE + "=" + ticket + ";path=/;secure");
+                            headers.add("Set-Cookie", AUTHCODE + "=" + ticket + ";path=/;secure");
                         } else {
-                            headers.put("Set-Cookie", AUTHCODE + "=" + ticket + ";path=/");
+                            headers.add("Set-Cookie", AUTHCODE + "=" + ticket + ";path=/");
                         }
                     }
                     return roles;
