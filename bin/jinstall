@@ -6,40 +6,39 @@
 case $# in
 1) d=/usr/local/bin;;
 2) d="$2";;
-*) echo Usage: `basename $0` JAR-FILE-NAME [ DEST-DIR ]; exit 0;;
+*) echo Usage: `basename $0` "{ executable-jar | directory } [ destination ]"; exit 0;;
 esac
 
-if ! expr "$1" : '.*\.jar' > /dev/null
-then
-    echo Error: "'$1'" is not a jar file
-    exit 1
+if [ -d "$1" ]; then
+    if ! j=`ls -1 $1/*jar-with-dependencies.jar 2>/dev/null`; then
+        echo Error: nothing found under $1 && exit 1
+    fi
+elif expr "$1" : '.*\.jar' > /dev/null; then
+    j=$1
+else
+    echo Error: "'$1'" is not a jar file && exit 1
 fi
 
-if [ ! -d "$d" ]
-then
-    echo Error: "'$d'" is not a directory
-    exit 1
+if [ ! -d "$d" ]; then
+    echo Error: "'$d'" is not a directory && exit 1
 fi
 
-if [ ! -x "$d/jwrapper" ]
-then
-    echo Error: jwrapper not installed in $d
-    exit 1
+if [ ! -x "$d/jwrapper" ]; then
+    echo Error: jwrapper not installed in $d && exit 1
 fi
 
 #
 # copy the jar to the destination directory
 #
-cp "$1" "$d"
+cp "$j" "$d"
 
 #
 # command name = file stem name but without version info
 #
-filename=`basename -- "$1"`
+filename=`basename -- "$j"`
 command=`expr "$filename" : '\(.*\)-[0-9].*\.jar'`
 
-if [ -z "$command" ]
-then
+if [ -z "$command" ]; then
 #
 # no version info, use the file stem name
 #
@@ -57,6 +56,6 @@ ln -sf jwrapper "$d"/"$command"
 
 ##############################################################################
 #
-# Copyright (c) 2004 Brian W. Hu. All rights reserved.
+# Copyright (c) 2004-2015 Brian W. Hu. All rights reserved.
 #
 ##############################################################################
