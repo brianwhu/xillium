@@ -25,4 +25,12 @@ public class Multimap<K, V> extends HashMap<K, List<V>> {
         }
         list.add(value);
     }
+
+    public void add(K key, Collection<V> values) {
+        List<V> list = get(key);
+        if (list == null) {
+            put(key, list = new ArrayList<V>());
+        }
+        list.addAll(values);
+    }
 }
