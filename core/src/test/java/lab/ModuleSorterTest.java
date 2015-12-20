@@ -8,31 +8,31 @@ import org.testng.annotations.*;
 
 public class ModuleSorterTest {
     private static final String[] NAME = {
-        "settings",
-        "global",
-        "portal",
-        "local",
-        "special",
-        "account",
-        "trading",
+        "trex-settings",
+        "trex-global",
+        "unix-portal",
+        "unix-local",
+        "unix-special",
+        "unix-account",
+        "unix-trading",
     };
 
     private static final String[] BASE = {
         "*",            //"settings",
-        "settings",     //"global",
-        "settings",     //"portal",
-        "portal",       //"local",
-        "global",       //"special"
+        "trex-settings",     //"global",
+        "trex-settings",     //"portal",
+        "unix-portal",       //"local",
+        "trex-global",       //"special"
         "",             //"account",
         "",             //"trading",
     };
 
     private static final String[] LOOP = {
-        "global",       //"settings",
-        "settings",     //"global",
-        "settings",     //"portal",
-        "portal",       //"local",
-        "global",       //"special"
+        "trex-global",       //"settings",
+        "trex-settings",     //"global",
+        "unix-settings",     //"portal",
+        "unix-portal",       //"local",
+        "trex-global",       //"special"
         "",             //"account",
         "",             //"trading",
     };
@@ -48,7 +48,7 @@ public class ModuleSorterTest {
                 next = random.nextInt(name.length);
             } while (set.contains(next));
             set.add(next);
-            sorter.add(new ModuleSorter.Entry(name[next], base[next], "/path/to/whatever.jar"));
+            sorter.add(new ModuleSorter.Entry("domain", name[next], "simple", base[next], "/path/to/whatever.jar"));
             System.out.println(name[next]);
         }
 

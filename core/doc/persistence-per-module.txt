@@ -1,0 +1,7 @@
+A DTP(Data Source, Transaction Manager, Persistence) triplet can be
+    * In the root application context, shared by all modules
+    * In a module application context, private to the module
+
+While the modules form a forest of arbitrary depth by their interdependency relationship,
+DTP triplets don't follow this structure. Any module not having a private DTP triplet
+uses the DTP triplet defined in the root application context.

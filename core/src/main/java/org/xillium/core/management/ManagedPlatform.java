@@ -18,9 +18,8 @@ import java.util.regex.Pattern;
 import javax.management.*;
 import javax.script.*;
 import javax.servlet.*;
-//import org.springframework.context.ApplicationContext;
-//import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.xillium.base.beans.Throwables;
+import org.xillium.base.util.Pair;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
 import org.xillium.data.validation.*;
@@ -31,19 +30,20 @@ import org.xillium.core.util.*;
 /**
  * Managed platform
  */
-public abstract class ManagedPlatform extends ManagementService {
+public abstract class ManagedPlatform extends ManagementService implements ServletContextListener {
     private static final Logger _logger = Logger.getLogger(ManagedPlatform.class.getName());
 
     protected static final String DOMAIN_NAME = "Xillium-Domain-Name";
     protected static final String MODULE_NAME = "Xillium-Module-Name";
+    protected static final String SIMPLE_NAME = "Xillium-Simple-Name";
     protected static final String MODULE_BASE = "Xillium-Module-Base";
 
     public static final String INSTANCE = "x!/mgmt";
 
-    protected static final Map<String, Service> _registry = new HashMap<String, Service>();
-    //protected ApplicationContext _context;
+    protected static final Map<String, Pair<Service, Persistence>> _registry = new HashMap<>();
+    protected final Map<String, Persistence> _persistences = new HashMap<>();
+    protected ServletContext _context;
     protected String _application;
-    protected Map<String, ParametricStatement> _statements;
 
     public static enum Signal {
         SystemProperties,
@@ -63,15 +63,12 @@ public abstract class ManagedPlatform extends ManagementService {
      */
     @Override
     public void contextInitialized(ServletContextEvent event) {
-        super.contextInitialized(event);
-        _registry.put(INSTANCE, this);
+        _registry.put(INSTANCE, new Pair<Service, Persistence>(this, null));
 
-        ServletContext context = event.getServletContext();
-        _application = context.getContextPath();
+        _context = event.getServletContext();
+        _application = _context.getContextPath();
         _logger.config("application: " + _application);
         if (_application.charAt(0) == '/') _application = _application.substring(1);
-
-        //_context = WebApplicationContextUtils.getWebApplicationContext(context);
 
         try { ManagementFactory.getPlatformMBeanServer().setAttribute(
             new ObjectName("Catalina:host=localhost,name=AccessLogValve,type=Valve"), new Attribute("condition", "intrinsic")
@@ -144,9 +141,10 @@ public abstract class ManagedPlatform extends ManagementService {
                     _logger.config("... " + jar);
                     JarInputStream jis = new JarInputStream(jar.startsWith("/") ? context.getResourceAsStream(jar) : new URL(jar).openStream());
                     try {
-                        String name = jis.getManifest().getMainAttributes().getValue(MODULE_NAME);
-                        if (name != null) {
-                            sorter.add(new ModuleSorter.Entry(name, jis.getManifest().getMainAttributes().getValue(MODULE_BASE), jar));
+                        Attributes attrs = jis.getManifest().getMainAttributes();
+                        String d = attrs.getValue(DOMAIN_NAME), n = attrs.getValue(MODULE_NAME), s = attrs.getValue(SIMPLE_NAME);
+                        if (d != null && n != null && s != null) {
+                            sorter.add(new ModuleSorter.Entry(d, n, s, attrs.getValue(MODULE_BASE), jar));
                         }
                     } finally {
                         jis.close();
@@ -231,13 +229,13 @@ public abstract class ManagedPlatform extends ManagementService {
                 case PersistenceCheck:
                     if (request.parameter != null) {
                         final ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
-                        engine.put("db", new PersistenceManager(binder, _statements, persist.getDataSource()));
-                        persist.doReadWrite(null, new Persistence.Task<Void, Void>() {
-                            public Void run(Void v, Persistence p) throws Exception {
+                        engine.put("db", new PersistenceManager(binder, _persistences));
+                        //persist.doReadWrite(null, new Persistence.Task<Void, Void>() {
+                            //public Void run(Void v, Persistence p) throws Exception {
                                 engine.eval(request.parameter);
-                                return null;
-                            }
-                        });
+                                //return null;
+                            //}
+                        //});
                     }
                     break;
                 default:

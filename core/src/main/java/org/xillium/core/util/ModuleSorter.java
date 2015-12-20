@@ -5,10 +5,12 @@ import java.util.*;
 
 public class ModuleSorter {
     public static class Entry {
-        public final String name, base, path;
+        public final String domain, name, simple, base, path;
 
-        public Entry(String n, String b, String p) {
+        public Entry(String d, String n, String s, String b, String p) {
+            domain = d;
             name = n;
+            simple = s;
             base = b;
             path = p;
         }

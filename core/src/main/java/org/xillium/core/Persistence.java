@@ -247,7 +247,17 @@ public class Persistence {
         int count = 0;
         for (Map.Entry<String, ParametricStatement> entry: _statements.entrySet()) {
             try {
-                DataSourceUtils.getConnection(_dataSource).prepareCall(entry.getValue().getSQL()).close();
+                ParametricStatement statement = entry.getValue();
+                Connection connection = DataSourceUtils.getConnection(_dataSource);
+                if (statement instanceof ParametricQuery) {
+                    connection.prepareStatement(statement.getSQL());
+                } else {
+                    try {
+                        connection.prepareCall(statement.getSQL());
+                    } catch (Exception x) {
+                        connection.prepareStatement(statement.getSQL());
+                    }
+                }
                 ++count;
             } catch (SQLException x) {
                 throw new SQLException(entry.getKey(), x);
@@ -287,7 +297,7 @@ public class Persistence {
         }
     }
 
-    Map<String, ParametricStatement> getStatementMap() {
+    public Map<String, ParametricStatement> getStatementMap() {
         return _statements;
     }
 

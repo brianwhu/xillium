@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.xillium.base.beans.*;
 import org.xillium.base.util.Multimap;
+import org.xillium.base.util.Pair;
 import org.xillium.data.*;
 import org.xillium.data.persistence.crud.CrudConfiguration;
 import org.xillium.data.xml.*;
@@ -40,18 +41,20 @@ public class HttpServiceDispatcher extends HttpServlet {
     private String _application;
 
     // Wired in spring application context
-    private Persistence _persistence;
+    //private Persistence _persistence;
 
     /**
-     * Initializes the servlet, loading and initializing xillium modules.
+     * Initializes the servlet
      */
     public void init() throws ServletException {
-        _application = ((ManagedPlatform)ServicePlatform.getService(ManagedPlatform.INSTANCE)).getName();
+        _application = ((ManagedPlatform)ServicePlatform.getService(ManagedPlatform.INSTANCE).first).getName();
 
+/*
         ApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
         if (wac.containsBean("persistence")) { // persistence may not be there if persistent storage is not required
             _persistence = (Persistence)wac.getBean("persistence");
         }
+*/
     }
 
     /**
@@ -73,7 +76,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             }
         }
 
-        Service service = ServicePlatform.getService(id);
+        Pair<Service, Persistence> service = ServicePlatform.getService(id);
         if (service == null) {
             _logger.warning("Request not recognized: " + req.getRequestURI());
             res.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -114,8 +117,8 @@ public class HttpServiceDispatcher extends HttpServlet {
                 }
             } else {
                 String method = req.getMethod().toLowerCase();
-                if (service instanceof DataBinder.WithDecoder && "post".equals(method)) {
-                    ((DataBinder.WithDecoder)service).getDataBinderDecoder().decode(binder, req.getInputStream()).close();
+                if (service.first instanceof DataBinder.WithDecoder && "post".equals(method)) {
+                    ((DataBinder.WithDecoder)service.first).getDataBinderDecoder().decode(binder, req.getInputStream()).close();
                 } else {
                 String content = req.getContentType();
                 if (content != null && isPostedXML(method, content.toLowerCase())) {
@@ -159,9 +162,9 @@ public class HttpServiceDispatcher extends HttpServlet {
 
             // pre-service filtration
 
-            if (service instanceof Service.Extended) {
+            if (service.first instanceof Service.Extended) {
                 try {
-                    ((Service.Extended)service).filtrate(binder);
+                    ((Service.Extended)service.first).filtrate(binder);
                 } catch (AuthenticationRequiredException x) {
                     if (binder.get(Service.REQUEST_HTTP_STATUS) != null) {
                         res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -179,11 +182,13 @@ public class HttpServiceDispatcher extends HttpServlet {
                 }
             }
 
+            // locate persistence object
+
             // authorization
 
-            if (service instanceof Service.Secured) {
+            if (service.first instanceof Service.Secured) {
                 try {
-                    ((Service.Secured)service).authorize(id, binder, _persistence);
+                    ((Service.Secured)service.first).authorize(id, binder, service.second);
                 } catch (AuthenticationRequiredException x) {
                     if (binder.get(Service.REQUEST_HTTP_STATUS) != null) {
                         res.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -203,16 +208,16 @@ public class HttpServiceDispatcher extends HttpServlet {
 
             // acknowledgement
 
-            if (service instanceof Service.Extended) {
-                try { ((Service.Extended)service).acknowledge(binder); } catch (Throwable t) {}
+            if (service.first instanceof Service.Extended) {
+                try { ((Service.Extended)service.first).acknowledge(binder); } catch (Throwable t) {}
             }
 
-            binder = service.run(binder, ServicePlatform.getDictionary(), _persistence);
+            binder = service.first.run(binder, ServicePlatform.getDictionary(), service.second);
 
             // post-service filter
 
-            if (service instanceof Service.Extended) {
-                try { ((Service.Extended)service).successful(binder); } catch (Throwable t) {}
+            if (service.first instanceof Service.Extended) {
+                try { ((Service.Extended)service.first).successful(binder); } catch (Throwable t) {}
             }
 
             // post-service action (deprecated)
@@ -245,8 +250,8 @@ public class HttpServiceDispatcher extends HttpServlet {
             binder.put(Service.FAILURE_MESSAGE, message);
 
             // post-service exception handler
-            if (service instanceof Service.Extended) {
-                try { ((Service.Extended)service).aborted(binder, x); } catch (Throwable t) {}
+            if (service.first instanceof Service.Extended) {
+                try { ((Service.Extended)service.first).aborted(binder, x); } catch (Throwable t) {}
             }
 
             boolean sst = !(binder.get(Service.SERVICE_STACK_TRACE) == null);
@@ -260,8 +265,8 @@ public class HttpServiceDispatcher extends HttpServlet {
             }
         } finally {
             // post-service filter
-            if (service instanceof Service.Extended) {
-                try { ((Service.Extended)service).complete(binder); } catch (Throwable t) {}
+            if (service.first instanceof Service.Extended) {
+                try { ((Service.Extended)service.first).complete(binder); } catch (Throwable t) {}
             }
 
             res.setHeader("Access-Control-Allow-Headers", "origin,x-prototype-version,x-requested-with,accept");
@@ -290,8 +295,8 @@ public class HttpServiceDispatcher extends HttpServlet {
                     String page = binder.get(Service.SERVICE_PAGE_TARGET);
 
                     if (page == null) {
-                        if (service instanceof DataBinder.WithEncoder) {
-                            DataBinder.Encoder encoder = ((DataBinder.WithEncoder)service).getDataBinderEncoder();
+                        if (service.first instanceof DataBinder.WithEncoder) {
+                            DataBinder.Encoder encoder = ((DataBinder.WithEncoder)service.first).getDataBinderEncoder();
                             binder.clearAutoValues();
                             res.setContentType(encoder.getContentType(binder));
                             try {

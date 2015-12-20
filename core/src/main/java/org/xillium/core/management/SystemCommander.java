@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import org.xillium.base.beans.*;
+import org.xillium.base.util.Pair;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
 import org.xillium.core.*;
@@ -28,11 +29,11 @@ public class SystemCommander {
     private static AtomicInteger _sequence = new AtomicInteger();
 
     private final DataBinder _binder;
-    private final Map<String, Service> _services;
+    private final Map<String, Pair<Service, Persistence>> _services;
     private boolean _async;
     private boolean _verbose;
 
-    public SystemCommander(DataBinder binder,  Map<String, Service> services) {
+    public SystemCommander(DataBinder binder,  Map<String, Pair<Service, Persistence>> services) {
         _binder = binder;
         _services = services;
     }
@@ -60,7 +61,7 @@ public class SystemCommander {
         try {
             ScriptableServiceFilter filter = new ScriptableServiceFilter();
             filter.setAcknowledge(script);
-            ((Service.Extendable)_services.get(address)).setFilter(filter);
+            ((Service.Extendable)_services.get(address).first).setFilter(filter);
             synchronized (_augmentations) { _augmentations.add(new ServiceAugmentation.Spec(address, filter)); }
         } catch (Exception x) {
             _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
@@ -71,7 +72,7 @@ public class SystemCommander {
     public SystemCommander m(String address, String name, String script) {
         try {
             ScriptableMilestoneEvaluation eval = new ScriptableMilestoneEvaluation(script);
-            ServiceMilestone.attach(_services.get(address), name, eval);
+            ServiceMilestone.attach(_services.get(address).first, name, eval);
             synchronized (_augmentations) { _augmentations.add(new ServiceAugmentation.Spec(address, name, eval)); }
         } catch (Exception x) {
             _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
@@ -83,9 +84,9 @@ public class SystemCommander {
         try {
             ServiceAugmentation.Spec spec = _augmentations.get(Integer.parseInt(index));
             if (spec.milestone != null) {
-                ServiceMilestone.detach(_services.get(spec.service), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
+                ServiceMilestone.detach(_services.get(spec.service).first, spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
             } else {
-                Service service = _services.get(spec.service);
+                Service service = _services.get(spec.service).first;
                 Field field = Beans.getKnownField(service.getClass(), "_filter");
                 field.set(service, CompoundServiceFilter.cleanse(field.get(service), (Service.Filter)spec.augment));
             }

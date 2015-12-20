@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.Iterator;
 import org.xillium.base.beans.JSONBuilder;
+import org.xillium.base.util.Pair;
 import org.xillium.data.*;
 import org.xillium.core.*;
 import org.xillium.data.validation.*;
@@ -14,9 +15,9 @@ import org.xillium.data.validation.*;
  * Service listing.
  */
 public class ListService extends SecuredService {
-    private final Map<String, Service> _services;
+    private final Map<String, Pair<Service, Persistence>> _services;
 
-    public ListService(Map<String, Service> services) {
+    public ListService(Map<String, Pair<Service, Persistence>> services) {
         _services = services;
     }
 

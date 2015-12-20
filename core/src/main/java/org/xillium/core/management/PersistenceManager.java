@@ -7,6 +7,7 @@ import javax.sql.DataSource;
 import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
+import org.xillium.core.Persistence;
 
 
 /**
@@ -23,14 +24,12 @@ public class PersistenceManager {
     private static final Set<String> _customized = new HashSet<String>();
 
     private final DataBinder _binder;
-    private final Map<String, ParametricStatement> _statements;
-    private final DataSource _source;
+    private final Map<String, Persistence> _persistences;
     private boolean _verbose;
 
-    public PersistenceManager(DataBinder binder, Map<String, ParametricStatement> statements, DataSource source) {
+    public PersistenceManager(DataBinder binder, Map<String, Persistence> persistences) {
         _binder = binder;
-        _statements = statements;
-        _source = source;
+        _persistences = persistences;
     }
 
     public PersistenceManager v(boolean verbose) {
@@ -40,8 +39,11 @@ public class PersistenceManager {
 
     public PersistenceManager l() {
         List<Object[]> rows = new ArrayList<Object[]>();
-        for (String name: _statements.keySet()) {
-            rows.add(new Object[]{ name });
+        for (String simple: _persistences.keySet()) {
+            Persistence persistence = _persistences.get(simple);
+            for (String name: persistence.getStatementMap().keySet()) {
+                rows.add(new Object[]{ name });
+            }
         }
         Collections.sort(rows, new Comparator<Object[]>() {
             public int compare(Object[] o1, Object[] o2) {
@@ -53,7 +55,7 @@ public class PersistenceManager {
     }
 
     public PersistenceManager t(String name) {
-        ParametricStatement ps = _statements.get(name);
+        ParametricStatement ps = _persistences.get(Strings.substringBefore(name, '/')).getParametricStatement(name);
         if (ps != null) {
             try {
                 Class<? extends DataObject> c = ps.getDataObjectClass(name.replace('/', '.'));
@@ -70,11 +72,12 @@ public class PersistenceManager {
 
     public PersistenceManager d(String name, String xml) {
         try {
+            Persistence persistence = _persistences.get(Strings.substringBefore(name, '/'));
             XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
-            if (!_customized.contains(name) && _statements.get(name) == null) {
+            if (!_customized.contains(name) && persistence.getParametricStatement(name) == null) {
                 _customized.add(name);
             }
-            _statements.put(name, (ParametricStatement)assembler.build(new ByteArrayInputStream(xml.getBytes("UTF-8"))));
+            persistence.getStatementMap().put(name, (ParametricStatement)assembler.build(new ByteArrayInputStream(xml.getBytes("UTF-8"))));
         } catch (Exception x) {
             _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));
         }
@@ -84,7 +87,7 @@ public class PersistenceManager {
     public PersistenceManager u(String name) {
         try {
             if (_customized.contains(name)) {
-                _statements.remove(name);
+                _persistences.get(Strings.substringBefore(name, '/')).getStatementMap().remove(name);
                 _customized.remove(name);
             } else {
                 _binder.put(MESSAGE, "can't undefine internal");
@@ -95,21 +98,28 @@ public class PersistenceManager {
         return this;
     }
 
-    public PersistenceManager x(String name) {
+    public PersistenceManager x(final String name) {
         try {
-            ParametricStatement ps = _statements.get(name);
+            Persistence persistence = _persistences.get(Strings.substringBefore(name, '/'));
+            ParametricStatement ps = persistence.getParametricStatement(name);
+
             Class<? extends DataObject> c = ps.getDataObjectClass(name.replace('/', '.'));
             DataObject data = c != null ? new org.xillium.data.validation.Dictionary().collect(c.newInstance(), _binder) : null;
-            Connection conn = _source.getConnection();
-            try {
-                if (ps instanceof ParametricQuery) {
-                    _binder.putResultSet("results", ((ParametricQuery)ps).executeSelect(conn, data, CachedResultSet.BUILDER));
-                } else {
-                    ps.executeProcedure(conn, data);
-                    if (data != null) _binder.put(data);
-                }
-            } finally {
-                conn.close();
+            if (ps instanceof ParametricQuery) {
+                persistence.doReadOnly(data, new Persistence.Task<Void, DataObject>() {
+                    public Void run(DataObject data, Persistence p) throws Exception {
+                        _binder.putResultSet("results", p.executeSelect(name, data, CachedResultSet.BUILDER));
+                        return null;
+                    }
+                });
+            } else {
+                persistence.doReadWrite(data, new Persistence.Task<Void, DataObject>() {
+                    public Void run(DataObject data, Persistence p) throws Exception {
+                        p.executeProcedure(name, data);
+                        if (data != null) _binder.put(data);
+                        return null;
+                    }
+                });
             }
         } catch (Exception x) {
             _binder.put(MESSAGE, _verbose ? Throwables.getFullMessage(x) : Throwables.getExplanation(x));

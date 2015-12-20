@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.*;
 
+import org.xillium.base.util.Pair;
 import org.xillium.core.util.ServiceMilestone;
 import org.xillium.core.Service;
+import org.xillium.core.Persistence;
 
 
 /**
@@ -82,31 +84,31 @@ public class ServiceAugmentation {
     /**
      * Installs the filters and milestone evaluations defined in this ServiceAugmentation on the services.
      */
-    public void install(Map<String, Service> services) {
+    public void install(Map<String, Pair<Service, Persistence>> services) {
         for (Spec spec: _specifications) {
             if (spec.service.equals(GLOBAL_ALL_SERVICES)) {
-                for (Map.Entry<String, Service> service: services.entrySet()) {
+                for (Map.Entry<String, Pair<Service, Persistence>> service: services.entrySet()) {
                     try {
                         if (spec.milestone == null) {
-                            if (service.getValue() instanceof Service.Extendable) {
-                                ((Service.Extendable)service.getValue()).setFilter((Service.Filter)spec.augment);
+                            if (service.getValue().first instanceof Service.Extendable) {
+                                ((Service.Extendable)service.getValue().first).setFilter((Service.Filter)spec.augment);
                             }
                         } else {
-                            ServiceMilestone.attach(service.getValue(), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
+                            ServiceMilestone.attach(service.getValue().first, spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                         }
                     } catch (Exception x) {
                         _logger.log(Level.WARNING, service.getKey(), x);
                     }
                 }
             } else if (spec.service.equals(MODULE_ALL_SERVICES)) {
-                for (Map.Entry<String, Service> service: services.entrySet()) {
+                for (Map.Entry<String, Pair<Service, Persistence>> service: services.entrySet()) {
                     try {
                         if (spec.milestone == null) {
-                            if (service.getKey().startsWith(_module + '/') && service.getValue() instanceof Service.Extendable) {
-                                ((Service.Extendable)service.getValue()).setFilter((Service.Filter)spec.augment);
+                            if (service.getKey().startsWith(_module + '/') && service.getValue().first instanceof Service.Extendable) {
+                                ((Service.Extendable)service.getValue().first).setFilter((Service.Filter)spec.augment);
                             }
                         } else {
-                            ServiceMilestone.attach(service.getValue(), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
+                            ServiceMilestone.attach(service.getValue().first, spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                         }
                     } catch (Exception x) {
                         _logger.log(Level.WARNING, service.getKey(), x);
@@ -115,9 +117,9 @@ public class ServiceAugmentation {
             } else if (spec.service.indexOf('/') > -1) {
                 try {
                     if (spec.milestone == null) {
-                        ((Service.Extendable)services.get(spec.service)).setFilter((Service.Filter)spec.augment);
+                        ((Service.Extendable)services.get(spec.service).first).setFilter((Service.Filter)spec.augment);
                     } else {
-                        ServiceMilestone.attach(services.get(spec.service), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
+                        ServiceMilestone.attach(services.get(spec.service).first, spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                     }
                 } catch (Exception x) {
                     _logger.log(Level.WARNING, spec.service, x);
@@ -125,9 +127,9 @@ public class ServiceAugmentation {
             } else {
                 try {
                     if (spec.milestone == null) {
-                        ((Service.Extendable)services.get(_module + '/' + spec.service)).setFilter((Service.Filter)spec.augment);
+                        ((Service.Extendable)services.get(_module + '/' + spec.service).first).setFilter((Service.Filter)spec.augment);
                     } else {
-                        ServiceMilestone.attach(services.get(_module + '/' + spec.service), spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
+                        ServiceMilestone.attach(services.get(_module + '/' + spec.service).first, spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                     }
                 } catch (Exception x) {
                     _logger.log(Level.WARNING, spec.service, x);
