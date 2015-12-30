@@ -12,7 +12,7 @@ public interface Open {
         public final T value;
 
         /**
-         * Constructs a Wrapper to enclose a given object.
+         * Constructs a Wrapper to enclose a non-Open object.
          *
          * @param v an object to be enclosed as a public member of this Wrapper instance.
          */

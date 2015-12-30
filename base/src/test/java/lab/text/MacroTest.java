@@ -83,14 +83,14 @@ public class MacroTest {
     @Test(groups={"functional", "text"})
     public void testTranslation() {
         Map<String, String> res = new HashMap<>();
-        res.put("text/document", "<h1>New Events:</h1>\n{@event@}\n<h1>Discounts:</h1>\n{@discount@}\n<h1>Quotes:</h1>\n{@quote:quotes@}\n{@footer@}");
+        res.put("text/document", "<h1>New Events:</h1>\n{@event@}\n<h1>Discounts:</h1>\n{@discount@}\n<h1>Quotes:</h1>\n{@quote:quotes@}\n{@footer(new)@}");
         res.put("text/event", "<p><em>{title}</em> - <i>{location}</i> {content}</p>\n");
         res.put("text/discount", "<p><em>{program}</em> - {content} {{@prefix@}@product-{quality}:products@{@suffix@}}</p>\n");
         res.put("text/product-full", "<li><em>{name}</em> - {time}{@option:options@}</li>\n");
         res.put("text/product-quick", "<li>{name} - {time}{@option:options@}</li>\n");
         res.put("text/option", ", {value}");
         res.put("text/quote", "<p>{value}</p>\n");
-        res.put("text/footer", "<h4>Thank you for visiting us, {username:-our valued customer}! ({username?our valued customer})</h4>\n");
+        res.put("text/footer", "<h4>Thank you for visiting our {1} site, {username:-our valued customer}!</h4>\n");
         res.put("text/prefix", "<ul>\n");
         res.put("text/suffix", "</ul>\n");
 

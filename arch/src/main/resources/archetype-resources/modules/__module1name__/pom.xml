@@ -23,7 +23,8 @@
           <archive>
             <manifestEntries>
               <Xillium-Domain-Name>${project.groupId}</Xillium-Domain-Name>
-              <Xillium-Module-Name>${xillium.module.name}</Xillium-Module-Name>
+              <Xillium-Module-Name>${project.artifactId}</Xillium-Module-Name>
+              <Xillium-Simple-Name>${xillium.module.name}</Xillium-Simple-Name>
             </manifestEntries>
           </archive>
         </configuration>
