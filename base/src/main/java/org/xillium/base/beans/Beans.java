@@ -3,6 +3,8 @@ package org.xillium.base.beans;
 import java.beans.*;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.regex.*;
+import org.xillium.base.Bifunctor;
 import org.xillium.base.type.typeinfo;
 import org.xillium.base.util.ValueOf;
 
@@ -504,6 +506,7 @@ public class Beans {
      * @return the converted value
      * @throws IllegalArgumentException if all conversion attempts fail
      */
+    @Deprecated
     public static <T> T valueOf(Class<T> type, String value) {
         return valueOf(type, value, null);
     }
@@ -554,6 +557,33 @@ public class Beans {
             }
         }
         return destination;
+    }
+
+    /**
+     * Updates an object by modifying all of its public fields that match a certain name pattern or a super type
+     * with a transforming function.
+     *
+     * @param <T> the class of the object
+     * @param <V> the class of the object's public fields to be updated
+     * @param object a Java object
+     * @param type an upper bound Class matching, or boxing, the type of the data members
+     * @param pattern an optional regex that matches the fields' names
+     * @param updater a Bifunctor
+     * @return the same object with fields updated
+     */
+    public static <T, V> T update(T object, Class<V> type, String pattern, Bifunctor<V, String, V> updater) {
+        if (type.isPrimitive()) {
+            throw new IllegalArgumentException("Primitive type must be boxed");
+        }
+        Pattern regex = pattern != null ? Pattern.compile(pattern) : null;
+        for (Field field: object.getClass().getFields()) {
+            if ((regex == null || regex.matcher(field.getName()).matches()) && type.isAssignableFrom(boxPrimitive(field.getType()))) {
+                try {
+                    field.set(object, updater.invoke(field.getName(), type.cast(field.get(object))));
+                } catch (Exception x) {}
+            }
+        }
+        return object;
     }
 
     /**

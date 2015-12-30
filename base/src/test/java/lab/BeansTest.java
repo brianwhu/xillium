@@ -1,5 +1,6 @@
 package lab;
 
+import org.xillium.base.Bifunctor;
 import org.xillium.base.beans.*;
 import org.testng.annotations.*;
 
@@ -61,6 +62,20 @@ public class BeansTest {
         Beans.fill(b, a);
         System.out.println("After:  B = " + b.name + ", " + b.score + ", " + b.desc);
         assert b.score.equals(a.score) : "Failed to fill object properties";
+    }
+
+    @Test(groups={"beans", "beans-object"})
+    public void testObjectUpdate() throws Exception {
+        B a = new B("Good", 10, "morning");
+        System.out.println("Before: A = " + a.name + ", " + a.score + ", " + a.desc);
+        Beans.update(a, String.class, null, new Bifunctor<String, String, String>() {
+            public String invoke(String name, String value) {
+                return name.equals("name") ? value + "-updated" : value.toUpperCase();
+            }
+        });
+        System.out.println("After:  A = " + a.name + ", " + a.score + ", " + a.desc);
+        assert a.name.equals("Good-updated") : "Failed to update object properties";
+        assert a.desc.equals("MORNING") : "Failed to update object properties";
     }
 
     @Test(groups={"beans", "beans-valueof"})
