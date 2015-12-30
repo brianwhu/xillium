@@ -1,5 +1,7 @@
 package org.xillium.data.persistence;
 
+import org.xillium.base.Trifunctor;
+import org.xillium.base.text.GuidedTransformer;
 import org.xillium.base.beans.Beans;
 import org.xillium.data.*;
 import java.sql.*;
@@ -131,17 +133,8 @@ public class ParametricStatement {
         }
     } else {
         List<Param> params = new ArrayList<Param>();
-        Matcher matcher = PARAM_SYNTAX.matcher(sql);
-        while (matcher.find()) {
-            //System.err.println("[" + matcher.start() + ", " + matcher.end() + "] " + matcher.group());
-            try {
-                params.add(new Param(matcher.group(1), java.sql.Types.class.getField(matcher.group(2)).getInt(null)));
-            } catch (Exception x) {
-                throw new IllegalArgumentException("Parameter specification", x);
-            }
-        }
+        _sql = transformer.invoke(new StringBuilder(), params, sql).toString();
         _params = params.toArray(new Param[params.size()]);
-        _sql = matcher.replaceAll("?");
     }
         return this;
     }
@@ -332,6 +325,22 @@ public class ParametricStatement {
     }
 
     /**
+     * Executes an INSERT statement without requesting for generated keys. This method is more lightweight than
+     * {@link executeInsert(Connection, DataObject, boolean)} as it does not create an array for the generated keys.
+     *
+     * @return the number of rows inserted.
+     */
+    public int executeInsert(Connection conn, DataObject object) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(_sql, Statement.NO_GENERATED_KEYS);
+        try {
+            load(statement, object);
+            return statement.executeUpdate();
+        } finally {
+            statement.close();
+        }
+    }
+
+    /**
      * Executes a batch INSERT statement.
      *
      * @return the number of rows inserted.
@@ -421,7 +430,25 @@ public class ParametricStatement {
     }
 
     private static final Param[] NoParams = new Param[0];
-    private static final Pattern PARAM_SYNTAX = Pattern.compile(":([-+]?\\w+\\??):(\\w+)");
+    private static final Pattern PARAM_SYNTAX = Pattern.compile(":([-+]?\\p{Alpha}\\w*\\??):(\\p{Alpha}\\w*)");
+    private static final Pattern QUOTE_SYNTAX = Pattern.compile("'([^']*)'");
+    private static final GuidedTransformer<List<Param>> transformer = new GuidedTransformer<List<Param>>(QUOTE_SYNTAX,
+        GuidedTransformer.Action.COPY,
+        new GuidedTransformer<List<Param>>(PARAM_SYNTAX,
+            new Trifunctor<StringBuilder, StringBuilder, List<Param>, Matcher>() {
+                public StringBuilder invoke(StringBuilder sb, List<Param> params, Matcher matcher) {
+                    try {
+                        params.add(new Param(matcher.group(1), java.sql.Types.class.getField(matcher.group(2)).getInt(null)));
+                    } catch (Exception x) {
+                        throw new IllegalArgumentException("Parameter specification :" + matcher.group(1) + ':' + matcher.group(2), x);
+                    }
+                    return sb.append("?");
+                }
+            },
+            GuidedTransformer.Action.COPY
+        )
+    );
+
     private /*final*/ Param[] _params;
     protected String _sql;
     protected String _tag;

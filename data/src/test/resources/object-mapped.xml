@@ -3,7 +3,7 @@
 
     <persist:parametric-statement><?assemble name="CreateMembership"?>
         <![CDATA[
-        INSERT INTO MEMBERSHIP(EMAIL,FIRST_NAME,LAST_NAME) VALUES('test@xillium.org', 'System', 'Tester')
+        INSERT INTO MEMBERSHIP(EMAIL,FIRST_NAME,LAST_NAME) VALUES('test@xillium.org', 'System', ':email:VARCHAR')
         ]]>
     </persist:parametric-statement>
 
@@ -15,7 +15,7 @@
 
     <persist:object-mapped-query class="lab.data.persistence.TestPersistence$Membership"><?assemble name="SelectMembership"?>
         <![CDATA[
-        SELECT * FROM MEMBERSHIP WHERE EMAIL = :email:VARCHAR
+        SELECT M.*, 'YYYY-MM-DD HH24:MI:SS' F FROM MEMBERSHIP M WHERE EMAIL = :email:VARCHAR
         ]]>
     </persist:object-mapped-query>
 
