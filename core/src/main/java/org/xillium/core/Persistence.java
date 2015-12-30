@@ -140,6 +140,20 @@ public class Persistence {
     }
 
     /**
+     * Executes an INSERT statement.
+     *
+     * @see ParametricStatement#executeInsert(Connection, DataObject)
+     */
+    public int executeInsert(String name, DataObject object) throws SQLException {
+        ParametricStatement statement = _statements.get(name);
+        if (statement != null) {
+            return statement.executeInsert(DataSourceUtils.getConnection(_dataSource), object);
+        } else {
+            throw new RuntimeException("ParametricStatement '" + name + "' not found");
+        }
+    }
+
+    /**
      * Executes a batch INSERT statement.
      */
     public int executeInsert(String name, DataObject[] objects) throws SQLException {
