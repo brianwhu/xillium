@@ -30,8 +30,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.7</source>
+          <target>1.7</target>
           <compilerArgument>-Xlint:all</compilerArgument>
           <showWarnings>true</showWarnings>
           <showDeprecation>true</showDeprecation>
@@ -72,17 +72,17 @@
     <dependency>
       <groupId>org.xillium</groupId>
       <artifactId>xillium-base</artifactId>
-      <version>1.1-SNAPSHOT</version>
+      <version>1.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.xillium</groupId>
       <artifactId>xillium-data</artifactId>
-      <version>1.1-SNAPSHOT</version>
+      <version>1.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.xillium</groupId>
       <artifactId>xillium-core</artifactId>
-      <version>1.1-SNAPSHOT</version>
+      <version>1.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.testng</groupId>
