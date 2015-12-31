@@ -11,6 +11,11 @@
     <packaging>pom</packaging>
     <version>1.1.0</version>
     <name>Xillium Platform</name>
+    <description>
+        The Xillium Service Platform is put in place to allow fast and quality construction
+        of enterprise solutions that are secure, performant, capacious, agile, and robust,
+        by following a well-chosen set of time-honored approaches and technologies.
+    </description>
     <url>http://platform.xillium.org</url>
 
     <modules>
@@ -47,6 +52,35 @@
                 <version>2.16</version>
                 <configuration>
                     <argLine>-Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                    <id>attach-sources</id>
+                    <goals>
+                        <goal>jar</goal>
+                    </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.3</version>
+                <executions>
+                    <execution>
+                    <id>attach-javadocs</id>
+                    <goals>
+                        <goal>jar</goal>
+                    </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <additionalparam>-Xdoclint:none</additionalparam>
                 </configuration>
             </plugin>
             <plugin>
@@ -89,4 +123,32 @@
         </dependency>
     </dependencies>
 
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>A business-friendly OSS license</comments>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>brianwhu</id>
+            <name>Brian Hu</name>
+            <email>brian.hu@xillium.org</email>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>America/New_York</timezone>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git@github.com:brianwhu/xillium.git</connection>
+        <developerConnection>scm:git:git@github.com:brianwhu/xillium.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/brianwhu/xillium</url>
+    </scm>
 </project>
