@@ -289,6 +289,7 @@ public class ServicePlatform extends ManagedPlatform {
                         JarEntry entry;
                         ByteArrayInputStream serviceConfiguration = null;
                         List<ByteArrayInputStream> resources = new ArrayList<>();
+                        boolean usingStorage = false;
                         while ((entry = jis.getNextJarEntry()) != null) {
                             String jarname = entry.getName();
                             if (jarname == null) continue;
@@ -298,6 +299,7 @@ public class ServicePlatform extends ManagedPlatform {
                                 serviceConfiguration = new ByteArrayInputStream(Bytes.read(jis));
                             } else if (jarname.startsWith(STORAGE_PREFIX) && jarname.endsWith(".xml")) {
                                 _logger.config("StorageConfiguration:" + module.path + ":" + jarname);
+                                usingStorage = true;
                                 resources.add(new ByteArrayInputStream(Bytes.read(jis)));
                             } else if (VALIDATION_DIC.equals(jarname)) {
                                 _logger.config("ValidationDictionary:" + module.path + ":" + jarname);
@@ -317,6 +319,8 @@ public class ServicePlatform extends ManagedPlatform {
 
                         if (info.persistence.second != null) {
                             factory.setBurnedIn(StorageConfiguration.class, info.persistence.second.getStatementMap(), module.simple);
+                        } else if (usingStorage) {
+                            throw new MissingResourceException("No persistence for storage, module: " + module.name, null, null);
                         }
                         factory.setBurnedIn(TextResources.class, module.simple);
                         for (ByteArrayInputStream stream: resources) {
