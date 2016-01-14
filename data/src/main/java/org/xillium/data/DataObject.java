@@ -8,7 +8,7 @@ import org.xillium.data.persistence.crud.tablename;
 /**
  * A data object.
  */
-public interface DataObject {
+public interface DataObject extends org.xillium.base.Open {
     /**
      * An implementation of DataObject that defines no members.
      */
