@@ -23,8 +23,8 @@ public class ValidationTest {
 
         //Dictionary dictionary = new Dictionary("core").addDataDictionary(StandardDataTypes.class);
         //Dictionary dictionary = (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory(), Trace.g.std).build("lab/validation/dictionary.xml");
-        Dictionary dictionary = (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory()).build(getClass().getResourceAsStream("/validation/dictionary.xml"));
-        System.err.println("Dictionary = " + Beans.toString(dictionary));
+        Reifier reifier = new XMLBeanAssembler(new DefaultObjectFactory()).build(getClass().getResourceAsStream("/validation/reifier.xml"), Reifier.class);
+        System.err.println("Reifier = " + Beans.toString(reifier));
         System.err.println("SubmitPurchaseOrderData = " + DataObject.Util.describe(lab.data.validation.SubmitPurchaseOrderData.class));
 
         DataBinder binder = new DataBinder();
@@ -34,9 +34,9 @@ public class ValidationTest {
 
         Trace.g.configure(new NullTrace());
         long now = System.currentTimeMillis();
-        DataObject object = dictionary.collect(new lab.data.validation.SubmitPurchaseOrderData(), binder);
+        DataObject object = reifier.collect(new lab.data.validation.SubmitPurchaseOrderData(), binder);
         //for (int i = 0; i < 300; ++i) {
-            //btrd = dictionary.collect(btrd, binder);
+            //btrd = reifier.collect(btrd, binder);
         //}
         long elapsed = System.currentTimeMillis() - now;
         System.err.println("Time = " + elapsed + ", DataObject =");
@@ -70,14 +70,14 @@ public class ValidationTest {
         binder.put("multiple", "A, C");
         binder.put("price", "2015");
 
-        Dictionary dict = (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory()).build(getClass().getResourceAsStream("/validation/dictionary.xml"));
+        Reifier reifier = new XMLBeanAssembler(new DefaultObjectFactory()).build(getClass().getResourceAsStream("/validation/reifier.xml"), Reifier.class);
         try {
-            Special special = dict.collect(new Special(), binder);
+            Special special = reifier.collect(new Special(), binder);
             assert false;
         } catch (Exception x) {}
 
         binder.put("price", "2000");
-        Special special = dict.collect(new Special(), binder);
+        Special special = reifier.collect(new Special(), binder);
         Special expected = new Special(Options.B, new java.math.BigInteger("2000"), Flags.valueOf(Options.class, "A, C"));
         assert expected.single == special.single;
         assert expected.price.equals(special.price);

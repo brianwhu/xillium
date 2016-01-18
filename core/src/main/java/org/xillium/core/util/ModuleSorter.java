@@ -4,27 +4,8 @@ import java.util.*;
 
 
 public class ModuleSorter {
-    public static class Entry {
-        public final String domain, name, simple, base, path;
 
-        public Entry(String d, String n, String s, String b, String p) {
-            domain = d;
-            name = n;
-            simple = s;
-            base = b;
-            path = p;
-        }
-
-        public boolean isSpecial() {
-            return base != null && base.length() > 0;
-        }
-
-        public String toString() {
-            return name + ':' + base + ':' + path;
-        }
-    }
-
-    public void add(Entry entry) {
+    public void add(ServiceModule entry) {
         _map.put(entry.name, entry);
     }
 
@@ -33,19 +14,19 @@ public class ModuleSorter {
     }
 
     public class Sorted {
-        public Iterator<Entry> specials() {
+        public Iterator<ServiceModule> specials() {
             return _special.iterator();
         }
 
-        public Iterator<Entry> regulars() {
+        public Iterator<ServiceModule> regulars() {
             return _regular.iterator();
         }
 
-        private final SortedSet<Entry> _special = new TreeSet<Entry>(new Comparator());
-        private final List<Entry> _regular = new ArrayList<Entry>();
+        private final SortedSet<ServiceModule> _special = new TreeSet<ServiceModule>(new Comparator());
+        private final List<ServiceModule> _regular = new ArrayList<ServiceModule>();
 
-        Sorted(Collection<Entry> entries) {
-            for (Entry e: entries) {
+        Sorted(Collection<ServiceModule> entries) {
+            for (ServiceModule e: entries) {
                 if (e.isSpecial()) {
                     _special.add(e);
                 } else {
@@ -55,9 +36,9 @@ public class ModuleSorter {
         }
     }
 
-    private final Map<String, Entry> _map = new HashMap<String, Entry>();
+    private final Map<String, ServiceModule> _map = new HashMap<String, ServiceModule>();
 
-    private class Comparator implements java.util.Comparator<Entry> {
+    private class Comparator implements java.util.Comparator<ServiceModule> {
         /**
          * Order by "base" relationship.
          *
@@ -68,14 +49,14 @@ public class ModuleSorter {
          *
          * @throws IllegalArgumentException if a dependency loop is detected
          */
-        public int compare(Entry o1, Entry o2) {
+        public int compare(ServiceModule o1, ServiceModule o2) {
             if (o1.name.equals(o2.name)) {
                 return 0;
             } else {
                 // is o1 based on o2?
                 Set<String> seen = new HashSet<String>();
                 seen.add(o1.name);
-                Entry superier = _map.get(o1.base);
+                ServiceModule superier = _map.get(o1.base);
                 while (superier != null) {
                     if (superier.name.equals(o2.name)) return 1;
                     if (seen.contains(superier.name)) {
