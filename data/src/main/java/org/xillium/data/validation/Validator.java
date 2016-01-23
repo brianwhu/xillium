@@ -47,40 +47,40 @@ public class Validator {
 
         typeinfo info = field.getAnnotation(typeinfo.class);
         _valueOf = info == null ? new ValueOf(type) : new ValueOf(type, info.value());
-                try {
-                    ranges s = field.getAnnotation(ranges.class);
-                    if (s != null) {
-                        _ranges = new Range[s.value().length];
-                        for (int i = 0; i < _ranges.length; ++i) {
-                            _ranges[i] = new Range(
-                                (Comparable)_valueOf.invoke(s.value()[i].min()),
-                                (Comparable)_valueOf.invoke(s.value()[i].max()),
-                                s.value()[i].inclusive()
-                            );
-                        }
-                    } else {
-                        range r = field.getAnnotation(range.class);
-                        if (r != null) {
-                            _ranges = new Range[1];
-                            _ranges[0] = new Range(
-                                (Comparable)_valueOf.invoke(r.min()),
-                                (Comparable)_valueOf.invoke(r.max()),
-                                r.inclusive()
-                            );
-                        }
-                    }
-
-                    pattern p = field.getAnnotation(pattern.class);
-                    _pattern = p != null ? Pattern.compile(p.value()) : null;
-
-                    size z = field.getAnnotation(size.class);
-                    _size = (z != null && z.value() > 0) ? z.value() : 0;
-
-                    values v = field.getAnnotation(values.class);
-                    _values = v != null ? (_valueOf.isString() ? v.value() : Objects.apply(new Object[v.value().length], v.value(), _valueOf)) : null;
-                } catch (ClassCastException x) {
-                    throw new IllegalArgumentException("Type is not Comparable yet has range specifications");
+        try {
+            ranges s = field.getAnnotation(ranges.class);
+            if (s != null) {
+                _ranges = new Range[s.value().length];
+                for (int i = 0; i < _ranges.length; ++i) {
+                    _ranges[i] = new Range(
+                        (Comparable)_valueOf.invoke(s.value()[i].min()),
+                        (Comparable)_valueOf.invoke(s.value()[i].max()),
+                        s.value()[i].inclusive()
+                    );
                 }
+            } else {
+                range r = field.getAnnotation(range.class);
+                if (r != null) {
+                    _ranges = new Range[1];
+                    _ranges[0] = new Range(
+                        (Comparable)_valueOf.invoke(r.min()),
+                        (Comparable)_valueOf.invoke(r.max()),
+                        r.inclusive()
+                    );
+                }
+            }
+
+            pattern p = field.getAnnotation(pattern.class);
+            _pattern = p != null ? Pattern.compile(p.value()) : null;
+
+            size z = field.getAnnotation(size.class);
+            _size = (z != null && z.value() > 0) ? z.value() : 0;
+
+            values v = field.getAnnotation(values.class);
+            _values = v != null ? (_valueOf.isString() ? v.value() : Objects.apply(new Object[v.value().length], v.value(), _valueOf)) : null;
+        } catch (ClassCastException x) {
+            throw new IllegalArgumentException("Type is not Comparable yet has range specifications");
+        }
     }
 
     public String getName() {

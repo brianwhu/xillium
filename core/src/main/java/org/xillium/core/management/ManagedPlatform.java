@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 import javax.management.*;
 import javax.script.*;
 import javax.servlet.*;
+import org.xillium.base.Functor;
 import org.xillium.base.beans.Throwables;
 import org.xillium.base.util.Pair;
 import org.xillium.data.*;
@@ -32,11 +33,6 @@ import org.xillium.core.util.*;
  */
 public abstract class ManagedPlatform extends ManagementService implements ServletContextListener {
     private static final Logger _logger = Logger.getLogger(ManagedPlatform.class.getName());
-
-    protected static final String DOMAIN_NAME = "Xillium-Domain-Name";
-    protected static final String MODULE_NAME = "Xillium-Module-Name";
-    protected static final String SIMPLE_NAME = "Xillium-Simple-Name";
-    protected static final String MODULE_BASE = "Xillium-Module-Base";
 
     public static final String INSTANCE = "x!/mgmt";
 
@@ -131,32 +127,16 @@ public abstract class ManagedPlatform extends ManagementService implements Servl
      * Detects service modules in a given set of JARs, and returns them in a sorted list.
      */
     protected ModuleSorter.Sorted sort(ServletContext context, Set<String> jars) {
-        ModuleSorter sorter = new ModuleSorter();
+        final ModuleSorter sorter = new ModuleSorter();
 
         try {
             _logger.config("There are " + jars.size() + " resource paths");
-
-            for (String jar : jars) {
-                try {
-                    _logger.config("... " + jar);
-                    JarInputStream jis = new JarInputStream(jar.startsWith("/") ? context.getResourceAsStream(jar) : new URL(jar).openStream());
-                    try {
-                        Attributes attrs = jis.getManifest().getMainAttributes();
-                        String d = attrs.getValue(DOMAIN_NAME), n = attrs.getValue(MODULE_NAME), s = attrs.getValue(SIMPLE_NAME);
-                        if (d != null && n != null && s != null) {
-                            sorter.add(new ModuleSorter.Entry(d, n, s, attrs.getValue(MODULE_BASE), jar));
-                        }
-                    } finally {
-                        jis.close();
-                    }
-                } catch (IOException x) {
-                    // report this failure and move on
-                    _logger.log(Level.WARNING, "Error during jar inspection, ignored", x);
-                } catch (Exception x) {
-                    // ignore this jar
-                    _logger.config("Unknown resource ignored");
+            ServiceModule.scan(context, jars, new Functor<Void, ServiceModule>() {
+                public Void invoke(ServiceModule module) {
+                    sorter.add(module);
+                    return null;
                 }
-            }
+            }, _logger);
         } catch (Exception x) {
             throw new RuntimeException("Failed to sort service modules", x);
         }

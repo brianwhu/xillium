@@ -2,6 +2,7 @@ package lab;
 
 import java.util.*;
 import org.xillium.core.util.ModuleSorter;
+import org.xillium.core.util.ServiceModule;
 
 import org.testng.annotations.*;
 
@@ -48,7 +49,7 @@ public class ModuleSorterTest {
                 next = random.nextInt(name.length);
             } while (set.contains(next));
             set.add(next);
-            sorter.add(new ModuleSorter.Entry("domain", name[next], "simple", base[next], "/path/to/whatever.jar"));
+            sorter.add(new ServiceModule("domain", name[next], "simple", base[next], "/path/to/whatever.jar"));
             System.out.println(name[next]);
         }
 
@@ -75,8 +76,8 @@ public class ModuleSorterTest {
         ModuleSorter sorter = load(NAME, BASE);
         ModuleSorter.Sorted sorted = sorter.sort();
 
-        List<ModuleSorter.Entry> list = new ArrayList<ModuleSorter.Entry>();
-        Iterator<ModuleSorter.Entry> it = sorted.specials();
+        List<ServiceModule> list = new ArrayList<ServiceModule>();
+        Iterator<ServiceModule> it = sorted.specials();
         while (it.hasNext()) {
             list.add(it.next());
         }

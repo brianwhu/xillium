@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<validation:reifier xmlns:validation="java://org.xillium.data.validation">
+    <class type-set="java:org.xillium.data.validation.StandardDataTypes"/>
+</validation:reifier>
+

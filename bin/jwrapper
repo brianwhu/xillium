@@ -11,9 +11,9 @@ x=`dirname $0`
 b=`basename $0`
 if j=`cygpath -m $x/$b.jar 2> /dev/null`
 then
-    java $d -jar $j $*
+    java $d -jar $j "$@"
 else
-    java $d -jar $x/$b.jar $*
+    java $d -jar $x/$b.jar "$@"
 fi
 
 ##############################################################################
