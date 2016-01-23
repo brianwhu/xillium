@@ -25,6 +25,9 @@ public class Strings {
      * Converts an array of bytes into a hexadecimal representation.
      *
      * This implementation is significantly faster than DatatypeConverter.printHexBinary().
+     *
+     * @param raw the byte array to convert to a hexadecimal String
+     * @return a hexadecimal String representing the bytes
      */
     public static String toHexString(byte[] raw) {
         byte[] hex = new byte[2 * raw.length];

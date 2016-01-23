@@ -14,7 +14,7 @@ import org.xillium.base.beans.Strings;
 /**
  * This is a macro processor that can handle 2 types of macro expansions.
  * <ol>
- * <li>Placeholder expansion - see {@link Macro#expand(String, Object) Macro.expand} method and
+ * <li>Placeholder expansion - see {@link Macro#expand(String, Object, String[]) Macro.expand} method and
  *     {@link Macro#expand(String, Pattern, Functor<Object, String>)} method</li>
  * <li>Reference expansion - insertion of another markup snippet with its own embedded placeholders and references</li>
  * </ol>
@@ -135,7 +135,7 @@ public class Macro {
      * @param markup the original text containing placeholders
      * @param object an object providing data members as values to the placeholders
      * @return the text will all placeholders expanded
-     * @see Macro#expand(String, Pattern, Functor<Object, String>) expand
+     * @see Macro.expand(String, Pattern, Functor<Object, String>, String[])
      */
     public static String expand(String markup, final Object object, String[] args) {
         return expand(markup, PLACEHOLDER, new Functor<Object, String>() {
@@ -165,8 +165,8 @@ public class Macro {
      * @param markup the original text containing placeholders
      * @param placeholder a capturing regex pattern
      * @param provider a functor that maps placeholder keys to corresponding text strings
-     * @param optional positional arguments
-     * @return the text will all placeholders expanded
+     * @param args optional positional arguments
+     * @return the text with all placeholders expanded
      */
     public static String expand(String markup, Pattern placeholder, Functor<Object, String> provider, String[] args) {
         while (true) {

@@ -11,10 +11,14 @@ public class Singleton<T> {
     private volatile T _value;
 
     /**
-     * Tests whether the referenced object is missing. This implementation simply tests reference nullity.
+     * Tests whether the referenced object is missing, where the meaning of "missing" is defined by implementation.
+     * This implementation simply tests reference nullity.
+     *
+     * @param object the object to check
+     * @return whether the object is missing
      */
-    protected boolean isMissing(T result) {
-        return result == null;
+    protected boolean isMissing(T object) {
+        return object == null;
     }
 
     /**

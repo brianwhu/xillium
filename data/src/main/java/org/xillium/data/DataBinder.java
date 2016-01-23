@@ -27,19 +27,27 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
     private final Map<String, Object> _named = new HashMap<String, Object>();
     private final DataBinder _lower;
 
+    /**
+     * Creates a standalone DataBinder.
+     */
     public DataBinder() {
         _lower = null;
     }
 
     /**
-     * Creates a DataBinder that sits on top of the given binder.
+     * Creates a DataBinder that sits on top of another binder.
+     *
+     * @param binder an existing binder
      */
     public DataBinder(DataBinder binder) {
         _lower = binder;
     }
 
     /**
-     * Creates a DataBinder that sits on top of and at the same time is placed as a named object inside the given binder.
+     * Creates a DataBinder that sits on top of and at the same time is placed as a named object inside another binder.
+     *
+     * @param binder an existing binder
+     * @param name the name of this new binder inside the existing binder
      */
     public DataBinder(DataBinder binder, String name) {
         _lower = binder;
@@ -52,6 +60,9 @@ public class DataBinder extends HashMap<String, String> implements ResultSetWork
 
     /**
      * Finds a string value from all data binders, starting from the current binder searching downwards.
+     *
+     * @param name the name of the value
+     * @return the first value found
      */
     public String find(String name) {
         String value = null;

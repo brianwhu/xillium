@@ -139,6 +139,11 @@ public class CachedResultSet {
 
     /**
      * Retrieves the rows from a collection of Objects, where a subset of the objects' (of type T) <i>public fields</i> are taken as result set columns.
+     *
+     * @param <T> the type of the objects in the collection
+     * @param collection a collection of objects
+     * @param columns names of a select subset of each object's public fields
+     * @return the result set from the list of objects
      */
     public static <T> CachedResultSet chooseFields(Collection<T> collection, String... columns) {
         CachedResultSet rs = new CachedResultSet(columns, new ArrayList<Object[]>());
@@ -168,6 +173,12 @@ public class CachedResultSet {
 
     /**
      * Retrieves the contents of this result set as a List of DataObjects.
+     *
+     * @param <T> the type of the objects to be in the list
+     * @param type the class of the objects to be in the list
+     * @return the list of objects
+     * @throws InstantiationException if new instances of the given class can't be created
+     * @throws IllegalAccessException if the fields of the given type can't be read or updated
      */
     public <T extends DataObject> List<T> asList(Class<T> type) throws InstantiationException, IllegalAccessException {
         Map<String, Field> fields = new HashMap<String, Field>();
@@ -190,6 +201,9 @@ public class CachedResultSet {
 
     /**
      * Explicitly creates a CachedResultSet.
+     *
+     * @param columns the column names
+     * @param rows the data rows
      */
     public CachedResultSet(String[] columns, List<Object[]> rows) {
         this.columns = columns;
@@ -198,6 +212,10 @@ public class CachedResultSet {
 
     /**
      * Renames the columns of a CachedResultSet.
+     *
+     * @param names the new names of the columns, starting from the first column. If not enought new names are provided,
+     *        the rest columns keep their original name.
+     * @return this object
      */
     public CachedResultSet rename(String... names) {
         for (int i = 0; i < names.length; ++i) {
@@ -208,6 +226,8 @@ public class CachedResultSet {
 
     /**
      * Builds a name-to-column index for quick access to data by columm names.
+     *
+     * @return a {@ Map} that maps column names to column positions starting from 0
      */
     public Map<String, Integer> buildIndex() {
         Map<String, Integer> index = new HashMap<String, Integer>();
@@ -219,6 +239,9 @@ public class CachedResultSet {
 
     /**
      * Inside an object: serialized the cached result set into JSON.
+     *
+     * @param js a JSONBuilder to contain generated JSON text
+     * @return the JSONBuilder
      */
     public JSONBuilder toJSON(JSONBuilder jb) {
         return jb.append('{').serialize("columns", columns).append(',').serialize("rows", rows).append('}');
