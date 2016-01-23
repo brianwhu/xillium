@@ -12,7 +12,7 @@ import org.xillium.core.management.WithCache;
 /**
  * An Authorizer that implements a prefix-based authorization policy.
  */
-public class StandardAuthorizer extends ManagedComponent implements Authorizer, PlatformLifeCycleAware, WithCache {
+public class StandardAuthorizer extends ManagedComponent implements Authorizer, PlatformAware, WithCache {
 	private static final Logger _logger = Logger.getLogger(StandardAuthorizer.class.getName());
 
 	private final Map<String, Permission[]> _roles = new HashMap<String, Permission[]>(); // a map from role name to authorized function names
