@@ -9,18 +9,17 @@ import java.util.logging.*;
 import javax.management.*;
 import javax.servlet.*;
 import javax.servlet.annotation.WebListener;
-import javax.servlet.http.*;
 
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.Lifecycle;
+import org.springframework.context.*;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.context.support.XmlWebApplicationContext;
+import org.xillium.base.Functor;
 import org.xillium.base.util.Bytes;
 import org.xillium.base.util.Pair;
 import org.xillium.base.beans.*;
@@ -29,13 +28,14 @@ import org.xillium.core.conf.*;
 import org.xillium.core.management.*;
 import org.xillium.core.intrinsic.*;
 import org.xillium.core.util.ModuleSorter;
+import org.xillium.core.util.ServiceModule;
 
 
 /**
  * Service Platform - initialization and termination.
  */
 @WebListener
-public class ServicePlatform extends ManagedPlatform {
+public final class ServicePlatform extends ManagedPlatform {
     private static final Logger _logger = Logger.getLogger(ServicePlatform.class.getName());
 
     private static final String VALIDATION_DIC = "validation-dictionary.xml";
@@ -43,59 +43,31 @@ public class ServicePlatform extends ManagedPlatform {
     private static final String STORAGE_PREFIX = "storage-"; // still a special case as it depends on the Persistence bean
     private static final String XILLIUM_PREFIX = "xillium-";
 
+    private static final String CONTROLLING = "controlling";
     private static final String PERSISTENCE = "persistence";
-
-    private static class PlatformLifeCycleAwareDef {
-        PlatformLifeCycleAware bean;
-        String module;
-
-        PlatformLifeCycleAwareDef(PlatformLifeCycleAware b, String m) {
-            bean = b;
-            module = m;
-        }
-    }
 
     private static class ServiceModuleInfo {
         Pair<Persistence, Persistence> persistence = new Pair<>(null, null); // root and latest
-        List<ServiceAugmentation> augmentations = new ArrayList<ServiceAugmentation>();
-        Map<String, String> descriptions = new HashMap<String, String>();
-        List<PlatformLifeCycleAwareDef> plcas = new ArrayList<PlatformLifeCycleAwareDef>(); // plca in regular modules
+        List<ServiceAugmentation> augmentations = new ArrayList<>();
+        Map<String, String> descriptions = new HashMap<>();
+        List<Pair<String, PlatformAware>> plcas = new ArrayList<>(); // plca in regular modules
         Hashtable<String, String> attrs = new Hashtable<>(); // jmx object name attributes
     }
 
-    private final Stack<ObjectName> _manageables = new Stack<ObjectName>();
-    private final Stack<List<PlatformLifeCycleAwareDef>> _plca = new Stack<List<PlatformLifeCycleAwareDef>>();
+    private final Stack<ApplicationContext> _applc = new Stack<>();
+    private final Stack<ObjectName> _manageables = new Stack<>();
+    private final Stack<List<Pair<String, PlatformAware>>> _plca = new Stack<>();
     private static final org.xillium.data.validation.Dictionary _dict = new org.xillium.data.validation.Dictionary();
 
+    private Set<String> _packaged, _extended;
 
-    /**
-     * Reloads the platform with the given application context at its root.
-     *
-     * <p>This method is useful in the situation where a root web application context is <i>not</i> provided and module application
-     * contexts are <i>not</i> to be loaded automatically but on demand.</p>
-     *
-     * <p>If a root web application context has been provided, the root web application context and all module application contexts
-     * are loaded automatically upon servlet context initialization. Consequently, calling this method won't have any effect.</p> 
-     */
-    public static ApplicationContext reload(ApplicationContext ac) {
-        ((ServicePlatform)ServicePlatform.getService(ManagedPlatform.INSTANCE).first).realize(ac);
-        return ac;
-    }
-
-    /**
-     * Unloads the platform.
-     *
-     * <p>If this method is never called, all application contexts will be unloaded when the servlet context is destroyed.</p>
-     */
-    public static void unload() {
-        ((ServicePlatform)ServicePlatform.getService(ManagedPlatform.INSTANCE).first).destroy();
-    }
-
+/*
     public ServicePlatform() {
         _logger.log(Level.INFO, "Start HTTP Service Platform " + getClass().getName());
         _logger.log(Level.INFO, "java.util.logging.config.file=" + System.getProperty("java.util.logging.config.file"));
         _logger.log(Level.INFO, "java.util.logging.config.class=" + System.getProperty("java.util.logging.config.class"));
     }
+*/
 
     static Pair<Service, Persistence> getService(String id) {
         return _registry.get(id);
@@ -106,25 +78,59 @@ public class ServicePlatform extends ManagedPlatform {
     }
 
     /**
-     * Tries to load an XML web application contenxt upon servlet context initialization. If the web application context is
-     * successfully refreshed and started, continues to load all module application contexts in the application.
+     * Tries to load an XML web application contenxt upon servlet context initialization. If a PlatformControl is detected
+     * in the web application contenxt, registers it with the platform MBean server and stop. Otherwise, continues to load all
+     * module contexts in the application.
      */
     @Override
     public void contextInitialized(ServletContextEvent event) {
         super.contextInitialized(event);
+        _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
+        _packaged = _context.getResourcePaths("/WEB-INF/lib/");
+        _extended = discover(System.getProperty("xillium.service.ExtensionsRoot"));
+
+        // servlet mappings must be registered before this method returns
+        Functor<Void, ServiceModule> functor = new Functor<Void, ServiceModule>() {
+            public Void invoke(ServiceModule module) {
+                _context.getServletRegistration("dispatcher").addMapping("/" + module.simple + "/*");
+                return null;
+            }
+        };
+        ServiceModule.scan(_context, _packaged, functor, _logger);
+        ServiceModule.scan(_context, _extended, functor, _logger);
 
         try {
             XmlWebApplicationContext wac = new XmlWebApplicationContext();
             wac.setServletContext(_context);
             wac.refresh();
             wac.start();
-            realize(wac);
+
+            try {
+                // let the life cycle control take over
+                PlatformControl controlling = wac.getBean(CONTROLLING, PlatformControl.class);
+                ManagementFactory.getPlatformMBeanServer().registerMBean(
+                    controlling.bind(this, wac, Thread.currentThread().getContextClassLoader()),
+                    new ObjectName(controlling.getClass().getPackage().getName(), "type", controlling.getClass().getSimpleName())
+                );
+            } catch (Exception x) {
+                // go ahead with platform realization
+                realize(wac, null);
+            }
         } catch (BeanDefinitionStoreException x) {
             _logger.warning(Throwables.getFirstMessage(x));
         }
     }
 
-    private void realize(ApplicationContext wac) {
+    /**
+     * Reloads the platform with the given application context at its root.
+     *
+     * <p>If a PlatformControl is detected in the root web application context, module application contexts are <i>not</i> to be
+     * loaded automatically when the servlet context is initialized. Consequently, this method can be called later to load all
+     * module application contexts.</p>
+     *
+     * <p>This method can be called also to reload the platform, after the platform is unloaded by a call to unload().</p>
+     */
+    public void realize(ApplicationContext wac, ConfigurableApplicationContext child) {
         if (WebApplicationContextUtils.getWebApplicationContext(_context) == null) {
             _context.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, wac);
         } else {
@@ -132,7 +138,7 @@ public class ServicePlatform extends ManagedPlatform {
             return;
         }
 
-        _dict.addTypeSet(org.xillium.data.validation.StandardDataTypes.class);
+        if (child != null) wac = child;
 
         ServiceModuleInfo info = new ServiceModuleInfo();
         if (wac.containsBean(PERSISTENCE)) { // persistence may not be there if persistent storage is not required
@@ -141,10 +147,10 @@ public class ServicePlatform extends ManagedPlatform {
         }
 
         _logger.log(Level.CONFIG, "install packaged modules");
-        wac = install(wac, sort(_context, _context.getResourcePaths("/WEB-INF/lib/")), info);
+        wac = install(wac, sort(_context, _packaged), info);
 
         _logger.log(Level.CONFIG, "install extension modules");
-        wac = install(wac, sort(_context, discover(System.getProperty("xillium.service.ExtensionsRoot"))), info);
+        wac = install(wac, sort(_context, _extended), info);
 
         _logger.log(Level.CONFIG, "install service augmentations");
         for (ServiceAugmentation fi: info.augmentations) {
@@ -182,7 +188,12 @@ public class ServicePlatform extends ManagedPlatform {
         destroy();
     }
 
-    private void destroy() {
+    /**
+     * Unloads the platform.
+     *
+     * <p>If this method is never called, all application contexts will be unloaded when the servlet context is destroyed.</p>
+     */
+    public void destroy() {
         WebApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(_context);
         if (wac != null) {
             _context.removeAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
@@ -191,7 +202,7 @@ public class ServicePlatform extends ManagedPlatform {
             return;
         }
 
-        _logger.info("<<<< Service Dispatcher(" + _application + ") destruction starting");
+        _logger.info("<<<< Service Platform(" + _application + ") destruction starting");
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         while (!_manageables.empty()) {
             ObjectName on = _manageables.pop();
@@ -204,11 +215,11 @@ public class ServicePlatform extends ManagedPlatform {
             _logger.info("<<<<<<<< MBean(" + on + ") unregistration complete");
         }
         while (!_plca.empty()) {
-            List<PlatformLifeCycleAwareDef> plcas = _plca.pop();
-            for (PlatformLifeCycleAwareDef plca: plcas) {
-                _logger.info("<<<<<<<< PlatformLifeCycleAware(" + plca.module + '/' + plca.bean.getClass().getName() + ") termination starting");
-                plca.bean.terminate(_application, plca.module);
-                _logger.info("<<<<<<<< PlatformLifeCycleAware(" + plca.module + '/' + plca.bean.getClass().getName() + ") termination complete");
+            List<Pair<String, PlatformAware>> plcas = _plca.pop();
+            for (Pair<String, PlatformAware> plca: plcas) {
+                _logger.info("<<<<<<<< PlatformAware(" + plca.first + '/' + plca.second.getClass().getName() + ") termination starting");
+                plca.second.terminate(_application, plca.first);
+                _logger.info("<<<<<<<< PlatformAware(" + plca.first + '/' + plca.second.getClass().getName() + ") termination complete");
             }
         }
 
@@ -224,61 +235,67 @@ public class ServicePlatform extends ManagedPlatform {
             }
             _logger.info("<<<<<<<< JDBC Driver(" + driver + ") deregistration complete");
         }
-        _logger.info("<<<< Service Dispatcher(" + _application + ") destruction complete");
 
-        if (wac instanceof Lifecycle) {
-            try { ((Lifecycle)wac).stop(); } catch (Exception x) { _logger.log(Level.WARNING, "Error stopping context", x); }
+        for (Iterator<String> it = _registry.keySet().iterator(); it.hasNext();) {
+            if (!it.next().startsWith("x!/")) it.remove();
         }
-        if (wac instanceof DisposableBean) {
-            try { ((DisposableBean)wac).destroy(); } catch (Exception x) { _logger.log(Level.WARNING, "Error destroying context", x); }
+        _registry.remove("x!/ping");
+        _registry.remove("x!/list");
+        _registry.remove("x!/desc");
+        while (!_applc.empty()) {
+            destroy(_applc.pop());
+        }
+        destroy(wac);
+
+        _logger.info("<<<< Service Platform(" + _application + ") destruction complete");
+    }
+
+    private void destroy(ApplicationContext ac) {
+        if (ac instanceof Lifecycle) {
+            try { ((Lifecycle)ac).stop(); } catch (Exception x) { _logger.log(Level.WARNING, "Error stopping context", x); }
+        }
+        if (ac instanceof DisposableBean) {
+            try { ((DisposableBean)ac).destroy(); } catch (Exception x) { _logger.log(Level.WARNING, "Error destroying context", x); }
         }
     }
 
     // install service modules in the ModuleSorter.Sorted
     private ApplicationContext install(ApplicationContext wac, ModuleSorter.Sorted sorted, ServiceModuleInfo info) {
-        // scan special modules, configuring and initializing PlatformLifeCycleAware objects as each module is loaded
-        //info.plcas = null;
+        // scan special modules, configuring and initializing PlatformAware objects as each module is loaded
         wac = install(wac, sorted.specials(), info, true);
 
-        // scan regular modules, collecting all PlatformLifeCycleAware objects
-        //info.plcas = new ArrayList<PlatformLifeCycleAwareDef>();
+        // scan regular modules, collecting all PlatformAware objects
         install(wac, sorted.regulars(), info, false);
 
         if (info.plcas.size() > 0) {
-            _logger.info("configure PlatformLifeCycleAware objects in regular modules");
-            for (PlatformLifeCycleAwareDef plca: info.plcas) {
-                _logger.info("Configuring REGULAR PlatformLifeCycleAware " + plca.bean.getClass().getName());
-                plca.bean.configure(_application, plca.module);
+            _logger.info("configure PlatformAware objects in regular modules");
+            for (Pair<String, PlatformAware> plca: info.plcas) {
+                _logger.info("Configuring REGULAR PlatformAware " + plca.second.getClass().getName());
+                plca.second.configure(_application, plca.first);
             }
 
-            _logger.info("initialize PlatformLifeCycleAware objects in regular modules");
-            for (PlatformLifeCycleAwareDef plca: info.plcas) {
-                _logger.info("Initalizing REGULAR PlatformLifeCycleAware " + plca.bean.getClass().getName());
-                plca.bean.initialize(_application, plca.module);
+            _logger.info("initialize PlatformAware objects in regular modules");
+            for (Pair<String, PlatformAware> plca: info.plcas) {
+                _logger.info("Initalizing REGULAR PlatformAware " + plca.second.getClass().getName());
+                plca.second.initialize(_application, plca.first);
             }
 
             _plca.push(info.plcas);
-            info.plcas = new ArrayList<PlatformLifeCycleAwareDef>();
+            info.plcas = new ArrayList<Pair<String, PlatformAware>>();
         } else {
-            _logger.info("No PlatformLifeCycleAware objects in regular modules");
+            _logger.info("No PlatformAware objects in regular modules");
         }
 
         return wac;
     }
 
-    private ApplicationContext install(ApplicationContext wac, Iterator<ModuleSorter.Entry> it, ServiceModuleInfo info, boolean isSpecial) {
-/*
-        boolean isSpecial = info.plcas == null;
-        if (isSpecial) {
-            info.plcas = new ArrayList<PlatformLifeCycleAwareDef>();
-        }
-*/
+    private ApplicationContext install(ApplicationContext wac, Iterator<ServiceModule> it, ServiceModuleInfo info, boolean isSpecial) {
         try {
             BurnedInArgumentsObjectFactory factory = new BurnedInArgumentsObjectFactory(ValidationConfiguration.class, _dict);
             XMLBeanAssembler assembler = new XMLBeanAssembler(factory);
 
             while (it.hasNext()) {
-                ModuleSorter.Entry module = it.next();
+                ServiceModule module = it.next();
                 try {
                     JarInputStream jis = new JarInputStream(
                         module.path.startsWith("/") ? _context.getResourceAsStream(module.path) : new URL(module.path).openStream()
@@ -313,7 +330,7 @@ public class ServicePlatform extends ManagedPlatform {
                             if (isSpecial) {
                                 wac = load(wac, module, serviceConfiguration, info);
                             } else {
-                                load(wac, module, serviceConfiguration, info);
+                                _applc.push(load(wac, module, serviceConfiguration, info));
                             }
                         }
 
@@ -330,19 +347,18 @@ public class ServicePlatform extends ManagedPlatform {
                         jis.close();
                     }
                     if (isSpecial && info.plcas.size() > 0) {
-                        for (PlatformLifeCycleAwareDef plca: info.plcas) {
-                            _logger.config("Configuring SPECIAL PlatformLifeCycleAware " + plca.bean.getClass().getName());
-                            plca.bean.configure(_application, module.simple);
+                        for (Pair<String, PlatformAware> plca: info.plcas) {
+                            _logger.config("Configuring SPECIAL PlatformAware " + plca.second.getClass().getName());
+                            plca.second.configure(_application, module.simple);
                         }
 
-                        for (PlatformLifeCycleAwareDef plca: info.plcas) {
-                            _logger.config("Initalizing SPECIAL PlatformLifeCycleAware " + plca.bean.getClass().getName());
-                            plca.bean.initialize(_application, module.simple);
+                        for (Pair<String, PlatformAware> plca: info.plcas) {
+                            _logger.config("Initalizing SPECIAL PlatformAware " + plca.second.getClass().getName());
+                            plca.second.initialize(_application, module.simple);
                         }
                         _plca.push(info.plcas);
-                        info.plcas = new ArrayList<PlatformLifeCycleAwareDef>();
+                        info.plcas = new ArrayList<Pair<String, PlatformAware>>();
                     }
-                    _context.getServletRegistration("dispatcher").addMapping("/" + module.simple + "/*");
                 } catch (IOException x) {
                     _logger.log(Level.WARNING, "Error during jar inspection, ignored", x);
                 }
@@ -356,7 +372,7 @@ public class ServicePlatform extends ManagedPlatform {
     }
 
     @SuppressWarnings("unchecked")
-    private ApplicationContext load(ApplicationContext parent, ModuleSorter.Entry module, InputStream stream, ServiceModuleInfo info) {
+    private ApplicationContext load(ApplicationContext parent, ServiceModule module, InputStream stream, ServiceModuleInfo info) {
         GenericApplicationContext gac = new GenericApplicationContext(parent);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
@@ -408,8 +424,8 @@ public class ServicePlatform extends ManagedPlatform {
 
         // Platform life cycle aware objects
 
-        for (String id: gac.getBeanNamesForType(PlatformLifeCycleAware.class)) {
-            info.plcas.add(new PlatformLifeCycleAwareDef((PlatformLifeCycleAware)gac.getBean(id), module.simple));
+        for (String id: gac.getBeanNamesForType(PlatformAware.class)) {
+            info.plcas.add(new Pair<String, PlatformAware>(module.simple, (PlatformAware)gac.getBean(id)));
         }
 
         // Manageable object registration: objects are registered under "type=class-name,name=context-path/module-name/bean-id"

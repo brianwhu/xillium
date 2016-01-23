@@ -149,6 +149,14 @@ public class Macro {
         return expand(markup, object, null);
     }
 
+    public static String expand(String markup, Functor<Object, String> provider, String[] args) {
+        return expand(markup, PLACEHOLDER, provider, args);
+    }
+
+    public static String expand(String markup, Functor<Object, String> provider) {
+        return expand(markup, PLACEHOLDER, provider, null);
+    }
+
     /**
      * Expands a text markup by resolving embedded placeholders, recognized by a pattern, with text retrieved through a functor.
      * The pattern must include at least one capturing group, whose matched value is used as a key to retrieve corresponding
