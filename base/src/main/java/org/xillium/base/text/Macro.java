@@ -5,43 +5,56 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.regex.*;
 
-import org.xillium.base.Open;
-import org.xillium.base.Functor;
+import org.xillium.base.*;
 import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.Strings;
+import org.xillium.base.text.GuidedTransformer;
 
 
 /**
  * This is a macro processor that can handle 2 types of macro expansions.
  * <ol>
- * <li>Placeholder expansion - see {@link Macro#expand(String, Object, String[]) Macro.expand} method and
+ * <li>Parameter expansion - see {@link Macro#expand(String, Object, String[]) Macro.expand} method and
  *     {@link Macro#expand(String, Pattern, Functor<Object, String>)} method</li>
- * <li>Reference expansion - insertion of another markup snippet with its own embedded placeholders and references</li>
+ * <li>Reference expansion - insertion of another markup snippet with its own embedded parameters and references</li>
  * </ol>
  * Dynamic data are provided by an open object.
  */
 public class Macro {
-    private static final Pattern PLACEHOLDER = Pattern.compile("\\{([^{}@:-]+)(?::-([^{}@]+))?\\}");
+    private static final Pattern PARAMETER = Pattern.compile("\\{([^{}@:-]+)(?::-([^{}@]+))?\\}");
     private static final Pattern REFERENCE = Pattern.compile("\\{([^{}@]+)?@([^{}@]+)@([^{}@]+)?\\}");
+    private static final GuidedTransformer<List<String>> MarkUpParser = new GuidedTransformer<>(Pattern.compile("[^:()]+(?:\\([^()]*\\))?"),
+        new Trifunctor<StringBuilder, StringBuilder, List<String>, Matcher>() {
+            public StringBuilder invoke(StringBuilder sb, List<String> names, Matcher matcher) {
+                names.add(matcher.group(0));
+                return sb;
+            }
+        },
+        GuidedTransformer.Action.SKIP
+    );
+
 
     /**
-     * Expands a text markup by resolving embedded placeholders and references to other text markups, with the help of an accompanying
+     * Expands a text markup by resolving embedded parameters and references to other text markups, with the help of a companion
      * open object.
      * <p>
-     * A reference pointing to another markup in the resources is marked up as {@code {PREFIX@MARKUP(ARGS):MEMBER@SUFFIX}}, where</p>
+     * A reference pointing to another markup in the resources is marked up as {@code {PREFIX@MARKUP(ARGS):MEMBER:ALTERN(ARGS)@SUFFIX}},
+     * where</p>
      * <ul>
-     * <li>{@code MARKUP} is a required element, which gives the name of the markup as well as the data member within the accompnaying
-     *     open object that is to be used as the accompanying open object for the recursive expansion of the markup</li>
-     * <li>{@code (ARGS)} is an optional list of positional arguments to be passed to the markup, which refers to such arguments using
-     *     positional argument placeholders {@code {1}}, {@code {2}}, etc.
      * <li>{@code PREFIX} and {@code SUFFIX} are optional pieces of text to be placed before and after the markup insertion.</li>
-     * <li>{@code :MEMBER} gives the name of the data member to accompany the markup. If omitted, the value of {@code MARKUP} is used as
-     *     this name.</li>
+     * <li>{@code MARKUP} is a required element, which gives the name of the markup to be expanded recursively.</li>
+     * <li>{@code MEMBER} gives the name of the data member within the companion object to be used as the companion object for the
+     *     recursive expansion of the markup. If this name is "-", the current companion object is reused instead. If omitted, the
+     *     value of {@code MARKUP} is used as this name.</li>
+     * <li>{@code ALTERN} is an optional element, which gives the name of an alternative markup in the case the data member has no
+     *     value.</li>
+     * <li>{@code (ARGS)} is an optional list of positional arguments to be passed to the markup, which refers to such arguments using
+     *     positional argument parameters {@code {1}}, {@code {2}}, etc.</li>
      * </ul>
      * 
      * @param resources a collection of named text resources
      * @param name the name of the text markup to be expanded
-     * @param object an object providing values to the placeholders, which will be wrapped if not an open object already
+     * @param object an object providing values to the parameters, which will be wrapped if not an open object already
      * @throws IllegalArgumentException if any reference to a text markup cannot be resolved
      * @throws NullPointerException if any reference to a data member cannot be resolved and the data member is required in the
      *         subsequence markup expansion
@@ -59,7 +72,7 @@ public class Macro {
 
         Object data = object == null ? null : ((object instanceof Open) ? object : new Open.Wrapper<String>(Strings.toString(object)));
 
-        // expand all placeholders first
+        // expand all parameters first
         text = expand(text, data, args);
 
         while (true) {
@@ -70,22 +83,40 @@ public class Macro {
                 List<Object> items = new ArrayList<>();
                 do {
                     sb.append(text.substring(top, matcher.start()));
-                    String reference = matcher.group(2);
-                    String markup = Strings.substringBefore(reference, ':');
-                    String member = Strings.substringAfter(reference, ':');
+
+                    String markup = null, member = null, altern = null;
+                    List<String> names = new ArrayList<>();
+                    MarkUpParser.invoke(null, names, matcher.group(2));
+                    switch (names.size()) {
+                    case 3:
+                        altern = names.get(2);
+                    case 2:
+                        member = names.get(1);
+                    case 1:
+                        markup = names.get(0);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Invalid markup specification: " + matcher.group(2));
+                    }
+                    if (member == null) member = markup;
+
                     args = parse(markup);
                     if (args != null) markup = args[0];
                     items.clear();
                     try {
                         if (data != null) {
-                            Field field = Beans.getKnownField(data.getClass(), member);
-                            Object bean = field.get(data);
-                            if (field.getType().isArray()) {
-                                if (bean != null) for (int i = 0; i < Array.getLength(bean); ++i) items.add(Array.get(bean, i));
-                            } else if (Collection.class.isAssignableFrom(field.getType())) {
-                                if (bean != null) items.addAll((Collection<?>)bean);
+                            if (member.equals("-")) {
+                                items.add(data);
                             } else {
-                                if (bean != null) items.add(bean);
+                                Field field = Beans.getKnownField(data.getClass(), member);
+                                Object bean = field.get(data);
+                                if (field.getType().isArray()) {
+                                    if (bean != null) for (int i = 0; i < Array.getLength(bean); ++i) items.add(Array.get(bean, i));
+                                } else if (Collection.class.isAssignableFrom(field.getType())) {
+                                    if (bean != null) items.addAll((Collection<?>)bean);
+                                } else {
+                                    if (bean != null) items.add(bean);
+                                }
                             }
                         } else {
                             // non-existent member: allow expansion to continue
@@ -104,6 +135,13 @@ public class Macro {
                             sb.append(expand(resources, markup, item, args));
                         }
                         sb.append(Strings.toString(matcher.group(3)));
+                    } else if (altern != null) {
+                        args = parse(altern);
+                        if (args != null) altern = args[0];
+                        if (namespace != null && altern.indexOf('/') == -1) {
+                            altern = namespace + '/' + altern;
+                        }
+                        sb.append(expand(resources, altern, null, args));
                     }
                     top = matcher.end();
                 } while (matcher.find());
@@ -122,23 +160,23 @@ public class Macro {
     }
 
     /**
-     * Expands a text markup by resolving embedded placeholders, with the help of an accompanying open object.
-     * <p>A placeholder is marked up as {@code {MEMBER:-DEFAULT}}, where</p>
+     * Expands a text markup by resolving embedded parameters, with the help of an accompanying open object.
+     * <p>A parameter is marked up as {@code {MEMBER:-DEFAULT}}, where</p>
      * <ul>
      * <li>{@code MEMBER} is a required element, which gives the name of the data member within the accompnaying open object that
-     *     is to be used to provide a replacement value for this placeholder</li>
+     *     is to be used to provide a replacement value for this parameter</li>
      * <li>{@code :-DEFAULT} is an optional piece of text to be used if the named data member doesn't exist or is null</li>
      * </ul>
      * <p>
-     * During expansion, placeholders are simply replaced by values of the named data members in the accompanying open object.</p>
+     * During expansion, parameters are simply replaced by values of the named data members in the accompanying open object.</p>
      *
-     * @param markup the original text containing placeholders
-     * @param object an object providing data members as values to the placeholders
-     * @return the text will all placeholders expanded
+     * @param markup the original text containing parameters
+     * @param object an object providing data members as values to the parameters
+     * @return the text will all parameters expanded
      * @see Macro.expand(String, Pattern, Functor<Object, String>, String[])
      */
     public static String expand(String markup, final Object object, String[] args) {
-        return expand(markup, PLACEHOLDER, new Functor<Object, String>() {
+        return expand(markup, PARAMETER, new Functor<Object, String>() {
              public Object invoke(String name) {
                 try { return Beans.getKnownField(object.getClass(), name).get(object); } catch (Exception x) { return null; }
             }
@@ -150,27 +188,27 @@ public class Macro {
     }
 
     public static String expand(String markup, Functor<Object, String> provider, String[] args) {
-        return expand(markup, PLACEHOLDER, provider, args);
+        return expand(markup, PARAMETER, provider, args);
     }
 
     public static String expand(String markup, Functor<Object, String> provider) {
-        return expand(markup, PLACEHOLDER, provider, null);
+        return expand(markup, PARAMETER, provider, null);
     }
 
     /**
-     * Expands a text markup by resolving embedded placeholders, recognized by a pattern, with text retrieved through a functor.
+     * Expands a text markup by resolving embedded parameters, recognized by a pattern, with text retrieved through a functor.
      * The pattern must include at least one capturing group, whose matched value is used as a key to retrieve corresponding
      * text from the provider.
      *
-     * @param markup the original text containing placeholders
-     * @param placeholder a capturing regex pattern
-     * @param provider a functor that maps placeholder keys to corresponding text strings
+     * @param markup the original text containing parameters
+     * @param parameter a capturing regex pattern
+     * @param provider a functor that maps parameter keys to corresponding text strings
      * @param args optional positional arguments
-     * @return the text with all placeholders expanded
+     * @return the text with all parameters expanded
      */
-    public static String expand(String markup, Pattern placeholder, Functor<Object, String> provider, String[] args) {
+    public static String expand(String markup, Pattern parameter, Functor<Object, String> provider, String[] args) {
         while (true) {
-            Matcher matcher = placeholder.matcher(markup);
+            Matcher matcher = parameter.matcher(markup);
             if (matcher.find()) {
                 StringBuilder sb = new StringBuilder();
                 int top = 0;
@@ -184,7 +222,7 @@ public class Macro {
                                 sb.append(args[pos]);
                             }
                         } catch (NumberFormatException x) {
-//System.out.println("named placeholder, " + name);
+//System.out.println("named parameter, " + name);
                             Object bean = provider.invoke(name);
                             if (bean != null) {
                                 if (bean.getClass().isArray()) {
@@ -215,8 +253,8 @@ public class Macro {
         return markup;
     }
 
-    public static String expand(String markup, Pattern placeholder, Functor<Object, String> provider) {
-        return expand(markup, placeholder, provider, null);
+    public static String expand(String markup, Pattern parameter, Functor<Object, String> provider) {
+        return expand(markup, parameter, provider, null);
     }
 
     // parses a markup spec for arguments between paratheses. returning an array with the markup name as the first element
