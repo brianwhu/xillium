@@ -265,7 +265,7 @@ public class Macro {
             if (rpara != text.length() - 1) {
                 throw new IllegalArgumentException("Invalid markup with arguments '" + text + '\'');
             } else {
-                return text.split(" *[,()] *");
+                return text.split("[,()]"); // spaces are to be preserved
             }
         } else {
             return null;
