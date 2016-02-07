@@ -12,13 +12,15 @@ import org.xillium.base.text.GuidedTransformer;
 
 
 /**
- * This is a macro processor that can handle 2 types of macro expansions.
+ * This is a macro processor that handles 2 types of macro expansions in a text markup.
  * <ol>
- * <li>Parameter expansion - see {@link Macro#expand(String, Object, String[]) Macro.expand} method and
- *     {@link Macro#expand(String, Pattern, Functor<Object, String>)} method</li>
+ * <li>Parameter expansion - see {@link #expand(String, Pattern, Functor, String[]) Macro.expand(String, Pattern, Functor, String[])} and
+ *     {@link #expand(String, Object, String[]) Macro.expand(String, Object, String[])}</li>
  * <li>Reference expansion - insertion of another markup snippet with its own embedded parameters and references</li>
  * </ol>
- * Dynamic data are provided by an open object.
+ * <p>
+ * Dynamic data are provided by either a functor or an open object.
+ * </p>
  */
 public class Macro {
     private static final Pattern PARAMETER = Pattern.compile("\\{([^{}@:-]+)(?::-([^{}@]+))?\\}");
@@ -160,20 +162,23 @@ public class Macro {
     }
 
     /**
-     * Expands a text markup by resolving embedded parameters, with the help of an accompanying open object.
-     * <p>A parameter is marked up as {@code {MEMBER:-DEFAULT}}, where</p>
+     * Expands a text markup by resolving embedded parameters, with text retrieved from an accompanying {@code Open} object.
+     * <p>
+     * This method is a specialization of {@link #expand(String, Pattern, Functor, String[]) Macro.expand(String, Pattern, Functor, String[])}
+     * </p>
+     * <p>
+     * A parameter is marked up as {@code {MEMBER:-DEFAULT}}, where
      * <ul>
-     * <li>{@code MEMBER} is a required element, which gives the name of the data member within the accompnaying open object that
-     *     is to be used to provide a replacement value for this parameter</li>
+     * <li>{@code MEMBER} is a required element, which gives the name of the data member within the accompnaying object that
+     *     is to be used to provide a value for this parameter</li>
      * <li>{@code :-DEFAULT} is an optional piece of text to be used if the named data member doesn't exist or is null</li>
      * </ul>
-     * <p>
-     * During expansion, parameters are simply replaced by values of the named data members in the accompanying open object.</p>
-     *
+     * </p>
      * @param markup the original text containing parameters
      * @param object an object providing data members as values to the parameters
+     * @param args positional arguments
      * @return the text will all parameters expanded
-     * @see Macro.expand(String, Pattern, Functor<Object, String>, String[])
+     * @see Macro#expand(String, Pattern, Functor, String[])
      */
     public static String expand(String markup, final Object object, String[] args) {
         return expand(markup, PARAMETER, new Functor<Object, String>() {
@@ -196,19 +201,22 @@ public class Macro {
     }
 
     /**
-     * Expands a text markup by resolving embedded parameters, recognized by a pattern, with text retrieved through a functor.
-     * The pattern must include at least one capturing group, whose matched value is used as a key to retrieve corresponding
+     * Expands a text markup by resolving embedded parameters, recognized by a pattern, with text retrieved from a functor.
+     * The pattern must include at least one capturing group, whose matched value is used as a key to retrieve
      * text from the provider.
-     *
+     * <p>
+     * This method repeats pattern scanning after each round of parameter expansion until no more parameters are detected.
+     * </p>
      * @param markup the original text containing parameters
-     * @param parameter a capturing regex pattern
-     * @param provider a functor that maps parameter keys to corresponding text strings
-     * @param args optional positional arguments
+     * @param pattern a capturing regex pattern
+     * @param provider a functor that maps parameter names to objects
+     * @param args optional positional arguments, which are used when the pattern's first capturing group captures a name that
+     *        can be interpreted as an integer
      * @return the text with all parameters expanded
      */
-    public static String expand(String markup, Pattern parameter, Functor<Object, String> provider, String[] args) {
+    public static String expand(String markup, Pattern pattern, Functor<Object, String> provider, String[] args) {
         while (true) {
-            Matcher matcher = parameter.matcher(markup);
+            Matcher matcher = pattern.matcher(markup);
             if (matcher.find()) {
                 StringBuilder sb = new StringBuilder();
                 int top = 0;
@@ -217,28 +225,34 @@ public class Macro {
                     try {
                         String name = matcher.group(1);
                         try {
+                            // positional arguments take precedence
                             int pos = Integer.parseInt(name);
                             if (args != null && -1 < pos && pos < args.length) {
                                 sb.append(args[pos]);
                             }
                         } catch (NumberFormatException x) {
-//System.out.println("named parameter, " + name);
+                            // named parameter
                             Object bean = provider.invoke(name);
                             if (bean != null) {
                                 if (bean.getClass().isArray()) {
+                                    // note: zero-length array produces no text
                                     for (int i = 0; i < Array.getLength(bean); ++i) sb.append(Strings.toString(Array.get(bean, i)));
                                 } else if (Iterable.class.isAssignableFrom(bean.getClass())) {
+                                    // note: zero-length iterable produces no text
                                     for (Object item: (Iterable<?>)bean) sb.append(Strings.toString(item));
                                 } else {
+                                    // non-container object
                                     sb.append(Strings.toString(bean));
                                 }
                             } else if (matcher.groupCount() > 1) {
+                                // second capturing group provides an alternative value
                                 sb.append(Strings.toString(matcher.group(2)));
                             }
                         }
                     } catch (Exception x) {
-//System.out.println("name not found, " + matcher.group(1));
+                        // name look up failure
                         if (matcher.groupCount() > 1) {
+                            // second capturing group provides an alternative value
                             sb.append(Strings.toString(matcher.group(2)));
                         }
                     }
@@ -253,8 +267,8 @@ public class Macro {
         return markup;
     }
 
-    public static String expand(String markup, Pattern parameter, Functor<Object, String> provider) {
-        return expand(markup, parameter, provider, null);
+    public static String expand(String markup, Pattern pattern, Functor<Object, String> provider) {
+        return expand(markup, pattern, provider, null);
     }
 
     // parses a markup spec for arguments between paratheses. returning an array with the markup name as the first element
