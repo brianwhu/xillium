@@ -6,7 +6,7 @@ package org.xillium.core.conf;
  */
 public class TextResource {
     public final String name;
-    public String text;
+    public String text = ""; // an empty string can go into map, null can't
 
     public TextResource(String n) {
         name = n;

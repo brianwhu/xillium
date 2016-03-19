@@ -2,9 +2,11 @@ package lab.text;
 
 import java.util.*;
 import java.util.regex.*;
+import org.xillium.base.Functor;
 import org.xillium.base.Trifunctor;
 import org.xillium.base.beans.*;
 import org.xillium.base.text.GuidedTransformer;
+import org.xillium.base.text.Macro;
 
 import org.testng.annotations.*;
 
@@ -95,5 +97,59 @@ public class GuidedTransformerTest {
             }
             sb.append(matcher.replaceAll("?"));
         }
+    }
+
+    // nested paratheses parsing
+    //private static final Pattern COMMA_FREE = Pattern.compile("[^,]+");
+    private static final Pattern PARENTHESES = Pattern.compile("\\([^()]*\\)");
+
+    @Test(groups={"functional", "text", "transformer"})
+    public void testNestedParentheses() {
+        String text = "NVL(return_error_type, result_type) first argument,second argument,(f a, (g 1, 3))";
+
+        final Map<String, String> store = new HashMap<>();
+        GuidedTransformer<Map<String, String>> encoder = new GuidedTransformer<Map<String, String>>(PARENTHESES,
+            new Trifunctor<StringBuilder, StringBuilder, Map<String, String>, Matcher>() {
+                public StringBuilder invoke(StringBuilder sb, Map<String, String> store, Matcher matcher) {
+                    sb.append("{#").append(store.size()).append('}');
+                    store.put("#" + store.size(), matcher.group(0));
+                    return sb;
+                }
+            },
+            GuidedTransformer.Action.COPY
+        );
+
+        StringBuilder sb = new StringBuilder();
+        int size = 0;
+        do {
+            size = store.size();
+            text = encoder.invoke(sb.delete(0, sb.length()), store, text).toString();
+        } while (size != store.size());
+
+System.out.println(Beans.toString(store));
+System.out.println(text);
+
+        String[] args = text.split(",");
+        for (int i = 0; i < args.length; ++i) {
+            while (true) {
+                String arg = Macro.expand(args[i], new Functor<Object, String>() {
+                    public Object invoke(String name) {
+                        return store.get(name);
+                    }
+                });
+                if (arg.equals(args[i])) {
+                    args[i] = arg;
+                    break;
+                } else {
+                    args[i] = arg;
+                }
+            }
+        }
+
+        System.out.println(Beans.toString(args));
+        assert args.length == 3;
+        assert args[0].equals("NVL(return_error_type, result_type) first argument");
+        assert args[1].equals("second argument");
+        assert args[2].equals("(f a, (g 1, 3))");
     }
 }
