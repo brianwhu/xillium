@@ -1,6 +1,7 @@
 package lab;
 
 import java.lang.reflect.*;
+import java.math.BigDecimal;
 
 import org.xillium.base.beans.Beans;
 import org.xillium.base.type.*;
@@ -12,7 +13,7 @@ import org.testng.annotations.*;
  * ValueOf tests.
  */
 public class ValueOfTest {
-    @Test(groups={"util", "util-valueof"})
+    @Test(groups={"util", "util-valueof", "util-valueof-simple"})
     @SuppressWarnings("unchecked")
     public void testValueOf() throws Exception {
         ValueOf aValueOf = new ValueOf(A.class);
@@ -49,6 +50,21 @@ public class ValueOfTest {
         assert dValueOf.invoke("3.1415").equals(new java.math.BigDecimal("3.1415"));
     }
 
+    @Test(groups={"util", "util-valueof", "util-valueof-array"})
+    @SuppressWarnings("unchecked")
+    public void testValueOfArray() throws Exception {
+        Field coords = B.class.getField("coords");
+        ValueOf cValueOf = new ValueOf(coords.getType());
+
+        B b = new B();
+        coords.set(b, cValueOf.invoke("12.3, 6.54, 2.00"));
+        System.err.println("B = " + Beans.toString(b));
+        assert b.coords.length == 3;
+        assert b.coords[0].equals(new BigDecimal("12.3"));
+        assert b.coords[1].equals(new BigDecimal("6.54"));
+        assert b.coords[2].equals(new BigDecimal("2.00"));
+    }
+
     @Test(groups={"util", "util-valueof", "util-valueof-speed"})
     @SuppressWarnings("unchecked")
     public void testValueOfSpeed() throws Exception {
@@ -77,7 +93,8 @@ public class ValueOfTest {
         TUESDAY
     }
 
-    static class B {
+    public static class B {
         @typeinfo(A.class) public Flags<A> x;
+        public BigDecimal[] coords;
     }
 }
