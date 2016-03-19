@@ -2,6 +2,7 @@ package org.xillium.base.beans;
 
 import java.beans.*;
 import java.lang.reflect.*;
+import java.math.*;
 import java.util.*;
 import java.util.regex.*;
 import org.xillium.base.Bifunctor;
@@ -26,7 +27,8 @@ public class Beans {
             || java.math.BigDecimal.class.isAssignableFrom(type)
             || java.util.Date.class.isAssignableFrom(type)
             || java.sql.Date.class.isAssignableFrom(type)
-            || java.sql.Time.class.isAssignableFrom(type);
+            || java.sql.Time.class.isAssignableFrom(type)
+            || java.sql.Timestamp.class.isAssignableFrom(type);
     }
 
     /**
@@ -417,14 +419,17 @@ public class Beans {
             field.setAccessible(true);
             field.set(object, value);
         } catch (IllegalArgumentException x) {
-            @SuppressWarnings("rawtypes")
-            Class ftype = field.getType();
             if (value instanceof Number) {
                 // size of "value" bigger than that of "field"?
                 try {
                     Number number = (Number)value;
+                    Class<?> ftype = field.getType();
                     if (Enum.class.isAssignableFrom(ftype)) {
                         field.set(object, ftype.getEnumConstants()[number.intValue()]);
+                    } else if (BigDecimal.class.isAssignableFrom(ftype)) {
+                        field.set(object, BigDecimal.valueOf(number.doubleValue()));
+                    } else if (BigInteger.class.isAssignableFrom(ftype)) {
+                        field.set(object, BigInteger.valueOf(number.longValue()));
                     } else if (Double.TYPE == ftype || Double.class.isAssignableFrom(ftype)) {
                         field.set(object, number.doubleValue());
                     } else if (Float.TYPE == ftype || Float.class.isAssignableFrom(ftype)) {
@@ -448,9 +453,9 @@ public class Beans {
                     throw new IllegalArgumentException(t);
                 }
             } else if (value instanceof String) {
-                field.set(object, new ValueOf(ftype, field.getAnnotation(typeinfo.class)).invoke((String)value));
+                field.set(object, new ValueOf(field.getType(), field.getAnnotation(typeinfo.class)).invoke((String)value));
             } else {
-                throw new IllegalArgumentException(x);
+                throw x;
             }
         }
 
@@ -498,7 +503,7 @@ public class Beans {
 
     /**
      * Converts a String representation into a value of a given type. This method calls
-     * {@code>valueOf(type, value, null)}.
+     * {@code valueOf(type, value, null)}.
      *
      * @param <T> the target class
      * @param type the target class

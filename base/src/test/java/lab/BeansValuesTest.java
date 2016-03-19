@@ -1,6 +1,7 @@
 package lab;
 
 import java.lang.reflect.*;
+import java.math.*;
 
 import org.xillium.base.type.*;
 import org.xillium.base.beans.*;
@@ -18,6 +19,8 @@ public class BeansValuesTest {
         Beans.setValue(b, B.class.getField("m"), "MONDAY");
         Beans.setValue(b, B.class.getField("t"), 2);
         Beans.setValue(b, B.class.getField("x"), " SUNDAY : : TUESDAY , ");
+        Beans.setValue(b, B.class.getField("decimal"), 3.1415926535);
+        Beans.setValue(b, B.class.getField("integer"), 65536L);
         assert b.s == A.SUNDAY;
         assert b.m == A.MONDAY;
         assert b.t == A.TUESDAY;
@@ -26,6 +29,8 @@ public class BeansValuesTest {
         assert b.x.isSet(A.TUESDAY);
         assert b.x.toString().equals("SUNDAY:TUESDAY");
         assert !b.x.isNone();
+        assert b.decimal.equals(new BigDecimal("3.1415926535"));
+        assert b.integer.equals(new BigInteger("65536"));
     }
 
     public static enum A {
@@ -39,5 +44,7 @@ public class BeansValuesTest {
         public A m;
         public A t;
         @typeinfo(A.class) public Flags<A> x;
+        public BigDecimal decimal;
+        public BigInteger integer;
     }
 }
