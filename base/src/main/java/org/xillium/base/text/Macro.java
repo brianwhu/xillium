@@ -8,7 +8,6 @@ import java.util.regex.*;
 import org.xillium.base.*;
 import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.Strings;
-import org.xillium.base.text.GuidedTransformer;
 
 
 /**
@@ -23,16 +22,6 @@ import org.xillium.base.text.GuidedTransformer;
 public class Macro {
     private static final Pattern PARAMETER = Pattern.compile("\\{([^{}@:-]+)(?::-([^{}@]+))?\\}");
     private static final Pattern REFERENCE = Pattern.compile("\\{([^{}@]+)?@([^{}@]+)@([^{}@]+)?\\}");
-    private static final GuidedTransformer<List<String>> MarkUpParser = new GuidedTransformer<>(Pattern.compile("[^:()]+(?:\\([^()]*\\))?"),
-        new Trifunctor<StringBuilder, StringBuilder, List<String>, Matcher>() {
-            public StringBuilder invoke(StringBuilder sb, List<String> names, Matcher matcher) {
-                names.add(matcher.group(0));
-                return sb;
-            }
-        },
-        GuidedTransformer.Action.SKIP
-    );
-
 
     /**
      * Expands a text markup by resolving embedded parameters and references to other text markups, with the help of a companion
@@ -85,15 +74,14 @@ public class Macro {
                     sb.append(text.substring(top, matcher.start()));
 
                     String markup = null, member = null, altern = null;
-                    List<String> names = new ArrayList<>();
-                    MarkUpParser.invoke(null, names, matcher.group(2));
-                    switch (names.size()) {
+                    String[] parts = Balanced.split(matcher.group(2), ':');
+                    switch (parts.length) {
                     case 3:
-                        altern = names.get(2);
+                        altern = parts[2];
                     case 2:
-                        member = names.get(1);
+                        member = parts[1];
                     case 1:
-                        markup = names.get(0);
+                        markup = parts[0];
                         break;
                     default:
                         throw new IllegalArgumentException("Invalid markup specification: " + matcher.group(2));
@@ -260,15 +248,20 @@ public class Macro {
     // parses a markup spec for arguments between paratheses. returning an array with the markup name as the first element
     private static String[] parse(String text) {
         int lpara = text.indexOf('(');
-        if (lpara > -1) {
-            int rpara = text.indexOf(')', lpara + 1);
+        switch (lpara) {
+        case -1:
+            return null;
+        case 0:
+            throw new IllegalArgumentException("Invalid markup with arguments '" + text + '\'');
+        default:
+            int rpara = text.lastIndexOf(')');
             if (rpara != text.length() - 1) {
                 throw new IllegalArgumentException("Invalid markup with arguments '" + text + '\'');
             } else {
-                return text.split("[,()]"); // spaces are to be preserved
+                List<String> args = new ArrayList<>();
+                args.add(text.substring(0, lpara));
+                return Balanced.split(args, null, text, lpara + 1, rpara, ',', null).toArray(new String[args.size()]);
             }
-        } else {
-            return null;
         }
     }
 }
