@@ -80,7 +80,7 @@ public class MacroTest {
         );
     }
 
-    @Test(groups={"functional", "text"})
+    @Test(groups={"functional", "text", "macro"})
     public void testTranslation() {
         Map<String, String> res = new HashMap<>();
         res.put("text/document", "<h1>New Events:</h1>\n{@event@}\n<h1>Discounts:</h1>\n{@discount@}\n<h1>Quotes:</h1>\n{@quote:quotes@}\n{@footer(new)@}");
@@ -94,6 +94,20 @@ public class MacroTest {
         res.put("text/prefix", "<ul>\n");
         res.put("text/suffix", "</ul>\n");
 
-        System.out.println(Macro.expand(res, "text/document", new Values()));
+        res.put("text/malformed", "Reference to a {@NonExistent@} piece of text");
+        res.put("text/recursive", "Reference to a {@recursive@} piece of text");
+
+        Values values = new Values();
+        System.out.println(Macro.expand(res, "text/document", values));
+
+        try {
+            Macro.expand(res, "text/malformed", values);
+            assert false : "Should have thrown an IllegalArgumentException";
+        } catch (IllegalArgumentException x) {}
+
+        try {
+            Macro.expand(res, "text/recursive", values);
+            assert false : "Should have thrown an IllegalStateException";
+        } catch (IllegalStateException x) {}
     }
 }

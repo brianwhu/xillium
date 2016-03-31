@@ -51,7 +51,7 @@ public class Macro {
      *         subsequence markup expansion
      * @return the fully expanded text
      */
-    public static String expand(Map<String, String> resources, String name, final Object object, String[] args) {
+    public static String expand(Map<String, String> resources, final String name, final Object object, String[] args) {
         String text = resources.get(name);
         if (text == null) {
             throw new IllegalArgumentException("Unknown text resource '" + name + '\'');
@@ -122,6 +122,9 @@ public class Macro {
                         }
                         sb.append(Strings.toString(matcher.group(1)));
                         for (Object item: items) {
+                            if (markup.equals(name) && item == object) {
+                                throw new IllegalStateException("Infinite recursion: " + name + ":" + object);
+                            }
                             sb.append(expand(resources, markup, item, args));
                         }
                         sb.append(Strings.toString(matcher.group(3)));
