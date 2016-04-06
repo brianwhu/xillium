@@ -24,7 +24,7 @@ import org.xillium.base.type.typeinfo;
 public class ValueOf implements Functor<Object, String> {
     public static final Pattern ARRAY_VALUE_SEPARATOR = Pattern.compile(" *, *");
 
-    private final boolean _isArray;
+    private final Class<?> _componentType;
     private Class<?>[] _args;
     private Method _valueOf;
     private Constructor<?> _init;
@@ -58,9 +58,9 @@ public class ValueOf implements Functor<Object, String> {
      * @throws IllegalArgumentException if the type does not support conversion from String texts
      */
     public ValueOf(Class<?> type, Class<?>[] args) {
-        _isArray = type.isArray();
-        if (_isArray) {
-            type = type.getComponentType();
+        _componentType = type.getComponentType();
+        if (_componentType != null) {
+            type = _componentType;
         }
         if (!type.equals(String.class)) {
             _args = args;
@@ -108,13 +108,12 @@ public class ValueOf implements Functor<Object, String> {
      * @throws IllegalArgumentException if the text cannot be converted into a value
      */
     public Object invoke(String text) {
-        if (_isArray) {
+        if (_componentType != null) {
             if (text == null || text.length() == 0) {
                 return null;
             } else {
                 String[] texts = ARRAY_VALUE_SEPARATOR.split(text);
-                Class<?> type = _valueOf != null ? _valueOf.getReturnType() : (_init != null ? _init.getDeclaringClass() : String.class);
-                Object array = Array.newInstance(type, texts.length);
+                Object array = Array.newInstance(_componentType, texts.length);
                 for (int i = 0; i < texts.length; ++i) {
                     Array.set(array, i, convert(texts[i]));
                 }
