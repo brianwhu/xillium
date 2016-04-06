@@ -48,7 +48,7 @@ public class Beans {
         if ("long".equals(name)) return long.class;
         if ("float".equals(name)) return float.class;
         if ("double".equals(name)) return double.class;
-        return Class.forName(name);
+        return Class.forName(name, true, Thread.currentThread().getContextClassLoader());
     }
 
     /**
