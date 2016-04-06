@@ -87,7 +87,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
     public ObjectMappedQuery(String parameters,  String classname) throws IllegalArgumentException {
         super(parameters);
         try {
-            _type = (Class<T>)Class.forName(classname);
+            _type = (Class<T>)Class.forName(classname, true, Thread.currentThread().getContextClassLoader());
         } catch (ClassNotFoundException x) {
             throw new IllegalArgumentException(x);
         }
@@ -101,7 +101,7 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
     @SuppressWarnings("unchecked")
     public ObjectMappedQuery(String classname) throws IllegalArgumentException {
         try {
-            _type = (Class<T>)Class.forName(classname);
+            _type = (Class<T>)Class.forName(classname, true, Thread.currentThread().getContextClassLoader());
         } catch (ClassNotFoundException x) {
             throw new IllegalArgumentException(x);
         }
