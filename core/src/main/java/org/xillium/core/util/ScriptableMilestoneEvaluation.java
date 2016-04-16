@@ -5,7 +5,7 @@ import javax.script.*;
 
 import org.xillium.base.beans.Throwables;
 import org.xillium.data.DataBinder;
-import org.xillium.data.validation.Dictionary;
+import org.xillium.data.validation.Reifier;
 import org.xillium.core.Persistence;
 import org.xillium.core.ServiceException;
 
@@ -40,7 +40,7 @@ public class ScriptableMilestoneEvaluation extends Scriptable implements Service
      * Calls the evaluations in order, returning immediately if one returns ServiceMilestone.Recommendation.COMPLETE.
      */
     @Override
-    public <M extends Enum<M>> ServiceMilestone.Recommendation evaluate(Class<M> type, String name, DataBinder binder, Dictionary dict, Persistence persist) {
+    public <M extends Enum<M>> ServiceMilestone.Recommendation evaluate(Class<M> type, String name, DataBinder binder, Reifier dict, Persistence persist) {
         if (_script != null) {
             try {
                 js.put("type", type);

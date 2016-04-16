@@ -10,6 +10,7 @@ import java.util.*;
 /**
  * A dictionary of extended types for data validation.
  */
+@Deprecated
 public class Dictionary {
     protected static final Map<Class<?>, Map<String, Validator>> _cachedValidators = new HashMap<Class<?>, Map<String, Validator>>();
 

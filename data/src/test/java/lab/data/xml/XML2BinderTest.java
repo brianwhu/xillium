@@ -26,22 +26,13 @@ public class XML2BinderTest {
 
     @Test(groups={"xml"})
     public void testCollection() throws Exception {
-/*
-        Dictionary dictionary =
-            (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory(), new StandardTrace().setLevel(Level.INFO)).build(args[0]);
-        System.err.println("Base Types = ");
-        System.err.println(Beans.toString(Dictionary.bases));
-*/
-        //Trace.g.configure(new StandardTrace()).std.setFilter(Dictionary.class);
         Trace.g.configure(new StandardTrace());
 
-        //Dictionary dictionary = new Dictionary("core").addDataDictionary(StandardDataTypes.class);
-        //Dictionary dictionary = (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory(), Trace.g.std).build("lab/validation/dictionary.xml");
         DataBinder binder = new DataBinder();
         XDBCodec.decode(binder, getClass().getResourceAsStream("/xml/data-exchange.xml"));
         System.out.println(Beans.toString(binder));
 
-        Request r = new Dictionary().collect(new Request(), binder);
+        Request r = new Reifier().collect(new Request(), binder);
         System.out.println(Beans.toString(r));
 /*
         Trace.g.configure(new NullTrace());

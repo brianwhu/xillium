@@ -1,7 +1,7 @@
 package org.xillium.core;
 
 import org.xillium.data.*;
-import org.xillium.data.validation.Dictionary;
+import org.xillium.data.validation.Reifier;
 
 
 /**
@@ -49,13 +49,13 @@ public interface Service {
      * transaction, while a checked exception does not.
 	 *
 	 * @param parameters - request parameters in a DataBinder
-	 * @param dict - a Dictionary for data validation/parsing
+	 * @param dict - a Reifier for data validation/parsing
 	 * @param persist - a Persistence for data persistence
 	 * @return response data in a DataBinder; This can be the same data binder passed in as the first argument
 	 * @throws ServiceException if the service fails for any reason. If the service is wrapped inside a transaction, the transaction
 	 *         is rolled back.
 	 */
-	public DataBinder run(DataBinder parameters, Dictionary dict, Persistence persist) throws ServiceException;
+	public DataBinder run(DataBinder parameters, Reifier dict, Persistence persist) throws ServiceException;
 
 	/**
 	 * Interface to indicate a secured service.

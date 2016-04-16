@@ -16,7 +16,7 @@ public class DescService extends SecuredService {
         _descs = descs;
     }
 
-    public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
+    public DataBinder run(DataBinder binder, Reifier dict, Persistence persist) throws ServiceException {
         String name = binder.get("name");
         if (name != null) {
             binder.put("parameters", _descs.get(name));

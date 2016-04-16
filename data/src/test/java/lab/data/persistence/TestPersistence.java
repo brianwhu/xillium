@@ -112,7 +112,7 @@ System.err.println(getClass().getResource("/object-mapped.xml"));
 
         Properties p = new Properties();
         p.load(getClass().getResourceAsStream("/object-mapped.properties"));
-        DataObject t = new org.xillium.data.validation.Dictionary().collect(c.newInstance(), new DataBinder().load(p));
+        DataObject t = new org.xillium.data.validation.Reifier().collect(c.newInstance(), new DataBinder().load(p));
         System.out.print("testDataObjectClassGen: Data = " + Beans.toString(t));
         List<Membership> memberships = selectMembership.getResults(DataSourceUtils.getConnection(dataSource), t);
         System.err.println("***testDataObjectClassGen: # of results = " + memberships.size());

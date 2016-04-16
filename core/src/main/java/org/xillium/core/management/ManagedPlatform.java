@@ -146,7 +146,7 @@ public abstract class ManagedPlatform extends ManagementService implements Servl
 
 
     @Override
-    public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
+    public DataBinder run(DataBinder binder, Reifier dict, Persistence persist) throws ServiceException {
         if (isLocal(binder)) {
             String redirect = binder.remove(REDIRECT);
             if (redirect != null && redirect.length() > 0) {

@@ -9,7 +9,7 @@ import org.xillium.data.CachedResultSet;
 import org.xillium.data.DataBinder;
 import org.xillium.data.DataObject;
 import org.xillium.data.persistence.*;
-import org.xillium.data.validation.Dictionary;
+import org.xillium.data.validation.Reifier;
 import lab.DataUtil;
 
 public class DataAccess {
@@ -39,7 +39,7 @@ public class DataAccess {
 
         Connection conn = dataSource.getConnection();
         try {
-            Data data = new Dictionary().collect(new Data(), binder);
+            Data data = new Reifier().collect(new Data(), binder);
             System.out.println(Beans.toString(data));
 
             //ResultSet rset = DepartmentsByLocation.intoResultSet(conn, data);

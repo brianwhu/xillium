@@ -104,7 +104,7 @@ public class PersistenceManager {
             ParametricStatement ps = persistence.getParametricStatement(name);
 
             Class<? extends DataObject> c = ps.getDataObjectClass(name.replace('/', '.'));
-            DataObject data = c != null ? new org.xillium.data.validation.Dictionary().collect(c.newInstance(), _binder) : null;
+            DataObject data = c != null ? new org.xillium.data.validation.Reifier().collect(c.newInstance(), _binder) : null;
             if (ps instanceof ParametricQuery) {
                 persistence.doReadOnly(data, new Persistence.Task<Void, DataObject>() {
                     public Void run(DataObject data, Persistence p) throws Exception {
