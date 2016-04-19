@@ -1,31 +1,38 @@
 package org.xillium.gear.util;
 
-import java.util.Random;
 import java.util.logging.*;
-import org.xillium.base.beans.Throwables;
 import org.xillium.core.management.Reporting;
 
 
 /**
  * <p>
- * A VitalTask is a Runnable that detects operation failure and undertakes retries automatically. An operation failure happens when method
- * execute() throws an exception before completion.</p>
+ * A VitalTask is a Runnable that detects operation failures and undertakes retries automatically. An operation failure is defined as
+ * the operation throwing an exception other than InterruptedException before completion.</p>
+ * <p>
+ * A VitalTask stops only when one of the following conditions is met.</p>
+ * <ol>
+ * <li> The operation completes without throwing any exception other than InterruptedException
+ * <li> The operation is interrupted by thread interruption
+ * <li> The trial strategy throws an InterruptedException or a RuntimeException
+ * </ol>
  * <p>
  * Failure and recovery notifications are reported via an associated Reporting object.</p>
  * <p>
- * By default, a VitalTask uses randomized exponetial backoff to avoid retrying the task too eagerly. Other TrialStrategy can be used as well.</p>
+ * By default, a VitalTask uses randomized exponetial backoff to avoid retrying the task too eagerly. Other TrialStrategy can be used as
+ * well.</p>
  * <p>
  * A VitalTask is interruptible. If a VitalTask is submitted to a separate thread, call getInterruptedException() to detect execution interruption
  * after the thread has joined.  When running a VitalTask on the local thread, call runAsInterruptible() instead of run() to get interruption
  * reported as an InterruptedException.</p>
  */
-public abstract class VitalTask<T extends Reporting> implements Runnable {
+public abstract class VitalTask<T extends Reporting, V> implements Runnable {
     protected static final Logger _logger = Logger.getLogger(VitalTask.class.getName());
 
     private final T _reporting;
     private final TrialStrategy _strategy;
     private final Runnable _preparation;
 
+    private V _result;
     private InterruptedException _interrupted;
     private int _age;
 
@@ -81,7 +88,7 @@ public abstract class VitalTask<T extends Reporting> implements Runnable {
      * exception) it fails completely. Such guarantee allows the task to be meaningfully retried. In other words, if a task fails many times
      * through the retry cycles until it eventually succeeds, it makes the same effect as if it had succeeded on the first attempt.
      */
-    protected abstract void execute() throws Exception;
+    protected abstract V execute() throws Exception;
 
     /**
      * Returns the number of retries this VitalTask has undertaken so far.
@@ -98,6 +105,13 @@ public abstract class VitalTask<T extends Reporting> implements Runnable {
     }
 
     /**
+     * Returns the computation result.
+     */
+    public final V getResult() {
+        return _result;
+    }
+
+    /**
      * Task entry point.
      */
     public final void run() {
@@ -107,7 +121,7 @@ public abstract class VitalTask<T extends Reporting> implements Runnable {
             try {
                 _strategy.observe(_age);
                 if (_preparation != null) _preparation.run();
-                execute();
+                _result = execute();
                 if (_age > 0) {
                     _reporting.emit(Reporting.Severity.NOTICE, "Failure recovered: " + toString(), _age, _logger);
                 }
@@ -133,7 +147,7 @@ public abstract class VitalTask<T extends Reporting> implements Runnable {
     /**
      * Calls run() and returns "this". Throws an InterruptedException if thread interruption is detected during run().
      */
-    public final VitalTask<T> runAsInterruptible() throws InterruptedException {
+    public final VitalTask<T, V> runAsInterruptible() throws InterruptedException {
         run();
         if (_interrupted != null) throw _interrupted;
         return this;

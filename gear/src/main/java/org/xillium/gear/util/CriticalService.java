@@ -78,24 +78,26 @@ public class CriticalService<T extends DataObject> {
             }
         } catch (RuntimeException x) {
             if (confirm == null) {
-                executor.execute(new VitalTask<Reporting>(reporting) {
-                    protected void execute() throws Exception {
+                executor.execute(new VitalTask<Reporting, Void>(reporting) {
+                    protected Void execute() throws Exception {
                         if (getAge() > DEFAULT_RETRY_LIMIT) {
                             try { process.invoke(null); } catch (Exception x) {}
                         } else {
                             process.invoke(RemoteService.call(location, recovery, repacker.invoke(request)));
                         }
+                        return null;
                     }
                 });
                 // positive!
             } else {
-                executor.execute(new VitalTask<Reporting>(reporting) {
-                    protected void execute() throws Exception {
+                executor.execute(new VitalTask<Reporting, Void>(reporting) {
+                    protected Void execute() throws Exception {
                         if (getAge() > DEFAULT_RETRY_LIMIT) {
-                            return;
+                            return null;
                         } else {
                             confirm.invoke(RemoteService.call(location, recovery, repacker.invoke(request)));
                         }
+                        return null;
                     }
                 });
                 // negative!
