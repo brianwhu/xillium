@@ -21,7 +21,7 @@ public class ListService extends SecuredService {
         _services = services;
     }
 
-    public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
+    public DataBinder run(DataBinder binder, Reifier dict, Persistence persist) throws ServiceException {
         Set<String> keys = new TreeSet<String>(_services.keySet());
         for (Iterator<String> it = keys.iterator(); it.hasNext();) {
             if (it.next().startsWith("x!/")) it.remove();

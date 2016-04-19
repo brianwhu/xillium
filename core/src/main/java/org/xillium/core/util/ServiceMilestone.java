@@ -7,7 +7,7 @@ import java.lang.reflect.Modifier;
 
 import org.xillium.base.beans.Beans;
 import org.xillium.data.DataBinder;
-import org.xillium.data.validation.Dictionary;
+import org.xillium.data.validation.Reifier;
 import org.xillium.core.Persistence;
 import org.xillium.core.Service;
 
@@ -69,7 +69,7 @@ public class ServiceMilestone<M extends Enum<M>> {
         /**
          * Evaluates a milestone as identified by the milestone enumeration's type and the milestone's name.
          */
-        public <M extends Enum<M>> Recommendation evaluate(Class<M> type, String name, DataBinder binder, Dictionary dict, Persistence persist);
+        public <M extends Enum<M>> Recommendation evaluate(Class<M> type, String name, DataBinder binder, Reifier dict, Persistence persist);
     }
 
     /**
@@ -137,7 +137,7 @@ public class ServiceMilestone<M extends Enum<M>> {
      * Executes evaluations at a milestone.
      */
     @SuppressWarnings("unchecked")
-    public Recommendation evaluate(M milestone, DataBinder binder, Dictionary dict, Persistence persist) {
+    public Recommendation evaluate(M milestone, DataBinder binder, Reifier dict, Persistence persist) {
         Evaluation evaluation = _evaluations[milestone.ordinal()];
         return evaluation != null ? evaluation.evaluate((Class<M>)milestone.getClass(), milestone.toString(), binder, dict, persist) : Recommendation.CONTINUE;
     }

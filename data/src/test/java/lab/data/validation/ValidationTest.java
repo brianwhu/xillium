@@ -12,17 +12,9 @@ import org.testng.annotations.*;
 public class ValidationTest {
     @Test(groups={"validation"})
     public void testCollection() throws Exception {
-/*
-        Dictionary dictionary =
-            (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory(), new StandardTrace().setLevel(Level.INFO)).build(args[0]);
-        System.err.println("Base Types = ");
-        System.err.println(Beans.toString(Dictionary.bases));
-*/
-        //Trace.g.configure(new StandardTrace()).std.setFilter(Dictionary.class);
+        //Trace.g.configure(new StandardTrace()).std.setFilter(Reifier.class);
         Trace.g.configure(new StandardTrace());
 
-        //Dictionary dictionary = new Dictionary("core").addDataDictionary(StandardDataTypes.class);
-        //Dictionary dictionary = (Dictionary)new XMLBeanAssembler(new DefaultObjectFactory(), Trace.g.std).build("lab/validation/dictionary.xml");
         Reifier reifier = new XMLBeanAssembler(new DefaultObjectFactory()).build(getClass().getResourceAsStream("/validation/reifier.xml"), Reifier.class);
         System.err.println("Reifier = " + Beans.toString(reifier));
         System.err.println("SubmitPurchaseOrderData = " + DataObject.Util.describe(lab.data.validation.SubmitPurchaseOrderData.class));

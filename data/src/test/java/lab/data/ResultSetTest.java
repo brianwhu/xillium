@@ -24,7 +24,7 @@ public class ResultSetTest {
         props.load(getClass().getResourceAsStream("/addresses.properties"));
 
         DataBinder binder = new DataBinder().load(props);
-        Request request = new org.xillium.data.validation.Dictionary().collect(new Request(), binder);
+        Request request = new org.xillium.data.validation.Reifier().collect(new Request(), binder);
         System.out.println("input array = " + Beans.toString(request));
 
         CachedResultSet rs = new CachedResultSet(Arrays.asList(request.addresses));

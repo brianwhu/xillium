@@ -2,7 +2,7 @@ package org.xillium.core.util;
 
 import org.xillium.base.util.Pair;
 import org.xillium.data.DataBinder;
-import org.xillium.data.validation.Dictionary;
+import org.xillium.data.validation.Reifier;
 import org.xillium.core.Persistence;
 
 
@@ -22,7 +22,7 @@ public class CompoundMilestoneEvaluation extends Pair<ServiceMilestone.Evaluatio
      * Calls the evaluations in order, returning immediately if one returns ServiceMilestone.Recommendation.COMPLETE.
      */
     @Override
-    public <M extends Enum<M>> ServiceMilestone.Recommendation evaluate(Class<M> type, String name, DataBinder binder, Dictionary dict, Persistence persist) {
+    public <M extends Enum<M>> ServiceMilestone.Recommendation evaluate(Class<M> type, String name, DataBinder binder, Reifier dict, Persistence persist) {
         if (first.evaluate(type, name, binder, dict, persist) == ServiceMilestone.Recommendation.CONTINUE) {
             return second.evaluate(type, name, binder, dict, persist);
         } else {

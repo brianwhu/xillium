@@ -25,9 +25,9 @@ public class Hello implements Service {
     /**
      * Service
      */
-    public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
+    public DataBinder run(DataBinder binder, Reifier reifier, Persistence persist) throws ServiceException {
         try {
-            Request request = dict.collect(new Request(), binder);
+            Request request = reifier.collect(new Request(), binder);
             binder.put("greeting", "Hello " + (request.name != null ? request.name : "World"));
         } catch (Exception x) {
             throw new ServiceException(x.getMessage(), x);

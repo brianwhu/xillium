@@ -114,7 +114,7 @@ public class CrudService extends ExtendableAndSecured implements DynamicService 
     }
 
     @Transactional
-    public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
+    public DataBinder run(DataBinder binder, Reifier dict, Persistence persist) throws ServiceException {
         int count = 0;
         try {
             DataObject request = dict.collect(_command.getRequestType().newInstance(), binder);

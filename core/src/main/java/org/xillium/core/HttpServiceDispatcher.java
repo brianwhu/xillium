@@ -212,7 +212,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                 try { ((Service.Extended)service.first).acknowledge(binder); } catch (Throwable t) {}
             }
 
-            binder = service.first.run(binder, ServicePlatform.getDictionary(), service.second);
+            binder = service.first.run(binder, ServicePlatform.getReifier(), service.second);
 
             // post-service filter
 

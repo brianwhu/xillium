@@ -90,7 +90,7 @@ public class DatabaseService extends ExtendableAndSecured implements DynamicServ
 
     @Override
     @Transactional
-    public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
+    public DataBinder run(DataBinder binder, Reifier dict, Persistence persist) throws ServiceException {
         try {
             if (_renames != null) for (Pair<String, String> pair: _renames) {
                 binder.put(pair.second, binder.get(pair.first));

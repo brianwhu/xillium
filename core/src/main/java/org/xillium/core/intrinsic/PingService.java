@@ -10,7 +10,7 @@ import org.xillium.data.validation.*;
  */
 public class PingService implements Service {
     @Override
-    public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
+    public DataBinder run(DataBinder binder, Reifier dict, Persistence persist) throws ServiceException {
         binder.put("echo", String.valueOf(System.currentTimeMillis()));
         return binder;
     }

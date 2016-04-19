@@ -57,7 +57,7 @@ public final class ServicePlatform extends ManagedPlatform {
     private final Stack<ApplicationContext> _applc = new Stack<>();
     private final Stack<ObjectName> _manageables = new Stack<>();
     private final Stack<List<Pair<String, PlatformAware>>> _plca = new Stack<>();
-    private static final org.xillium.data.validation.Dictionary _dict = new org.xillium.data.validation.Dictionary();
+    private static final org.xillium.data.validation.Reifier _dict = new org.xillium.data.validation.Reifier();
 
     private Set<String> _packaged, _extended;
 
@@ -73,7 +73,7 @@ public final class ServicePlatform extends ManagedPlatform {
         return _registry.get(id);
     }
 
-    static org.xillium.data.validation.Dictionary getDictionary() {
+    static org.xillium.data.validation.Reifier getReifier() {
         return _dict;
     }
 

@@ -72,7 +72,7 @@ public class ProxyService extends ExtendableAndSecured {
         _error = error;
     }
 
-    public DataBinder run(DataBinder binder, Dictionary dict, Persistence persist) throws ServiceException {
+    public DataBinder run(DataBinder binder, Reifier dict, Persistence persist) throws ServiceException {
 		try {
             String url = lookupServerURL(binder);
             _logger.info("lookupServerURL: url=" + url);
