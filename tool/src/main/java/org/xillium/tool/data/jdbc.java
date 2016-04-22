@@ -66,18 +66,18 @@ public class jdbc {
                         System.out.print("Request = ");
                         System.out.println(mapper.writeValueAsString(mapper.readTree(DataObject.Util.describe(c))));
                     } else if (args.length == 3 && args[2].indexOf('=') < 0) {
-                        t = new org.xillium.data.validation.Dictionary().collect(t, new DataBinder().load(args[2]));
+                        t = new org.xillium.data.validation.Reifier().collect(t, new DataBinder().load(args[2]));
         System.out.println(" calling with"); System.out.println(Beans.toString(t));
                         b = execute(ps, t, conn);
         System.out.println("returned with"); System.out.println(Beans.toString(t));
                     } else if (args[2].indexOf('=') < 0) {
                         DataBinder binder = new DataBinder().load(args[2]);
-                        t = new org.xillium.data.validation.Dictionary().collect(t, binder.load(args, 3));
+                        t = new org.xillium.data.validation.Reifier().collect(t, binder.load(args, 3));
         System.out.println(" calling with"); System.out.println(Beans.toString(t));
                         b = execute(ps, t, conn);
         System.out.println("returned with"); System.out.println(Beans.toString(t));
                     } else {
-                        t = new org.xillium.data.validation.Dictionary().collect(t, new DataBinder().load(args, 2));
+                        t = new org.xillium.data.validation.Reifier().collect(t, new DataBinder().load(args, 2));
         System.out.println("calling with {"); System.out.print(Beans.toString(t)); System.out.println("}");
                         b = execute(ps, t, conn);
         System.out.println("returned with {"); System.out.print(Beans.toString(t)); System.out.println("}");
