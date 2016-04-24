@@ -672,10 +672,12 @@ _logger.fine("endElement " + element);
         while (len > 0 && Character.isWhitespace(ch[start+len-1])) {
             --len;
         }
-        if (_chars.length() > 0) {
-            _chars.append(' ');
+        if (len > 0) {
+            if (_chars.length() > 0) {
+                _chars.append(' ');
+            }
+            _chars.append(ch, start, len);
         }
-        _chars.append(ch, start, len);
     }
 
     private static final Pattern PROCESSING_INSTRUCTION = Pattern.compile("(@?[\\w_]+) *= *\"([^\"]+)\"");
