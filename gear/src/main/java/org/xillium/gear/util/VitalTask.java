@@ -123,7 +123,7 @@ public abstract class VitalTask<T extends Reporting, V> implements Runnable {
                 if (_preparation != null) _preparation.run();
                 _result = execute();
                 if (_age > 0) {
-                    _reporting.emit(Reporting.Severity.NOTICE, "Failure recovered: " + toString(), _age, _logger);
+                    _reporting.emit(Level.INFO, "Failure recovered: " + toString(), _age, _logger);
                 }
                 break;
             } catch (InterruptedException x) {

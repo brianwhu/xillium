@@ -1,6 +1,7 @@
 package org.xillium.core.management;
 
 import java.util.concurrent.Executor;
+import java.util.logging.Level;
 import javax.management.*;
 
 
@@ -20,7 +21,7 @@ public class NotificationBroadcaster extends NotificationBroadcasterSupport {
                 "Bean attribute change"
             ),
             new MBeanNotificationInfo(
-                new String[] { Reporting.Severity.ALERT.toString(), Reporting.Severity.NOTICE.toString() },
+                new String[] { Level.SEVERE.toString(), Level.WARNING.toString(), Level.INFO.toString() },
                 Notification.class.getName(),
                 "Alert"
             )

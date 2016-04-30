@@ -1,5 +1,6 @@
 package org.xillium.core.management;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
@@ -8,14 +9,6 @@ import java.util.logging.Logger;
  */
 public interface Reporting {
     /**
-     * Report Severity.
-     */
-    public enum Severity {
-        NOTICE,
-        ALERT
-    }
-
-    /**
      * Sends a non-JMX message through this manageable.
      */
     public void send(String subject, String message);
@@ -23,7 +16,7 @@ public interface Reporting {
     /**
      * Emits a JMX notification through this manageable.
      */
-    public void emit(Severity severity, String message, long sequence);
+    public void emit(Level severity, String message, long sequence);
 
     /**
      * Emits an alert for a caught Throwable through this manageable.
@@ -33,7 +26,7 @@ public interface Reporting {
     /**
      * Emits a notification through this manageable, entering the notification into a logger along the way.
      */
-    public void emit(Severity severity, String message, long sequence, Logger logger);
+    public void emit(Level severity, String message, long sequence, Logger logger);
 
     /**
      * Emits an alert for a caught Throwable through this manageable, entering the notification into a logger along the way.
