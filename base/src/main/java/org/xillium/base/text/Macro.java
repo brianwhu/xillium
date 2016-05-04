@@ -215,7 +215,14 @@ public class Macro {
                     sb.append(markup.substring(top, matcher.start()));
                     try {
                         String name = matcher.group(1);
-                        try {
+                        if ("*".equals(name)) { // all positional arguments with comma in between
+                            if (args != null) {
+                                for (int i = 1; i < args.length; ++i) {
+                                    if (i > 1) sb.append(',');
+                                    sb.append(args[i]);
+                                }
+                            }
+                        } else try {
                             // positional arguments take precedence
                             int pos = Integer.parseInt(name);
                             if (args != null && -1 < pos && pos < args.length) {
