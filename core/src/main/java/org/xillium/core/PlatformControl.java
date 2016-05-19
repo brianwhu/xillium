@@ -28,6 +28,11 @@ public class PlatformControl implements Reloadable, Lifecycle, ApplicationContex
         return this;
     }
 
+    /**
+     * Initializes this control.
+     */
+    public void initialize() {}
+
     @Override
     public void setApplicationContext(ApplicationContext context) {
         if (context instanceof ConfigurableApplicationContext) {

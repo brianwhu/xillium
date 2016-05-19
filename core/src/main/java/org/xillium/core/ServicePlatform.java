@@ -10,6 +10,7 @@ import javax.management.*;
 import javax.servlet.*;
 import javax.servlet.annotation.WebListener;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
@@ -112,9 +113,12 @@ public final class ServicePlatform extends ManagedPlatform {
                     controlling.bind(this, wac, Thread.currentThread().getContextClassLoader()),
                     new ObjectName(controlling.getClass().getPackage().getName(), "type", controlling.getClass().getSimpleName())
                 );
-            } catch (Exception x) {
+                controlling.initialize();
+            } catch (BeansException x) {
                 // go ahead with platform realization
                 realize(wac, null);
+            } catch (Exception x) {
+                _logger.warning(Throwables.getFirstMessage(x));
             }
         } catch (BeanDefinitionStoreException x) {
             _logger.warning(Throwables.getFirstMessage(x));
