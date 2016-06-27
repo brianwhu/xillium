@@ -46,7 +46,8 @@ public class jdbc {
                 names.add(name);
             }
         } else {
-            ParametricStatement ps = new ParametricStatement().set(new String(Bytes.read(new FileInputStream(args[1]), true)));
+            ParametricStatement ps = args[1].startsWith("report") || args[1].indexOf("query.sql") > -1 ? new ParametricQuery() : new ParametricStatement();
+            ps.set(new String(Bytes.read(new FileInputStream(args[1]), true)));
             stmts.add(new Pair<ParametricStatement, Class<? extends DataObject>>(ps, ps.getDataObjectClass("xillium.t.d.call")));
             names.add(args[1]);
         }
