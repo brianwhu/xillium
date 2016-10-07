@@ -18,13 +18,11 @@ public class Options<T> {
     /**
      * Annotation to provide a description to an option item.
      * Typical uses include
-     * <pre>
-     * {@code
+     * <pre>{@code
      * public class Setting {
      *     @Option.description("Specify an additional class path") public String classpath;
      * }
-     * }
-     * </pre>
+     * }</pre>
      */
     @Retention(RetentionPolicy.RUNTIME)
     public static @interface description {
@@ -34,13 +32,11 @@ public class Options<T> {
     /**
      * Annotation to provide a placeholder to an option item.
      * Typical uses include
-     * <pre>
-     * {@code
+     * <pre>{@code
      * public class Setting {
      *     @Option.placeholder("additional-class-path-to-include") public String classpath;
      * }
-     * }
-     * </pre>
+     * }</pre>
      */
     @Retention(RetentionPolicy.RUNTIME)
     public static @interface placeholder {

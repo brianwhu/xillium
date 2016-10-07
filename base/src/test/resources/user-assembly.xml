@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model:object-assembly xmlns:model="java://org.xillium.base.model" xmlns:lab="java://lab.model">
+    <lab:user><?assemble name="sjones"?>
+        <string first="Steve"/>
+        <string last="Jones"/>
+        <string group="customer"/>
+        <string id="steve.jones"/>
+    </lab:user>
+    <lab:user><?assemble name="dsmith"?>
+        <string first="David"/>
+        <string last="Smith"/>
+        <string group="customer"/>
+        <string id="david.smith"/>
+    </lab:user>
+    <lab:user><?assemble name="tjefferson"?>
+        <string first="Thomas"/>
+        <string last="Jefferson"/>
+        <string group="president"/>
+        <string id="thomas.jefferson"/>
+    </lab:user>
+</model:object-assembly>
+

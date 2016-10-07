@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model:object-assembly xmlns:model="java://org.xillium.base.model" xmlns:lab="java://lab.model">
+    <lab:address street="1990 New Haven Ave" city="Melbourne" state="Florida"><?assemble name="Work"?></lab:address>
+    <lab:address street="300 Sugar Mill Cir" city="Melbourne" state="Florida"><?assemble name="Home"?></lab:address>
+    <lab:address street="1 Busch Ave" city="Tampa" state="Florida"><?assemble name="Play"?></lab:address>
+</model:object-assembly>
+
