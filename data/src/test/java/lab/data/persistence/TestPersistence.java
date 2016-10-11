@@ -75,6 +75,8 @@ System.err.println(getClass().getResource("/object-mapped.xml"));
         assembler.build(getClass().getResourceAsStream("/object-mapped.xml"));
         @SuppressWarnings("unchecked")
 		ObjectMappedQuery<Membership> selectMemberships = (ObjectMappedQuery<Membership>)StorageConfiguration.getParametricStatement("SelectAllMemberships");
+        System.err.println("***testObjectMappedQuery: # of params = " + selectMemberships.getParameters().length);
+        assert selectMemberships.getParameters().length == 0 : "***testObjectMappedQuery: # of params should be zero";
         List<Membership> memberships = selectMemberships.getResults(DataSourceUtils.getConnection(dataSource), null);
         System.err.println("***testObjectMappedQuery: # of results = " + memberships.size());
         for (Membership membership: memberships) {

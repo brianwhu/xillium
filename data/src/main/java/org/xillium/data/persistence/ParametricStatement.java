@@ -432,20 +432,24 @@ public class ParametricStatement {
     private static final Param[] NoParams = new Param[0];
     private static final Pattern PARAM_SYNTAX = Pattern.compile(":([-+]?\\p{Alpha}\\w*\\??):(\\p{Alpha}\\w*)");
     private static final Pattern QUOTE_SYNTAX = Pattern.compile("'([^']*)'");
+    private static final Pattern COMM1_SYNTAX = Pattern.compile("/\\*.*?\\*/", Pattern.DOTALL);
     private static final GuidedTransformer<List<Param>> transformer = new GuidedTransformer<List<Param>>(QUOTE_SYNTAX,
         GuidedTransformer.Action.COPY,
-        new GuidedTransformer<List<Param>>(PARAM_SYNTAX,
-            new Trifunctor<StringBuilder, StringBuilder, List<Param>, Matcher>() {
-                public StringBuilder invoke(StringBuilder sb, List<Param> params, Matcher matcher) {
-                    try {
-                        params.add(new Param(matcher.group(1), java.sql.Types.class.getField(matcher.group(2)).getInt(null)));
-                    } catch (Exception x) {
-                        throw new IllegalArgumentException("Parameter specification :" + matcher.group(1) + ':' + matcher.group(2), x);
+        new GuidedTransformer<List<Param>>(COMM1_SYNTAX,
+            GuidedTransformer.Action.COPY,
+            new GuidedTransformer<List<Param>>(PARAM_SYNTAX,
+                new Trifunctor<StringBuilder, StringBuilder, List<Param>, Matcher>() {
+                    public StringBuilder invoke(StringBuilder sb, List<Param> params, Matcher matcher) {
+                        try {
+                            params.add(new Param(matcher.group(1), java.sql.Types.class.getField(matcher.group(2)).getInt(null)));
+                        } catch (Exception x) {
+                            throw new IllegalArgumentException("Parameter specification :" + matcher.group(1) + ':' + matcher.group(2), x);
+                        }
+                        return sb.append("?");
                     }
-                    return sb.append("?");
-                }
-            },
-            GuidedTransformer.Action.COPY
+                },
+                GuidedTransformer.Action.COPY
+            )
         )
     );
 

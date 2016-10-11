@@ -9,6 +9,10 @@
 
     <persist:object-mapped-query class="lab.data.persistence.TestPersistence$Membership"><?assemble name="SelectAllMemberships"?>
         <![CDATA[
+        /* multiple-line
+         * comments including :firstName:VARCHAR or :lastName:VARCHAR
+         * ought to be skipped
+         */
         SELECT * FROM MEMBERSHIP
         ]]>
     </persist:object-mapped-query>
