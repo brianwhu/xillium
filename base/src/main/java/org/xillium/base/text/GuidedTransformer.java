@@ -37,7 +37,7 @@ import org.xillium.base.Trifunctor;
  *
  * @param <F> the type of a caller provided facility object to be passed to both processing function
  */
-public class GuidedTransformer<F> implements Trifunctor<StringBuilder, StringBuilder, F, String> {
+public class GuidedTransformer<F> implements Trifunctor<StringBuilder, StringBuilder, F, CharSequence> {
     /**
      * Defalut actions
      */
@@ -48,7 +48,7 @@ public class GuidedTransformer<F> implements Trifunctor<StringBuilder, StringBui
 
     private final Pattern _pattern;
     private final Trifunctor<StringBuilder, StringBuilder, F, Matcher> _accepted;
-    private final Trifunctor<StringBuilder, StringBuilder, F, String> _rejected;
+    private final Trifunctor<StringBuilder, StringBuilder, F, CharSequence> _rejected;
 
     /**
      * Constructs a {@code GuidedTransformer} from a regex pattern, a {@code Trifunctor} that processes accepted text, and a
@@ -59,7 +59,7 @@ public class GuidedTransformer<F> implements Trifunctor<StringBuilder, StringBui
      * @param rejected a Trifunctor that is to be invoked on segments of text rejected by the pattern
      */
     public GuidedTransformer(Pattern pattern, Trifunctor<StringBuilder, StringBuilder, F, Matcher> accepted,
-                                              Trifunctor<StringBuilder, StringBuilder, F, String> rejected) {
+                                              Trifunctor<StringBuilder, StringBuilder, F, CharSequence> rejected) {
         _pattern = pattern;
         _accepted = accepted;
         _rejected = rejected;
@@ -77,12 +77,12 @@ public class GuidedTransformer<F> implements Trifunctor<StringBuilder, StringBui
         _pattern = pattern;
         _accepted = accepted;
         _rejected = action == Action.SKIP ?
-            new Trifunctor<StringBuilder, StringBuilder, F, String>() {
-                public StringBuilder invoke(StringBuilder sb, F facility, String original) { return sb; }
+            new Trifunctor<StringBuilder, StringBuilder, F, CharSequence>() {
+                public StringBuilder invoke(StringBuilder sb, F facility, CharSequence original) { return sb; }
             }
             :
-            new Trifunctor<StringBuilder, StringBuilder, F, String>() {
-                public StringBuilder invoke(StringBuilder sb, F facility, String original) { return sb.append(original); }
+            new Trifunctor<StringBuilder, StringBuilder, F, CharSequence>() {
+                public StringBuilder invoke(StringBuilder sb, F facility, CharSequence original) { return sb.append(original); }
             };
     }
 
@@ -94,7 +94,7 @@ public class GuidedTransformer<F> implements Trifunctor<StringBuilder, StringBui
      * @param action an instruction to either skip or copy segments of text accepted by the pattern
      * @param rejected a Trifunctor that is to be invoked on segments of text rejected by the pattern
      */
-    public GuidedTransformer(Pattern pattern, Action action, Trifunctor<StringBuilder, StringBuilder, F, String> rejected) {
+    public GuidedTransformer(Pattern pattern, Action action, Trifunctor<StringBuilder, StringBuilder, F, CharSequence> rejected) {
         _pattern = pattern;
         _accepted = action == Action.SKIP ?
             new Trifunctor<StringBuilder, StringBuilder, F, Matcher>() {
@@ -116,14 +116,14 @@ public class GuidedTransformer<F> implements Trifunctor<StringBuilder, StringBui
      * @return the {@code StringBuilder}
      */
     @Override
-    public StringBuilder invoke(StringBuilder sb, F facility, String text) {
+    public StringBuilder invoke(StringBuilder sb, F facility, CharSequence text) {
         int top = 0;
         Matcher matcher = _pattern.matcher(text);
         while (matcher.find()) {
-            sb = _rejected.invoke(sb, facility, text.substring(top, matcher.start()));
+            sb = _rejected.invoke(sb, facility, text.subSequence(top, matcher.start()));
             sb = _accepted.invoke(sb, facility, matcher);
             top = matcher.end();
         }
-        return _rejected.invoke(sb, facility, text.substring(top));
+        return _rejected.invoke(sb, facility, text.subSequence(top, text.length()));
     }
 }
