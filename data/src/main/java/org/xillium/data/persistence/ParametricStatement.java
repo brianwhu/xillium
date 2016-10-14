@@ -326,7 +326,7 @@ public class ParametricStatement {
 
     /**
      * Executes an INSERT statement without requesting for generated keys. This method is more lightweight than
-     * {@link executeInsert(Connection, DataObject, boolean)} as it does not create an array for the generated keys.
+     * {@link #executeInsert(Connection, DataObject, boolean)} as it does not create an array for the generated keys.
      *
      * @return the number of rows inserted.
      */

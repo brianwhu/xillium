@@ -227,7 +227,7 @@ public class CachedResultSet {
     /**
      * Builds a name-to-column index for quick access to data by columm names.
      *
-     * @return a {@ Map} that maps column names to column positions starting from 0
+     * @return a {@code Map} that maps column names to column positions starting from 0
      */
     public Map<String, Integer> buildIndex() {
         Map<String, Integer> index = new HashMap<String, Integer>();
@@ -240,7 +240,7 @@ public class CachedResultSet {
     /**
      * Inside an object: serialized the cached result set into JSON.
      *
-     * @param js a JSONBuilder to contain generated JSON text
+     * @param jb a JSONBuilder to contain generated JSON text
      * @return the JSONBuilder
      */
     public JSONBuilder toJSON(JSONBuilder jb) {
