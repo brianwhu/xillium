@@ -6,7 +6,7 @@ import javax.script.*;
 import org.xillium.base.beans.Throwables;
 import org.xillium.data.DataBinder;
 import org.xillium.data.validation.Reifier;
-import org.xillium.core.Persistence;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.core.ServiceException;
 
 

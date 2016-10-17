@@ -16,6 +16,7 @@ import org.xillium.base.beans.*;
 import org.xillium.base.util.Multimap;
 import org.xillium.base.util.Pair;
 import org.xillium.data.*;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.data.persistence.crud.CrudConfiguration;
 import org.xillium.data.xml.*;
 import org.xillium.core.management.ManagedPlatform;

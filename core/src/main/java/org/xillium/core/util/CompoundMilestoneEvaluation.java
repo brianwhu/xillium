@@ -2,8 +2,8 @@ package org.xillium.core.util;
 
 import org.xillium.base.util.Pair;
 import org.xillium.data.DataBinder;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.data.validation.Reifier;
-import org.xillium.core.Persistence;
 
 
 /**

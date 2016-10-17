@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.logging.*;
 
 import org.xillium.base.util.Pair;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.core.util.ServiceMilestone;
 import org.xillium.core.Service;
-import org.xillium.core.Persistence;
 
 
 /**

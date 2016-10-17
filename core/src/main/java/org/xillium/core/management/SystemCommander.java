@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.*;
 import org.xillium.base.beans.*;
 import org.xillium.base.util.Pair;
 import org.xillium.data.*;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.data.validation.*;
 import org.xillium.core.*;
 import org.xillium.core.conf.ServiceAugmentation;

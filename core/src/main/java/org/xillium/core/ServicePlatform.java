@@ -24,7 +24,9 @@ import org.xillium.base.Functor;
 import org.xillium.base.util.Bytes;
 import org.xillium.base.util.Pair;
 import org.xillium.base.beans.*;
+import org.xillium.base.model.*;
 import org.xillium.data.*;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.core.conf.*;
 import org.xillium.core.management.*;
 import org.xillium.core.intrinsic.*;
@@ -339,7 +341,7 @@ public final class ServicePlatform extends ManagedPlatform {
                         }
 
                         if (info.persistence.second != null) {
-                            factory.setBurnedIn(StorageConfiguration.class, info.persistence.second.getStatementMap(), module.simple);
+                            factory.setBurnedIn(ObjectAssembly.class, info.persistence.second.getStatementMap(), module.simple);
                         } else if (usingStorage) {
                             throw new MissingResourceException("No persistence for storage, module: " + module.name, null, null);
                         }

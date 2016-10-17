@@ -2,6 +2,7 @@ package org.xillium.core.intrinsic;
 
 import org.xillium.data.*;
 import org.xillium.core.*;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.data.validation.*;
 
 

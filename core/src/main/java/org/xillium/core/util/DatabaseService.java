@@ -12,6 +12,7 @@ import org.xillium.core.*;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
 import org.xillium.data.persistence.ParametricQuery;
+import org.xillium.data.persistence.Persistence;
 
 
 /**

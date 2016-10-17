@@ -7,6 +7,7 @@ import java.util.Iterator;
 import org.xillium.base.beans.JSONBuilder;
 import org.xillium.base.util.Pair;
 import org.xillium.data.*;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.core.*;
 import org.xillium.data.validation.*;
 

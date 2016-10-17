@@ -7,7 +7,6 @@ import javax.sql.DataSource;
 import org.xillium.base.beans.*;
 import org.xillium.data.*;
 import org.xillium.data.persistence.*;
-import org.xillium.core.Persistence;
 
 
 /**

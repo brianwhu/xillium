@@ -3,6 +3,7 @@ package org.xillium.core.intrinsic;
 import java.util.Map;
 import org.xillium.core.*;
 import org.xillium.data.*;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.data.validation.*;
 
 

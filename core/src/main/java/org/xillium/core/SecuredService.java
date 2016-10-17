@@ -1,7 +1,9 @@
 package org.xillium.core;
 
 import java.util.logging.*;
-import org.xillium.data.*;
+import org.xillium.data.DataBinder;
+import org.xillium.data.persistence.Persistence;
+
 
 /**
  * An implementation of Service.Secured, this abstract service authorizes invocation using an injected Authorizer.
