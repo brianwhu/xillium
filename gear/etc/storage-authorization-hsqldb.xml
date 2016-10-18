@@ -95,11 +95,11 @@
     <?assemble name="UpdateSecureSession"?>
         <![CDATA[
         MERGE INTO
-            SECURE_SESSIONS USING DUAL ON (ID = :id:VARCHAR)
+            SECURE_SESSIONS USING (VALUES :id:VARCHAR, :token:VARCHAR, :clock:NUMERIC) V(ID, TOKEN, CLOCK) ON (SECURE_SESSIONS.ID = V.ID)
         WHEN MATCHED THEN
-            UPDATE SET TOKEN = :token:VARCHAR, CLOCK = :clock:NUMERIC
+            UPDATE SET SECURE_SESSIONS.TOKEN = V.TOKEN, SECURE_SESSIONS.CLOCK = V.CLOCK
         WHEN NOT MATCHED THEN
-            INSERT (ID, TOKEN, CLOCK) VALUES(:id:VARCHAR, :token:VARCHAR, :clock:NUMERIC)
+            INSERT (ID, TOKEN, CLOCK) VALUES(V.ID, V.TOKEN, V.CLOCK)
         ]]>
     </persist:parametric-statement>
 

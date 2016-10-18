@@ -6,6 +6,7 @@ import java.util.logging.*;
 import java.net.InetAddress;
 import org.xillium.base.beans.Strings;
 import org.xillium.data.*;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.core.*;
 import org.xillium.core.management.ManagedComponent;
 

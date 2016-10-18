@@ -8,7 +8,7 @@ import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.Strings;
 import org.xillium.data.DataObject;
 import org.xillium.data.persistence.ObjectMappedQuery;
-import org.xillium.core.Persistence;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.gear.model.coordinate;
 
 

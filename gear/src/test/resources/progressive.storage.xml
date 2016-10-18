@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<conf:storage-configuration xmlns:persist="java://org.xillium.data.persistence" xmlns:conf="java://org.xillium.core.conf">
+<model:object-assembly xmlns:model="java://org.xillium.base.model" xmlns:persist="java://org.xillium.data.persistence">
 
     <persist:object-mapped-query class="org.xillium.gear.util.Progressive$State">
     <?assemble name="RecallState"?>
@@ -52,5 +52,5 @@
         ]]>
     </persist:object-mapped-query>
 
-</conf:storage-configuration>
+</model:object-assembly>
 

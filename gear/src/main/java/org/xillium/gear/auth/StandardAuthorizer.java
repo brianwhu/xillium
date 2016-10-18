@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.logging.*;
 import org.xillium.base.beans.Strings;
 import org.xillium.data.*;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.core.*;
 import org.xillium.core.management.ManagedComponent;
 import org.xillium.core.management.WithCache;

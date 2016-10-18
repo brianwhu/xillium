@@ -1,7 +1,7 @@
 package org.xillium.gear.util;
 
 import org.xillium.data.DataObject;
-import org.xillium.core.Persistence;
+import org.xillium.data.persistence.Persistence;
 
 
 /**

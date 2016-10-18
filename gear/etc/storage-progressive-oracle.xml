@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<conf:storage-configuration xmlns:persist="java://org.xillium.data.persistence" xmlns:conf="java://org.xillium.core.conf">
+<model:object-assembly xmlns:model="java://org.xillium.base.model" xmlns:persist="java://org.xillium.data.persistence">
 
     <!--
      | PL/SQL
@@ -46,5 +46,5 @@
         ]]>
     </persist:parametric-statement>
 
-</conf:storage-configuration>
+</model:object-assembly>
 

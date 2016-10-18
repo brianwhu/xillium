@@ -13,6 +13,7 @@ import javax.servlet.http.*;
 import javax.xml.bind.DatatypeConverter;
 import org.xillium.base.beans.*;
 import org.xillium.data.*;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.core.*;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;

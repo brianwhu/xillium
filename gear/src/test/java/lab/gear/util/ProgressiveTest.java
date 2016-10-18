@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testng.annotations.*;
 
 import org.xillium.base.beans.*;
+import org.xillium.data.persistence.Persistence;
 import org.xillium.core.*;
 import org.xillium.core.conf.*;
 import org.xillium.core.management.*;

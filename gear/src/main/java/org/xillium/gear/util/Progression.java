@@ -2,7 +2,7 @@ package org.xillium.gear.util;
 
 import java.util.logging.*;
 import org.xillium.base.beans.*;
-import org.xillium.core.Persistence;
+import org.xillium.data.persistence.Persistence;
 import org.springframework.transaction.annotation.Transactional;
 
 
