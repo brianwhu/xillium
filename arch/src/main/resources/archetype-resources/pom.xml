@@ -72,17 +72,17 @@
     <dependency>
       <groupId>org.xillium</groupId>
       <artifactId>xillium-base</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.7</version>
     </dependency>
     <dependency>
       <groupId>org.xillium</groupId>
       <artifactId>xillium-data</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.7</version>
     </dependency>
     <dependency>
       <groupId>org.xillium</groupId>
       <artifactId>xillium-core</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.7</version>
     </dependency>
     <dependency>
       <groupId>org.testng</groupId>

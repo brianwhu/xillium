@@ -53,7 +53,7 @@
   ** xillium Persistence object supporting SQL with named parameters
   -->
 
-  <bean id="persistence" class="org.xillium.core.Persistence">
+  <bean id="persistence" class="org.xillium.data.persistence.Persistence">
     <constructor-arg index="0"><ref bean="dataSource"/></constructor-arg>
     <property name="transactionManager" ref="transactionManager"/>
   </bean>
