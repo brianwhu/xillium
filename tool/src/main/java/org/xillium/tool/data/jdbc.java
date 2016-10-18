@@ -12,12 +12,12 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import org.xillium.base.util.Bytes;
 import org.xillium.base.util.Pair;
 import org.xillium.base.beans.*;
+import org.xillium.base.model.ObjectAssembly;
 import org.xillium.data.CachedResultSet;
 import org.xillium.data.DataObject;
 import org.xillium.data.DataBinder;
 import org.xillium.data.validation.*;
 import org.xillium.data.persistence.*;
-import org.xillium.core.conf.StorageConfiguration;
 
 
 public class jdbc {
@@ -38,7 +38,7 @@ public class jdbc {
         int separator = args[1].indexOf(".xml:");
         if (separator > 0) {
             Map<String, ParametricStatement> map = new HashMap<String, ParametricStatement>();
-            factory.setBurnedIn(StorageConfiguration.class, map, "-");
+            factory.setBurnedIn(ObjectAssembly.class, map, "-");
             assembler.build(args[1].substring(0, separator+4));
             for (String name: args[1].substring(separator+5).split(" *, *")) {
                 ParametricStatement ps = map.get("-/" + name);
