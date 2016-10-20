@@ -1,3 +1,15 @@
+# /* vim:set filetype=sh: */
+
+# show directory structure in a maven project
+ltree() {
+case $# in 0) p=.;; *) p=$1;; esac && find $p -not \( -name target -prune \) -not \( -name .git -prune \)|sed 's/[^-][^\/]*\//--/g;s/-/|/'
+}
+
+# list most recently modified files in a maven project
+latest() {
+find . -not \( -name target -prune \) -type f -printf '%Ts\t%T+\t%p\n'|sort -nr|head -25|cut -f2-3
+}
+
 # find a string in any of the given type of files
 ff() {
 find . \( -name "*.$1" \) -exec grep "$2" {} \; -print
@@ -78,10 +90,12 @@ esac
 
 # build several modules in sequence then a deployment unit
 mk() {
+local a
+while expr "$1" : "-.*" >/dev/null 2>&1; do a="$a $1" && shift; done
 case $# in
 0) ;;
-1) mvn -f deploys/$1/pom.xml install;;
-*) p=$1; shift; mvn -f modules/$p/pom.xml install && mk $*;;
+1) mvn -f deploys/$1/pom.xml install $a;;
+*) local p=$1; shift; mvn -f modules/$p/pom.xml install $a && mk $a $*;;
 esac
 }
 
