@@ -16,8 +16,8 @@ import org.xillium.base.type.typeinfo;
  */
 public class Options<T> {
     /**
-     * Annotation to provide a description to an option item.
-     * Typical uses include
+     * Annotation to provide a description to an option item. A field must be annotated by {@code @Option.description}
+     * to be recognized as a command line option. Typical uses include
      * <pre>{@code
      * public class Setting {
      *     @Option.description("Specify an additional class path") public String classpath;
@@ -57,7 +57,8 @@ public class Options<T> {
     private final Map<Character, Field> _booleans = new TreeMap<>();
 
     /**
-     * Constructs an Options parser bound to a receiving object.
+     * Constructs an Options parser bound to a receiving object. Public fields of the object that are annotated by
+     * {@code @Option.description} are recognized as command line options.
      *
      * @param options the Java object whose public data members are to be updated by command line arguments
      */
@@ -77,7 +78,7 @@ public class Options<T> {
 
         Set<Character> set = new HashSet<>();
         for (Field field: Beans.getKnownInstanceFields(prototype)) {
-            if (field.getType() == Boolean.class || field.getType() == Boolean.TYPE) {
+            if (field.getAnnotation(description.class) != null && (field.getType() == Boolean.class || field.getType() == Boolean.TYPE)) {
                 char key = getShortOptionKey(field);
                 // if any keys clash, reject all of them
                 if (!set.contains(key)) {
@@ -98,6 +99,9 @@ public class Options<T> {
     public <A extends Appendable> A document(A output) throws IOException {
         StringBuilder line = new StringBuilder();
         for (Field field: Beans.getKnownInstanceFields(_prototype)) {
+            description d = field.getAnnotation(description.class);
+            if (d == null) continue;
+
             placeholder p = field.getAnnotation(placeholder.class);
             char key = getShortOptionKey(field);
             if ((field.getType() == Boolean.class || field.getType() == Boolean.TYPE) && _booleans.containsKey(key)) {
@@ -105,15 +109,12 @@ public class Options<T> {
             } else {
                 line.append("  --").append(field.getName()).append('=').append(p != null ? p.value() : "value");
             }
-            description d = field.getAnnotation(description.class);
-            if (d != null) {
                 if (line.length() < 16) {
                     for (int i = line.length(); i < 16; ++i) line.append(' ');
                     line.append(d.value());
                 } else {
                     line.append("\n\t\t").append(d.value());
                 }
-            }
             output.append(line.toString()).append('\n');
             line.setLength(0);
         }
@@ -143,7 +144,7 @@ public class Options<T> {
                     for (char letter: matcher.group(1).toCharArray()) {
                         char key = Character.toLowerCase(letter);
                         Field field = _booleans.get(key);
-                        if (field != null) {
+                        if (field != null && field.getAnnotation(description.class) != null) {
                             try {
                                 field.set(_options, Character.isLowerCase(letter));
                             } catch (IllegalAccessException x) {
@@ -161,7 +162,9 @@ public class Options<T> {
 //System.out.println("value = " + value);
                     try {
                         Field field = Beans.getKnownField(_prototype, param);
-                        if (value != null) { // allowing arguments like "--data=" if empty value is okay with the data object
+                        if (field.getAnnotation(description.class) == null) {
+                            throw new NoSuchFieldException(param);
+                        } else if (value != null) { // allowing arguments like "--data=" if empty value is okay with the data object
                             if (Collection.class.isAssignableFrom(field.getType())) {
                                 Class<?> elementType = field.getAnnotation(typeinfo.class).value()[0];
                                 ((Collection)field.get(_options)).add(new ValueOf(elementType).invoke(value));
