@@ -66,4 +66,12 @@ public class StringsTest {
         gap = System.currentTimeMillis() - start;
         System.out.println("DatatypeConverter.printHexBinary: " + gap);
     }
+
+    @Test(groups={"join"})
+    public void testJoin() throws Exception {
+        assert Strings.join(new int[]{ 1, 3, 5, 7, 9 }, '-').equals("1-3-5-7-9");
+        assert Strings.join(new int[]{ 1, 3, 5, 7, 9 }, '-', 11, 13).equals("1-3-5-7-9-11-13");
+        assert Strings.join(new String[]{ "Hello", "Mr.", "Jones" }, ' ').equals("Hello Mr. Jones");
+        assert Strings.join(new String[]{ "Good", "Morning" }, ' ', "Adam").equals("Good Morning Adam");
+    }
 }

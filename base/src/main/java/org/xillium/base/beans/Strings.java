@@ -344,11 +344,14 @@ public class Strings {
      * @param separator - a separator character
      * @return the string from joining elements in the array
      */
-    public static String join(Object array, char separator) {
+    public static String join(Object array, char separator, Object... pieces) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0, ii = Array.getLength(array); i < ii; ++i) {
             Object element = Array.get(array, i);
             sb.append(element != null ? element.toString() : "null").append(separator);
+        }
+        for (int i = 0; i < pieces.length; ++i) {
+            sb.append(pieces[i] != null ? pieces[i].toString() : "null").append(separator);
         }
         if (sb.length() > 0) sb.setLength(sb.length()-1);
         return sb.toString();
@@ -362,10 +365,13 @@ public class Strings {
      * @param separator - a separator character
      * @return the string from joining elements in the iterable
      */
-    public static <T> String join(Iterable<T> iterable, char separator) {
+    public static <T> String join(Iterable<T> iterable, char separator, T... pieces) {
         StringBuilder sb = new StringBuilder();
         for (T element: iterable) {
             sb.append(element != null ? element.toString() : "null").append(separator);
+        }
+        for (int i = 0; i < pieces.length; ++i) {
+            sb.append(pieces[i] != null ? pieces[i].toString() : "null").append(separator);
         }
         if (sb.length() > 0) sb.setLength(sb.length()-1);
         return sb.toString();
