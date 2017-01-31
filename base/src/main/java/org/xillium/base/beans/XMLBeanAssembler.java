@@ -622,6 +622,7 @@ _logger.fine("endElement " + element);
         }
         _chars.setLength(0);
         _logger.fine("<<ElementInfo: " + element.type.getName() + " in " + element +
+                   "\n    @to is " + element.inst.get("@to") +
                    "\n    @as is " + element.inst.get("@as") +
                    "\n    @id is " + element.inst.get("@id"));
 
@@ -643,11 +644,16 @@ _logger.fine("endElement " + element);
             ElementInfo parent = _stack.get(_stack.size()-1);
             _logger.fine("Parent is " + parent.data.getClass().getName());
             try {
+                Object target = parent.data;
+                String to = element.inst.get("@to");
+                if (to != null) {
+                    target = parent.data.getClass().getMethod("get" + Strings.toCamelCase(to, '-', false)).invoke(parent.data);
+                }
                 String as = element.inst.get("@as");
                 if (as != null) {
-                    injectProperty(parent.data, element.type, element.data, Strings.toCamelCase(as, '-', false), element.args.complete());
+                    injectProperty(target, element.type, element.data, Strings.toCamelCase(as, '-', false), element.args.complete());
                 } else {
-                    injectProperty(parent.data, element.type, element.data, null, element.args.complete());
+                    injectProperty(target, element.type, element.data, null, element.args.complete());
                 }
             } catch (Exception x) {
 				if (!_lenient) {
