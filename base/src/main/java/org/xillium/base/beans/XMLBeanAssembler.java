@@ -127,6 +127,13 @@ public class XMLBeanAssembler extends DefaultHandler {
         _lenient = lenient;
     }
 
+    private void complain(String message, Exception x) throws BeanAssemblyException {
+        if (!_lenient) {
+            throw new BeanAssemblyException(message, x);
+        } else {
+            _logger.log(Level.WARNING, message);
+        }
+    }
 
     private String fixPotentialArrayName(String name) {
         if (name.endsWith("[]")) {
@@ -258,6 +265,11 @@ public class XMLBeanAssembler extends DefaultHandler {
         }
 
         // attempt property injection using setXXX(), addXXX(), set(), or add(), in that order
+    try {
+        _logger.fine(S.fine(_logger) ? "trying " + name + "() on " + bean.getClass() + ": " + property.length + args(property) : null);
+        Beans.invoke(bean, name, property);
+        _logger.fine("... successful");
+    } catch (NoSuchMethodException x0) {
         try {
             _logger.fine(S.fine(_logger) ? "trying set" + name + "() on " + bean.getClass() + ": " + property.length + args(property) : null);
             Beans.invoke(bean, "set" + name, property);
@@ -279,6 +291,7 @@ public class XMLBeanAssembler extends DefaultHandler {
                 }
             }
         }
+    }
     }
 
     private void injectProperty(Object bean, Class<?> type, Object property, String alias, TypedValueGroup arguments)
@@ -430,6 +443,8 @@ public class XMLBeanAssembler extends DefaultHandler {
         Object data;
         Map<String, String> pkgs = new HashMap<String, String>(); // xmlns/packages defined on this element
         String jpkg; // the java package assigned to this element
+        boolean lang; // type is primitive in java.lang
+        boolean stub; // data created by default constructor
         TypedValueGroup args = new TypedValueGroup();
         Map<String, String> inst = new HashMap<String, String>(); // assembly instructions
 
@@ -517,6 +532,7 @@ public class XMLBeanAssembler extends DefaultHandler {
             }
         } else if (isPrimitiveType(q)) {
             info.jpkg = "java.lang";
+            info.lang = true;
         } else if (!_stack.isEmpty()) {
             info.jpkg = _stack.get(_stack.size()-1).jpkg;
         } else {
@@ -573,25 +589,18 @@ public class XMLBeanAssembler extends DefaultHandler {
 	                    _logger.fine("Create " + info.name + " with the default constructor");
 	                    info.data = _factory.create(info.name);
 	                    info.type = info.data.getClass();
+                        info.stub = true;
 	                }
 	            }
             } catch (ClassNotFoundException x) {
                 // no class by the element name is found, assumed String
-                if (!_lenient) {
-                    throw new BeanAssemblyException("No class associated with element " + q);
-                } else {
-					_logger.log(Level.WARNING, "can't find class " + info.name, x);
-				}
+                complain("No class associated with element " + q, x);
             }
             _stack.add(info);
             //_logger.fine(">>ElementInfo: " + info.type.getName() + " in " + info);
             // all other exceptions indicate mismatches between the beans and the XML schema
         } catch (Exception x) {
-            if (!_lenient) {
-                throw new BeanAssemblyException("Failed to assemble bean from element " + q, x);
-            } else {
-				_logger.log(Level.SEVERE, "can't create object for this element", x);
-			}
+            complain("Failed to assemble bean from element " + q, x);
         }
     }
 
@@ -613,11 +622,16 @@ _logger.fine("endElement " + element);
             try {
                 injectProperty(element.data, String.class, _chars.toString(), null, null);
             } catch (Exception x) {
-				if (!_lenient) {
-					throw new BeanAssemblyException("Failed to set characters to object " + element.type.getName(), x);
-				} else {
-					_logger.warning("Failed to set characters to parent " + element.data);
-				}
+                if (element.lang && element.stub) {
+                    // recreate the primitive type with a sole String argument
+                    try {
+                        element.data = _factory.create(element.name, _chars.toString());
+                    } catch (Exception y) {
+                        complain("Failed to recreate object type " + element.name + " with charactors", y);
+                    }
+                } else {
+                    complain("Failed to set characters to object " + element.type.getName(), x);
+                }
             }
         }
         _chars.setLength(0);
@@ -649,18 +663,16 @@ _logger.fine("endElement " + element);
                 if (to != null) {
                     target = parent.data.getClass().getMethod("get" + Strings.toCamelCase(to, '-', false)).invoke(parent.data);
                 }
-                String as = element.inst.get("@as");
-                if (as != null) {
-                    injectProperty(target, element.type, element.data, Strings.toCamelCase(as, '-', false), element.args.complete());
+                String name = element.inst.get("@do");
+                if (name != null) {
+                    injectProperty(target, element.type, element.data, name, element.args.complete());
+                } else if ((name = element.inst.get("@as")) != null) {
+                    injectProperty(target, element.type, element.data, Strings.toCamelCase(name, '-', false), element.args.complete());
                 } else {
                     injectProperty(target, element.type, element.data, null, element.args.complete());
                 }
             } catch (Exception x) {
-				if (!_lenient) {
-					throw new BeanAssemblyException("Failed to set value " + element.data + " to parent " + parent.data, x);
-				} else {
-					_logger.log(Level.WARNING, "Failed to set value " + element.data + " to parent " + parent.data, x);
-				}
+                complain("Failed to set value " + element.data + " to parent " + parent.data, x);
             }
         }
         _top = element.data;
