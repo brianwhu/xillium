@@ -7,7 +7,7 @@ case $# in
 esac
 
 if ! [ -f $HOME/.xilliumrc ]; then
-    catalina=`find /usr -name catalina.sh 2>/dev/null|head -1|awk 'BEGIN{FS="/bin/"}{print $1}'`
+    catalina=`find / -name catalina.sh 2>/dev/null|head -1|awk 'BEGIN{FS="/bin/"}{print $1}'`
     if [ -n $catalina ]; then
         echo "export CATALINA_HOME=$catalina" >> $HOME/.xilliumrc
         instance=`find / -name webapps -type d 2>/dev/null|head -1|awk 'BEGIN{FS="/webapps"}{print $1}'`

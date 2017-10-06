@@ -18,14 +18,14 @@ rm -f /tmp/xillium.rt.zip
 (cd `dirname $0` && zip -r9 /tmp/xillium.rt.zip rt > /dev/null 2>&1)
 
 ctrl() {
-    ssh root@$2 "mkdir -p deployment"
-    echo "put /tmp/xillium.rt.zip deployment" | sftp -oBatchMode=yes -b - root@$2 > /dev/null 2>&1
+    ssh ${user:-${USER}}@$2 "mkdir -p deployment"
+    echo "put /tmp/xillium.rt.zip deployment" | sftp -oBatchMode=yes -b - ${user:-${USER}}@$2 > /dev/null 2>&1
     echo "Installing ..."
-    ssh root@$2 "rm -rf deployment/rt && unzip -d deployment deployment/xillium.rt.zip > /dev/null 2>&1"
+    ssh ${user:-${USER}}@$2 "rm -rf deployment/rt && unzip -d deployment deployment/xillium.rt.zip > /dev/null 2>&1"
     echo "Cleaning up ..."
-    ssh root@$2 "rm -f deployment/xillium.rt.zip"
+    ssh ${user:-${USER}}@$2 "rm -f deployment/xillium.rt.zip"
     echo "Setting up environment ..."
-    ssh root@$2 "chmod +x deployment/rt/bin/* && sh deployment/rt/bin/inst $3"
+    ssh ${user:-${USER}}@$2 "chmod +x deployment/rt/bin/* && sh deployment/rt/bin/inst $3"
 }
 
 . $(dirname $0)/apply

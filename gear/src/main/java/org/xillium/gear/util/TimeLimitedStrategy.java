@@ -21,7 +21,7 @@ public class TimeLimitedStrategy implements TrialStrategy {
     @Override
     public void observe(int age) throws InterruptedException {
         if (System.currentTimeMillis() >= _limit) {
-            throw new InterruptedException("Time is up");
+            throw new InterruptedException("Time{" + System.currentTimeMillis() + "}HasPassed{" + _limit + '}');
         }
     }
 

@@ -20,10 +20,10 @@ ctrl() {
             t=webapps
         fi
         echo "Preparing server '$2' ..."
-        ssh root@$2 '$HOME/deployment/rt/bin/deploy_prep' $m $t
+        ssh ${user:-${USER}}@$2 '$HOME/deployment/rt/bin/deploy_prep' $m $t
         echo "Deploying '$m' to server '$2' ..."
-        echo "put ${M2_REPO:-$HOME/.m2/repository}/$GRP/$m/$REV/$m-$REV.war deployment" | sftp -oBatchMode=yes -b - root@$2 > /dev/null
-        ssh root@$2 '$HOME/deployment/rt/bin/deploy_link' $m $t $REV
+        echo "put ${M2_REPO:-$HOME/.m2/repository}/$GRP/$m/$REV/$m-$REV.war deployment" | sftp -oBatchMode=yes -b - ${user:-${USER}}@$2 > /dev/null
+        ssh ${user:-${USER}}@$2 '$HOME/deployment/rt/bin/deploy_link' $m $t $REV
     else
         echo "Unknown server: $2"
     fi

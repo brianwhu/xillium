@@ -7,7 +7,7 @@ case $# in 0) p=.;; *) p=$1;; esac && find $p -not \( -name target -prune \) -no
 
 # list most recently modified files in a maven project
 latest() {
-find . -not \( -name target -prune \) -type f -printf '%Ts\t%T+\t%p\n'|sort -nr|head -25|cut -f2-3
+find ${1:-.} -not \( -name target -prune \) -not \( -name .git -prune \) -type f -printf '%Ts\t%T+\t%p\n'|sort -nr|head -25|cut -f2-3
 }
 
 # find a string in any of the given type of files

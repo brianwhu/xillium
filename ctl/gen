@@ -8,7 +8,7 @@ case $# in
 4) mvn archetype:generate -DarchetypeCatalog=local \
     -DarchetypeGroupId=org.xillium \
     -DarchetypeArtifactId=xillium-arch \
-    -DarchetypeVersion=1.1-SNAPSHOT \
+    -DarchetypeVersion=1.1.7 \
     -DgroupId=$1 \
     -DartifactId=$2 \
     -Dmodule1name=$3 \
@@ -20,7 +20,7 @@ case $# in
       mvn archetype:generate -DarchetypeCatalog=local -DarchetypeRepository=https://oss.sonatype.org/content/repositories/snapshots \
         -DarchetypeGroupId=org.xillium \
         -DarchetypeArtifactId=xillium-arch \
-        -DarchetypeVersion=1.0-SNAPSHOT \
+        -DarchetypeVersion=1.1.7 \
         -DgroupId=$1 \
         -DartifactId=$2 \
         -Dmodule1name=$3 \
