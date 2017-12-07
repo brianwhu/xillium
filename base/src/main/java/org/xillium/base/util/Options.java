@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.regex.*;
 
 import org.xillium.base.beans.Beans;
+import org.xillium.base.beans.Strings;
 import org.xillium.base.type.typeinfo;
 
 
@@ -50,7 +51,7 @@ public class Options<T> {
 
     private static final String  STOPPER = "--";
     private static final Pattern SOPTION = Pattern.compile("-([0-9A-Za-z]+)");
-    private static final Pattern LOPTION = Pattern.compile("--(\\p{Alpha}\\w*)(?:=(.*))?");
+    private static final Pattern LOPTION = Pattern.compile("--(\\p{Alpha}[\\w-]*)(?:=(.*))?");
 
     private final T _options;
     private final Class<?> _prototype;
@@ -103,11 +104,12 @@ public class Options<T> {
             if (d == null) continue;
 
             placeholder p = field.getAnnotation(placeholder.class);
+            String n = Strings.splitCamelCase(field.getName(), "-").toLowerCase();
             char key = getShortOptionKey(field);
             if ((field.getType() == Boolean.class || field.getType() == Boolean.TYPE) && _booleans.containsKey(key)) {
-                line.append("  -").append(key).append(", --").append(field.getName());
+                line.append("  -").append(key).append(", --").append(n);
             } else {
-                line.append("  --").append(field.getName()).append('=').append(p != null ? p.value() : "value");
+                line.append("  --").append(n).append('=').append(p != null ? p.value() : "value");
             }
                 if (line.length() < 16) {
                     for (int i = line.length(); i < 16; ++i) line.append(' ');
@@ -161,7 +163,7 @@ public class Options<T> {
 //System.out.println("groups = " + matcher.groupCount());
 //System.out.println("value = " + value);
                     try {
-                        Field field = Beans.getKnownField(_prototype, param);
+                        Field field = Beans.getKnownField(_prototype, Strings.toLowerCamelCase(param, '-'));
                         if (field.getAnnotation(description.class) == null) {
                             throw new NoSuchFieldException(param);
                         } else if (value != null) { // allowing arguments like "--data=" if empty value is okay with the data object
