@@ -46,12 +46,14 @@ public class MetaDataHelper {
         public final String name;
         public final Set<String> primaryKey;
         public final Map<String, ForeignKey> foreignKeys;
+        public final Map<String, ForeignKey> exportedKeys;
         public final List<Column> columns;
 
-        public Table(String n, Set<String> p, Map<String, ForeignKey> f, List<Column> c) {
+        public Table(String n, Set<String> p, Map<String, ForeignKey> f, Map<String, ForeignKey> e, List<Column> c) {
             name = n;
             primaryKey = p;
             foreignKeys = f;
+            exportedKeys = e;
             columns = c;
         }
     }
@@ -66,14 +68,34 @@ public class MetaDataHelper {
     private static final int COLUMNS_TB_COL_DEFAULT = 13;
 */
 
+    private static final int ALL_TABLES_TAB_NAME = 3;
+
     private static final int PRIMARY_PK_COL_NAME = 4;
 
     private static final int IMPORTED_PK_TAB_NAME = 3;
     private static final int IMPORTED_PK_COL_NAME = 4;
-
     private static final int IMPORTED_FK_TAB_NAME = 7;
     private static final int IMPORTED_FK_COL_NAME = 8;
     private static final int IMPORTED_FK_KEY_NAME = 12;
+
+    private static final int EXPORTED_PK_TAB_NAME = 3;
+    private static final int EXPORTED_PK_COL_NAME = 4;
+    private static final int EXPORTED_FK_TAB_NAME = 7;
+    private static final int EXPORTED_FK_COL_NAME = 8;
+    private static final int EXPORTED_FK_KEY_SEQ  = 9;
+    private static final int EXPORTED_FK_KEY_NAME = 12;
+
+
+    public static List<String> getKnownTableNames(DatabaseMetaData metadata) throws Exception {
+        List<String> names = new ArrayList<>();
+        try (ResultSet keys = metadata.getTables(null, null, null, new String[]{ "TABLE" })) {
+            while (keys.next()) {
+                names.add(keys.getString(ALL_TABLES_TAB_NAME));
+            }
+        }
+
+        return names;
+    }
 
     /**
      * Returns a table's primary key columns as a Set of strings.
@@ -86,6 +108,31 @@ public class MetaDataHelper {
         }
         keys.close();
         return columns;
+    }
+
+    /**
+     * Returns a table's exported keys and their columns as a Map from the key name to the ForeignKey object.
+     *
+     * <p>A foreign key may not have a name. On such a database, 2 foreign keys must reference 2 different tables. Otherwise
+     * there's no way to tell them apart and the foreign key information reported by DatabaseMetaData becomes ill-formed.</p>
+     */
+    public static Map<String, ForeignKey> getExportedKeys(DatabaseMetaData metadata, String tableName) throws Exception {
+        ResultSet keys = metadata.getExportedKeys(metadata.getConnection().getCatalog(), metadata.getUserName(), tableName);
+        Map<String, ForeignKey> map = new HashMap<String, ForeignKey>();
+
+        while (keys.next()) {
+            String table = keys.getString(EXPORTED_FK_TAB_NAME);
+            String name = keys.getString(EXPORTED_FK_KEY_NAME);
+            if (name == null || name.length() == 0) name = "UNNAMED_FK_" + table;
+
+            ForeignKey key = map.get(name);
+            if (key == null) {
+                map.put(name, key = new ForeignKey(table));
+            }
+            key.add(keys.getString(EXPORTED_FK_COL_NAME));
+        }
+        keys.close();
+        return map;
     }
 
     /**
@@ -132,7 +179,13 @@ public class MetaDataHelper {
      * Returns a table's structure
      */
     public static Table getTable(DatabaseMetaData metadata, String tableName) throws Exception {
-        return new Table(tableName, getPrimaryKey(metadata, tableName), getForeignKeys(metadata, tableName), getColumns(metadata, tableName));
+        return new Table(
+            tableName,
+            getPrimaryKey(metadata, tableName),
+            getForeignKeys(metadata, tableName),
+            getExportedKeys(metadata, tableName),
+            getColumns(metadata, tableName)
+        );
     }
 
     /**

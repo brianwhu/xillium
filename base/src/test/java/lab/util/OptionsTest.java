@@ -38,6 +38,9 @@ public class OptionsTest {
         @Options.description("Set a project name")
         @Options.placeholder("name")
         public String name = "default";
+        @Options.description("Specify input character encoding")
+        @Options.placeholder("encoding")
+        public String inputEncoding = "utf-8";
     }
 
     @Test(groups={"options"})
@@ -45,7 +48,7 @@ public class OptionsTest {
         Options<Configuration> options = new Options<>(new Configuration());
         List<Pair<Options.Unrecognized, String>> errors = new ArrayList<>();
         int index = options.parse(new String[] {
-            "--name=", "-dC", "--3a", "--data=F", "--dynamic", "--data=A", "--since=2015-10-07", "--date=2015-10-10", "--date=2015-12-12", "--compress=9", "--data=", "--levels=2,3,4,18", "--data", "--", "--path"
+            "--name=", "-dC", "--3a", "--data=F", "--dynamic", "--data=A", "--since=2015-10-07", "--date=2015-10-10", "--date=2015-12-12", "--compress=9", "--data=", "--levels=2,3,4,18", "--input-encoding=ascii", "--data", "--", "--path"
         }, 0, errors);
         options.document(System.out);
         System.out.println(index);
@@ -53,7 +56,7 @@ public class OptionsTest {
         System.out.println(Beans.toString(options.get()));
 
         Configuration c = options.get();
-        assert index == 14 : "wrong stop index";
+        assert index == 15 : "wrong stop index";
         assert errors.size() == 2;
         assert c.dynamic;
         assert !c.local;
@@ -61,5 +64,6 @@ public class OptionsTest {
         assert !c.compatible;
         assert c.data.size() == 3;
         assert c.date.size() == 2;
+        assert c.inputEncoding.equals("ascii");
     }
 }
