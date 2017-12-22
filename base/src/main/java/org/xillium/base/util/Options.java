@@ -158,7 +158,7 @@ public class Options<T> {
                     }
                 } else if ((matcher = LOPTION.matcher(args[index])).matches()) {
 //System.out.println("LOPTION: " + args[index]);
-                    String param = Strings.toLowerCamelCase(matcher.group(1), '-');
+                    String param = matcher.group(1);
                     String value = matcher.group(2);
 //System.out.println("groups = " + matcher.groupCount());
 //System.out.println("value = " + value);
