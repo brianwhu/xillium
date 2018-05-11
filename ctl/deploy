@@ -6,23 +6,39 @@ case $# in
 esac
 
 # project revision to deploy
-TOP=$(dirname $0)/..
-REV=$(cd $TOP && grep '<global.version>' pom.xml|awk 'BEGIN{FS="[<>]"}{print $3}')
-GRP=$(cd $TOP && grep '<groupId>' pom.xml|head -1|awk 'BEGIN{FS="[<>]"}{print $3}'|sed 's/\./\//g')
+CTL=$(dirname $(readlink -f $0))
+REV=$(grep '<version>' pom.xml|head -1|awk 'BEGIN{FS="[<>]"}{print $3}')
 
-ctrl() {
+echo $CTL
+echo $REV
+
+ctrl() { # argument host env
     local m
     if m=`expr "$2" : '\(.*[^.0-9]\)[0-9]*\..*'` > /dev/null
     then
-        local p=`expr "$m" : '[^-][^-]*-\(.*\)'` > /dev/null
-        local t=$(cd $TOP/deploys/$p && grep '<deployment.target>' pom.xml|head -1|awk 'BEGIN{FS="[<>]"}{print $3}')
+        local p="$m"
+        while [ "$p" -a ! \( -f "deploys/$p/pom.xml" \) ]; do
+            echo "directory 'deploys/$p'... not there"
+            p=`expr "$p" : '[^-][^-]*-\(.*\)'` > /dev/null
+        done
+        if [ -z "$p" ]; then
+            echo "*** no deployment unit found" && exit 1
+        fi
+
+        local t=$(grep '<deployment.target>' deploys/$p/pom.xml|head -1|awk 'BEGIN{FS="[<>]"}{print $3}')
         if [ -z "$t" ]; then
             t=webapps
         fi
+        local f=$(find deploys/$p -type f -name '*war' 2>/dev/null)
+        if [ -z "$f" ]; then
+            echo "*** no deployment unit found" && exit 1
+        fi
+        echo "Deployment module: $m, prefix: $p, target: $t, file: $f"
         echo "Preparing server '$2' ..."
+
         ssh ${user:-${USER}}@$2 '$HOME/deployment/rt/bin/deploy_prep' $m $t
         echo "Deploying '$m' to server '$2' ..."
-        echo "put ${M2_REPO:-$HOME/.m2/repository}/$GRP/$m/$REV/$m-$REV.war deployment" | sftp -oBatchMode=yes -b - ${user:-${USER}}@$2 > /dev/null
+        echo "put $f deployment" | sftp -oBatchMode=yes -b - ${user:-${USER}}@$2 >/dev/null
         ssh ${user:-${USER}}@$2 '$HOME/deployment/rt/bin/deploy_link' $m $t $REV
     else
         echo "Unknown server: $2"

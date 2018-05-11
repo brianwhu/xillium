@@ -16,12 +16,15 @@ fi
 
 rm -f /tmp/xillium.rt.zip
 (cd `dirname $0` && zip -r9 /tmp/xillium.rt.zip rt > /dev/null 2>&1)
+if [[ -f rt/etc/profile ]]; then
+    zip /tmp/xillium.rt.zip rt/etc/profile
+fi
 
 ctrl() {
     ssh ${user:-${USER}}@$2 "mkdir -p deployment"
     echo "put /tmp/xillium.rt.zip deployment" | sftp -oBatchMode=yes -b - ${user:-${USER}}@$2 > /dev/null 2>&1
     echo "Installing ..."
-    ssh ${user:-${USER}}@$2 "rm -rf deployment/rt && unzip -d deployment deployment/xillium.rt.zip > /dev/null 2>&1"
+    ssh ${user:-${USER}}@$2 "rm -rf deployment/rt && unzip -d deployment deployment/xillium.rt.zip >/dev/null 2>&1"
     echo "Cleaning up ..."
     ssh ${user:-${USER}}@$2 "rm -f deployment/xillium.rt.zip"
     echo "Setting up environment ..."

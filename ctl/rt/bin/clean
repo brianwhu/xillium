@@ -4,7 +4,7 @@
 
 mv    ${CATALINA_BASE:-/usr/tomcat}/logs/catalina.out ${CATALINA_BASE:-/usr/tomcat}/logs/tomcat.out.`date +%F-%H%M%S`
 rm -f ${CATALINA_BASE:-/usr/tomcat}/logs/localhost.*
-rm -f ${CATALINA_BASE:-/usr/tomcat}/logs/catalina.*
+rm -f ${CATALINA_BASE:-/usr/tomcat}/logs/catalina.[0-9]*
 >     ${CATALINA_BASE:-/usr/tomcat}/logs/catalina.out
 find  ${CATALINA_BASE:-/usr/tomcat}/webapps -maxdepth 1 -mindepth 1 -type d -not -name '*.war' -exec rm -rf {} \;
 if [ -d ${CATALINA_BASE:-/usr/tomcat}/secured ]; then

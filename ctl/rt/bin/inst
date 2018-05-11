@@ -35,8 +35,8 @@ if ! [ -f $HOME/.xilliumrc ]; then
         echo "#export XILLIUM_MEM=6g" >> $HOME/.xilliumrc
     fi
 
-    if ! grep $HOME/deployment/rt/etc/bashrc $HOME/.xilliumrc > /dev/null 2>&1; then
-        echo ". $HOME/deployment/rt/etc/bashrc" >> $HOME/.xilliumrc
+    if ! grep $HOME/deployment/rt/etc/profile $HOME/.xilliumrc > /dev/null 2>&1; then
+        echo '. $HOME/deployment/rt/etc/profile' >> $HOME/.xilliumrc
     fi
 fi
 
