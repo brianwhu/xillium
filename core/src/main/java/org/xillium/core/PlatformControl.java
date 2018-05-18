@@ -1,22 +1,21 @@
 package org.xillium.core;
 
 import java.util.logging.*;
-import org.springframework.context.*;
 import org.springframework.web.context.support.XmlWebApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.xillium.core.management.Reloadable;
 
 
 /**
  * A JMX bean that controls the service platform life cycle
  */
-public class PlatformControl implements Reloadable, Lifecycle, ApplicationContextAware {
+public class PlatformControl implements Reloadable {
     private static final Logger _logger = Logger.getLogger(PlatformControl.class.getName());
     private static ServicePlatform _platform;
     private static XmlWebApplicationContext _root;
     private static ClassLoader _cloader;
-    private static boolean _running;
 
-    private ConfigurableApplicationContext _context;
+    private ClassPathXmlApplicationContext _context;
 
     /**
      * To be called by ServicePlatform when detected in the top-level application context.
@@ -29,77 +28,52 @@ public class PlatformControl implements Reloadable, Lifecycle, ApplicationContex
     }
 
     /**
-     * Initializes this control.
+     * Whether this control is set to reload the service platform automatically.
      */
-    public void initialize() {}
-
-    @Override
-    public void setApplicationContext(ApplicationContext context) {
-        if (context instanceof ConfigurableApplicationContext) {
-            _context = (ConfigurableApplicationContext)context;
-        } else {
-            _logger.log(Level.WARNING, "Non-ConfigurableApplicationContext not chainable");
-        }
+    public boolean isAutomatic() {
+        return false;
     }
 
     @Override
     public synchronized String reload() {
-        ClassLoader original = Thread.currentThread().getContextClassLoader();
-        try {
-            Thread.currentThread().setContextClassLoader(_cloader);
-            _root.refresh();
-            if (_context != null) _context.setParent(_root);
-            _platform.realize(_root, _context);
+        if (_context != null) {
             return null;
-        } catch (Exception x) {
-            _logger.log(Level.WARNING, x.getMessage(), x);
-            return x.getMessage();
-        } finally {
-            Thread.currentThread().setContextClassLoader(original);
+        } else {
+            ClassLoader original = Thread.currentThread().getContextClassLoader();
+            try {
+                Thread.currentThread().setContextClassLoader(_cloader);
+                _root.refresh();
+                _context = new ClassPathXmlApplicationContext("applicationContext.xml");
+                _context.setParent(_root);
+                _context.start();
+                _platform.realize(_root, _context);
+                return null;
+            } catch (Exception x) {
+                _logger.log(Level.WARNING, x.getMessage(), x);
+                return x.getMessage();
+            } finally {
+                Thread.currentThread().setContextClassLoader(original);
+            }
         }
     }
 
     @Override
     public synchronized String unload() {
-        ClassLoader original = Thread.currentThread().getContextClassLoader();
-        try {
-            Thread.currentThread().setContextClassLoader(_cloader);
-            _platform.destroy();
+        if (_context == null) {
             return null;
-        } catch (Exception x) {
-            _logger.log(Level.WARNING, x.getMessage(), x);
-            return x.getMessage();
-        } finally {
-            Thread.currentThread().setContextClassLoader(original);
+        } else {
+            ClassLoader original = Thread.currentThread().getContextClassLoader();
+            try {
+                Thread.currentThread().setContextClassLoader(_cloader);
+                _platform.destroy();
+                _context = null;
+                return null;
+            } catch (Exception x) {
+                _logger.log(Level.WARNING, x.getMessage(), x);
+                return x.getMessage();
+            } finally {
+                Thread.currentThread().setContextClassLoader(original);
+            }
         }
     }
-
-    @Override
-    public synchronized boolean isRunning() {
-        _logger.info("Returning " + _running);
-        return _running;
-    }
-
-    @Override
-    public synchronized void start() {
-        _logger.info("Before reload()");
-        if (_platform != null) {
-            _logger.info("Calling reload()");
-            reload();
-            _running = true;
-            _logger.info("Running = " + _running);
-        }
-    }
-
-    @Override
-    public synchronized void stop() {
-        if (_platform != null) {
-            _logger.info("Calling unload()");
-            unload();
-            _running = false;
-            _logger.info("Running = " + _running);
-        }
-        _logger.info("After unload()");
-    }
-
 }

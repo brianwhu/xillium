@@ -17,6 +17,7 @@ import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.context.*;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.context.support.XmlWebApplicationContext;
@@ -57,7 +58,7 @@ public final class ServicePlatform extends ManagedPlatform {
         Hashtable<String, String> attrs = new Hashtable<>(); // jmx object name attributes
     }
 
-    private final Stack<ApplicationContext> _applc = new Stack<>();
+    private final Stack<AbstractApplicationContext> _applc = new Stack<>();
     private final Stack<ObjectName> _manageables = new Stack<>();
     private final Stack<List<Pair<String, PlatformAware>>> _plca = new Stack<>();
     private static final org.xillium.data.validation.Reifier _dict = new org.xillium.data.validation.Reifier();
@@ -115,7 +116,9 @@ public final class ServicePlatform extends ManagedPlatform {
                     controlling.bind(this, wac, Thread.currentThread().getContextClassLoader()),
                     new ObjectName(controlling.getClass().getPackage().getName(), "type", controlling.getClass().getSimpleName())
                 );
-                controlling.initialize();
+                if (controlling.isAutomatic()) {
+                    controlling.reload();
+                }
             } catch (BeansException x) {
                 // go ahead with platform realization
                 realize(wac, null);
@@ -200,7 +203,7 @@ public final class ServicePlatform extends ManagedPlatform {
      * <p>If this method is never called, all application contexts will be unloaded when the servlet context is destroyed.</p>
      */
     public void destroy() {
-        WebApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(_context);
+        XmlWebApplicationContext wac = (XmlWebApplicationContext)WebApplicationContextUtils.getWebApplicationContext(_context);
         if (wac != null) {
             _context.removeAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
         } else {
@@ -249,20 +252,11 @@ public final class ServicePlatform extends ManagedPlatform {
         _registry.remove("x!/list");
         _registry.remove("x!/desc");
         while (!_applc.empty()) {
-            destroy(_applc.pop());
+            _applc.pop().close();
         }
-        destroy(wac);
+        wac.close();
 
         _logger.info("<<<< Service Platform(" + _application + ") destruction complete");
-    }
-
-    private void destroy(ApplicationContext ac) {
-        if (ac instanceof Lifecycle) {
-            try { ((Lifecycle)ac).stop(); } catch (Exception x) { _logger.log(Level.WARNING, "Error stopping context", x); }
-        }
-        if (ac instanceof DisposableBean) {
-            try { ((DisposableBean)ac).destroy(); } catch (Exception x) { _logger.log(Level.WARNING, "Error destroying context", x); }
-        }
     }
 
     // install service modules in the ModuleSorter.Sorted
@@ -378,7 +372,7 @@ public final class ServicePlatform extends ManagedPlatform {
     }
 
     @SuppressWarnings("unchecked")
-    private ApplicationContext load(ApplicationContext parent, ServiceModule module, InputStream stream, ServiceModuleInfo info) {
+    private AbstractApplicationContext load(ApplicationContext parent, ServiceModule module, InputStream stream, ServiceModuleInfo info) {
         GenericApplicationContext gac = new GenericApplicationContext(parent);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
