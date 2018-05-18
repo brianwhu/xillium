@@ -28,6 +28,12 @@ public class ParametricQuery extends ParametricStatement {
     public ParametricQuery() throws IllegalArgumentException {
     }
 
+    @Override
+    public ParametricQuery set(String sql) throws IllegalArgumentException {
+        super.set(sql);
+        return this;
+    }
+
     /**
      * Executes the SELECT statement, passing the result set to the ResultSetWorker for processing.
      *

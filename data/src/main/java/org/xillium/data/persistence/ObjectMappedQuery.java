@@ -116,6 +116,12 @@ public class ObjectMappedQuery<T extends DataObject> extends ParametricQuery {
         _type = type;
     }
 
+    @Override
+    public ObjectMappedQuery<T> set(String sql) throws IllegalArgumentException {
+        super.set(sql);
+        return this;
+    }
+
     /**
      * Executes the query and returns the results as a list of objects.
      */
