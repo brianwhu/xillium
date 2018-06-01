@@ -8,7 +8,7 @@ import javax.annotation.Resource;
 
 //import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.transaction.TransactionConfiguration;
+//import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 import org.testng.annotations.*;
 
@@ -19,7 +19,7 @@ import org.springframework.test.context.testng.AbstractTransactionalTestNGSpring
  * Testing Persistence
  */
 @ContextConfiguration(locations={"/application-context.xml"})
-@TransactionConfiguration(transactionManager="transactionManager", defaultRollback=false)
+//@TransactionConfiguration(transactionManager="transactionManager", defaultRollback=false)
 @Transactional
 public class TestSchema extends AbstractTransactionalTestNGSpringContextTests {
 	private static final int COLUMN_NAME = 4;

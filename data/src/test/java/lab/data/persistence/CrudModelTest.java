@@ -7,7 +7,7 @@ import java.util.*;
 import java.sql.*;
 
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.transaction.TransactionConfiguration;
+//import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.test.context.testng.AbstractTransactionalTestNGSpringContextTests;
 import org.springframework.transaction.annotation.Transactional;
 import org.testng.annotations.*;
@@ -18,7 +18,7 @@ import org.xillium.data.persistence.crud.CrudCommand;
 
 
 @ContextConfiguration(locations={"/application-context.xml"})
-@TransactionConfiguration(transactionManager="transactionManager", defaultRollback=false)
+//@TransactionConfiguration(transactionManager="transactionManager", defaultRollback=false)
 @Transactional(readOnly=true)
 public class CrudModelTest extends AbstractTransactionalTestNGSpringContextTests {
 

@@ -6,7 +6,7 @@ import javax.sql.DataSource;
 import javax.annotation.Resource;
 
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.transaction.TransactionConfiguration;
+//import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.test.context.testng.AbstractTransactionalTestNGSpringContextTests;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.jdbc.datasource.DataSourceUtils;
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
  * Testing Persistence
  */
 @ContextConfiguration(locations={"/application-context.xml"})
-@TransactionConfiguration(transactionManager="transactionManager", defaultRollback=false)
+//@TransactionConfiguration(transactionManager="transactionManager", defaultRollback=false)
 @Transactional
 public class TestPersistence extends AbstractTransactionalTestNGSpringContextTests {
 //	private static final Date date1 = java.sql.Date.valueOf("2011-09-04");

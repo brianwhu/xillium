@@ -8,14 +8,13 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
 http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
 http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-    <bean name="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"
-          p:ignoreUnresolvablePlaceholders="true"
-          p:ignoreResourceNotFound="true">
+    <bean name="propertyConfigurer" class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
         <property name="locations">
             <list>
                 <value>classpath:progressive.db.properties</value>
             </list>
         </property>
+        <property name="ignoreResourceNotFound" value="true"/>
     </bean>
 
     <!-- jdbc data source -->
