@@ -2,12 +2,15 @@ package org.xillium.base.text;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.regex.*;
 
 import org.xillium.base.*;
 import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.Strings;
+import org.xillium.base.util.Objects;
+import org.xillium.base.util.ValueOf;
 
 
 /**
@@ -98,6 +101,11 @@ public class Macro {
                             if (member.equals("-")) {
                                 items.add(data);
                             } else {
+                                String[] params = parse(member);
+                                if (params != null) {
+                                    Object bean = invoke(data, params);
+                                    if (bean != null) items.add(bean);
+                                } else {
                                 Field field = Beans.getKnownField(data.getClass(), member);
                                 Object bean = field.get(data);
                                 if (field.getType().isArray()) {
@@ -107,12 +115,13 @@ public class Macro {
                                 } else {
                                     if (bean != null) items.add(bean);
                                 }
+                                }
                             }
                         } else {
                             // non-existent member: allow expansion to continue
                             items.add(null);
                         }
-                    } catch (NoSuchFieldException|IllegalAccessException x) {
+                    } catch (NoSuchFieldException|NoSuchMethodException|IllegalAccessException x) {
                         // non-existent member: allow expansion to continue
                         items.add(null);
                     }
@@ -174,7 +183,7 @@ public class Macro {
     public static String expand(String markup, final Object object, String[] args) {
         return expand(markup, PARAMETER, new Functor<Object, String>() {
              public Object invoke(String name) {
-                try { return Beans.getKnownField(object.getClass(), name).get(object); } catch (Exception x) { return null; }
+                try { return Objects.getProperty(object, name); } catch (Exception x) { return null; }
             }
         }, args);
     }
@@ -286,6 +295,23 @@ public class Macro {
                 args.add(text.substring(0, lpara));
                 return Balanced.split(args, null, text, lpara + 1, rpara, ',', null).toArray(new String[args.size()]);
             }
+        }
+    }
+
+    private static Object invoke(Object bean, String[] args) throws NoSuchMethodException {
+        try {
+            for (Method candidate: bean.getClass().getMethods()) {
+                if (!candidate.getName().equals(args[0]) || candidate.getParameterCount() != args.length - 1) continue;
+                Class<?>[] ptypes = candidate.getParameterTypes();
+                Object[] params = new Object[ptypes.length];
+                for (int i = 0; i < ptypes.length; ++i) {
+                    params[i] = new ValueOf(ptypes[i]).invoke(args[i + 1].trim());
+                }
+                return Beans.accessible(candidate).invoke(bean, params);
+            }
+            throw new NoSuchMethodException(args[0]);
+        } catch (IllegalAccessException|java.lang.reflect.InvocationTargetException x) {
+            throw new NoSuchMethodException(x.getMessage());
         }
     }
 }
