@@ -1,11 +1,16 @@
 package org.xillium.data.persistence;
 
+import org.xillium.base.Open;
 import org.xillium.base.Trifunctor;
 import org.xillium.base.text.GuidedTransformer;
+import org.xillium.base.text.Macro;
 import org.xillium.base.beans.Beans;
+import org.xillium.base.util.EnvironmentAware;
+import org.xillium.base.util.EnvironmentReference;
 import org.xillium.data.*;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.regex.*;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -20,7 +25,7 @@ import javassist.bytecode.annotation.MemberValue;
  *
  * TODO: remove nullable setting and checking, and let the database check column nullability
  */
-public class ParametricStatement {
+public class ParametricStatement implements EnvironmentAware {
     public static class Param {
         public static final int IN = 0x0001;
         public static final int OUT = 0x0002;
@@ -116,9 +121,20 @@ public class ParametricStatement {
     }
 
     /**
+     * Install a EnvironmentReference to provide variable expansion on the SQL text.
+     */
+    @Override
+    public void setEnvironmentReference(EnvironmentReference reference) {
+        _env = reference;
+    }
+
+    /**
      * Assigns a SQL string to this ParametricStatement.
      */
     public ParametricStatement set(String sql) throws IllegalArgumentException {
+        if (_env != null) {
+            try { sql = Macro.expand(sql, _env.call()); } catch (Exception x) { throw new IllegalArgumentException(x.getMessage(), x); }
+        }
     if (_params != null) {
         int count = 0;
         int qmark = sql.indexOf('?');
@@ -454,6 +470,7 @@ public class ParametricStatement {
     );
 
     private /*final*/ Param[] _params;
+    protected EnvironmentReference _env;
     protected String _sql;
     protected String _tag;
 

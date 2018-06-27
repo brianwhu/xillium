@@ -19,6 +19,7 @@ import org.xillium.base.beans.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import lab.TestingHelper;
 
 
 /**
@@ -69,7 +70,7 @@ System.err.println(getClass().getResource("/object-mapped.xml"));
 	public void cleanup() {
 	}
 
-	@Test(groups={"object"})
+	@Test(groups={"persistence", "object"})
 	public void testObjectMappedQuery() throws Exception {
         XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
         assembler.build(getClass().getResourceAsStream("/object-mapped.xml"));
@@ -87,7 +88,7 @@ System.err.println(getClass().getResource("/object-mapped.xml"));
         //System.err.println(Beans.toString(memberships));
 	}
 
-	@Test(groups={"object"})
+	@Test(groups={"persistence", "object"})
     public void testResultSet2Xml() throws Exception {
         XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
         assembler.build(getClass().getResourceAsStream("/object-mapped.xml"));
@@ -98,7 +99,7 @@ System.err.println(getClass().getResource("/object-mapped.xml"));
         System.err.println("***testResultSet2Xml: done");
     }
 
-    @Test(groups={"object"})
+    @Test(groups={"persistence", "object"})
     public void testDataObjectClassGen() throws Exception {
         XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
         assembler.build(getClass().getResourceAsStream("/object-mapped.xml"));
@@ -120,9 +121,9 @@ System.err.println(getClass().getResource("/object-mapped.xml"));
         System.err.println("***testDataObjectClassGen: # of results = " + memberships.size());
         assert memberships.size() == 1;
         for (Membership membership: memberships) {
-            System.err.println(membership.email);
-            System.err.println(membership.firstName);
-            System.err.println(membership.lastName);
+            TestingHelper.assertEqual(membership.email, "test@xillium.org");
+            TestingHelper.assertEqual(membership.firstName, "Open Source");
+            TestingHelper.assertEqual(membership.lastName, ":email:VARCHAR");
         }
         //System.err.println(Beans.toString(memberships));
         int rows = StorageConfiguration.getParametricStatement("DeleteMembership").executeUpdate(DataSourceUtils.getConnection(dataSource), t);

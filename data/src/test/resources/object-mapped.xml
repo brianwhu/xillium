@@ -2,8 +2,9 @@
 <lab:storage-configuration xmlns:persist="java://org.xillium.data.persistence" xmlns:lab="java://lab.data.persistence">
 
     <persist:parametric-statement><?assemble name="CreateMembership"?>
+        <lab:statement-configuration/>
         <![CDATA[
-        INSERT INTO MEMBERSHIP(EMAIL,FIRST_NAME,LAST_NAME) VALUES('test@xillium.org', 'System', ':email:VARCHAR')
+        INSERT INTO MEMBERSHIP(EMAIL,FIRST_NAME,LAST_NAME) VALUES('test@xillium.org', '{name}', ':email:VARCHAR')
         ]]>
     </persist:parametric-statement>
 

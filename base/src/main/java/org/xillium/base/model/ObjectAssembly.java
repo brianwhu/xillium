@@ -1,6 +1,9 @@
 package org.xillium.base.model;
 
 import java.util.Map;
+import org.xillium.base.beans.BeanAssemblyPreprocessor;
+import org.xillium.base.util.EnvironmentReference;
+import org.xillium.base.util.EnvironmentAware;
 
 
 /**
@@ -19,9 +22,10 @@ import java.util.Map;
  * // use addresses ...
  * }</pre>
  */
-public class ObjectAssembly<T> {
+public class ObjectAssembly<T> implements BeanAssemblyPreprocessor, EnvironmentAware {
     private final Map<String, T> _collection;
     private final String _namespace;
+    private EnvironmentReference _reference;
 
     public ObjectAssembly(Map<String, T> collection, String namespace) {
         _collection = collection;
@@ -30,5 +34,18 @@ public class ObjectAssembly<T> {
 
     public void add(T object, String name) {
         _collection.put(_namespace + '/' + name, object);
+    }
+
+    @Override
+    public void setEnvironmentReference(EnvironmentReference reference) {
+        _reference = reference;
+    }
+
+    @Override
+    public Void invoke(Object component) {
+        if (component instanceof EnvironmentAware) {
+            EnvironmentAware.class.cast(component).setEnvironmentReference(_reference);
+        }
+        return null;
     }
 }

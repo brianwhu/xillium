@@ -5,6 +5,7 @@ public class User {
     public String first;
     public String last;
     public String group;
+    public String note; // no setter
 
     public void setFirst(String s) {
         first = s;

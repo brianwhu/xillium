@@ -17,6 +17,7 @@
         <string last="Jefferson"/>
         <string group="president"/>
         <string id="thomas.jefferson"/>
+        <string note="My favorite"/>
     </lab:user>
 </model:object-assembly>
 

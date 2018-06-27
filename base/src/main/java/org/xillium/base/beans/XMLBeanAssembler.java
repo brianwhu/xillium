@@ -285,9 +285,23 @@ public class XMLBeanAssembler extends DefaultHandler {
                     Beans.invoke(bean, "set", property);
                     _logger.fine("... successful");
                 } catch (NoSuchMethodException x2) {
+                    try {
                     _logger.fine(S.fine(_logger) ? "trying add() on " + bean.getClass() + ": " + property.length + args(property) : null);
                     Beans.invoke(bean, "add", property);
                     _logger.fine("... successful");
+                    } catch (NoSuchMethodException x3) {
+                        if (property.length == 1) {
+                            try {
+                                _logger.fine(S.fine(_logger) ? "trying '" + java.beans.Introspector.decapitalize(name) + "' on " + bean.getClass() : null);
+                                Beans.setValue(bean, Beans.getKnownField(bean.getClass(), java.beans.Introspector.decapitalize(name)), property[0]);
+                            } catch (Exception x4) {
+                                _logger.log(Level.FINE, x4.getClass().getName(), x4);
+                                throw x3;
+                            }
+                        } else {
+                            throw x3;
+                        }
+                    }
                 }
             }
         }
@@ -595,6 +609,12 @@ public class XMLBeanAssembler extends DefaultHandler {
             } catch (ClassNotFoundException x) {
                 // no class by the element name is found, assumed String
                 complain("No class associated with element " + q, x);
+            }
+            if (!_stack.isEmpty()) {
+                ElementInfo parent = _stack.get(_stack.size()-1);
+                if (BeanAssemblyPreprocessor.class.isAssignableFrom(parent.type)) {
+                    BeanAssemblyPreprocessor.class.cast(parent.data).invoke(info.data);
+                }
             }
             _stack.add(info);
             //_logger.fine(">>ElementInfo: " + info.type.getName() + " in " + info);
