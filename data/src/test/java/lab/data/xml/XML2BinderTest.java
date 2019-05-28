@@ -26,8 +26,6 @@ public class XML2BinderTest {
 
     @Test(groups={"xml"})
     public void testCollection() throws Exception {
-        Trace.g.configure(new StandardTrace());
-
         DataBinder binder = new DataBinder();
         XDBCodec.decode(binder, getClass().getResourceAsStream("/xml/data-exchange.xml"));
         System.out.println(Beans.toString(binder));
@@ -35,7 +33,6 @@ public class XML2BinderTest {
         Request r = new Reifier().collect(new Request(), binder);
         System.out.println(Beans.toString(r));
 /*
-        Trace.g.configure(new NullTrace());
         long now = System.currentTimeMillis();
         DataObject object = dictionary.collect(new lab.data.validation.SubmitPurchaseOrderData(), binder);
         //for (int i = 0; i < 300; ++i) {

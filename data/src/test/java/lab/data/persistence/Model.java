@@ -10,16 +10,6 @@ import org.xillium.data.DataObject;
 public class Model {
     public static void main(String[] args) throws Exception {
         int index = 0;
-/*
-        Trace trace = null;
-
-        if (args.length > 1 && args[0].equals("-v")) {
-            trace = new StandardTrace().setLevel(Level.INFO);
-            ++index;
-        } else {
-            trace = new NullTrace();
-        }
-*/
 
         XMLBeanAssembler assembler = new XMLBeanAssembler(new DefaultObjectFactory());
         DataSource dataSource = (DataSource)assembler.build(args[index++]);

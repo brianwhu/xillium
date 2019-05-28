@@ -1,6 +1,5 @@
 package org.xillium.core.util;
 
-import java.util.logging.*;
 import java.util.Map;
 import org.xillium.core.*;
 import org.xillium.data.*;
@@ -11,9 +10,8 @@ import org.xillium.data.persistence.Persistence;
 /**
  * A simple proxy service that redirects requests to other remote services via a lookup mechanism based on request data.
  */
+@lombok.extern.log4j.Log4j2
 public class ProxyService extends ExtendableAndSecured {
-    private static final Logger _logger = Logger.getLogger(ProxyService.class.getName());
-
     private String _service;
     private Map<String, String> _servers;
     private String _selector;
@@ -28,7 +26,7 @@ public class ProxyService extends ExtendableAndSecured {
      * @return the URL to a remote server, or null if lookup fails
      */
     protected String lookupServerURL(DataBinder binder) {
-        _logger.info("STANDARD lookupServerURL: servers=" + _servers + ", selector='" + _selector + '\'');
+        _log.info("STANDARD lookupServerURL: servers={}, selector='{}'", _servers, _selector);
         if (_servers != null) {
             if (_selector != null) {
                 return _servers.get(binder.get(_selector));
@@ -76,7 +74,7 @@ public class ProxyService extends ExtendableAndSecured {
     public DataBinder run(DataBinder binder, Reifier dict, Persistence persist) throws ServiceException {
 		try {
             String url = lookupServerURL(binder);
-            _logger.info("lookupServerURL: url=" + url);
+            _log.info("lookupServerURL: {}", url);
             if (url != null) {
                 binder.put(SERVICE_JSON_TUNNEL, new String(RemoteService.call(url, _service, binder).body, "UTF-8"));
             } else {

@@ -1,6 +1,6 @@
 package org.xillium.gear.util;
 
-import java.util.logging.*;
+import java.util.logging.Level;
 import org.xillium.core.management.Reporting;
 
 
@@ -25,9 +25,8 @@ import org.xillium.core.management.Reporting;
  * after the thread has joined.  When running a VitalTask on the local thread, call runAsInterruptible() instead of run() to get interruption
  * reported as an InterruptedException.</p>
  */
+@lombok.extern.log4j.Log4j2
 public abstract class VitalTask<T extends Reporting, V> implements Runnable {
-    protected static final Logger _logger = Logger.getLogger(VitalTask.class.getName());
-
     private final T _reporting;
     private final TrialStrategy _strategy;
     private final Runnable _preparation;
@@ -123,19 +122,19 @@ public abstract class VitalTask<T extends Reporting, V> implements Runnable {
                 if (_preparation != null) _preparation.run();
                 _result = execute();
                 if (_age > 0) {
-                    _reporting.emit(Level.INFO, "Failure recovered: " + toString(), _age, _logger);
+                    _reporting.emit(Level.INFO, "Failure recovered: " + toString(), _age, _log);
                 }
                 break;
             } catch (InterruptedException x) {
-                _logger.log(Level.WARNING, "Interrupted, age = " + _age, x);
+                _log.warn("Interrupted, age = " + _age, x);
                 _interrupted = x;
                 break;
             } catch (Exception x) {
-                _reporting.emit(x, "Failure detected, age = " + _age, _age, _logger);
+                _reporting.emit(x, "Failure detected, age = " + _age, _age, _log);
                 try {
                     _strategy.backoff(_age);
                 } catch (InterruptedException i) {
-                    _logger.log(Level.WARNING, "Interrupted, age = " + _age, x);
+                    _log.warn("Interrupted, age = " + _age, x);
                     _interrupted = i;
                     break;
                 }

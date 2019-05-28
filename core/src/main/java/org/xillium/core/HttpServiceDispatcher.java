@@ -2,7 +2,6 @@ package org.xillium.core;
 
 import java.io.*;
 import java.util.*;
-import java.util.logging.*;
 import java.util.regex.*;
 import javax.servlet.*;
 import javax.servlet.annotation.WebServlet;
@@ -32,11 +31,11 @@ import org.xillium.core.management.ManagedPlatform;
  * When a request URI matches the above pattern, this servlet looks up a Service instance registered under the name 'module/service'.
  */
 @WebServlet(name="dispatcher", value="/x!/*", loadOnStartup=1)
+@lombok.extern.log4j.Log4j2
 public class HttpServiceDispatcher extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("/[^/?]+/([^/?]+/[^/?]+)"); // '/context/module/service'
     private static final Pattern SQL_CONSTRAINT = Pattern.compile("\\([^.]+\\.([\\w-]+)\\)");
     private static final File TEMPORARY = null;
-    private static final Logger _logger = Logger.getLogger(HttpServiceDispatcher.class.getName());
 
     // Servlet context path without the leading '/'
     private String _application;
@@ -71,7 +70,7 @@ public class HttpServiceDispatcher extends HttpServlet {
             if (m.matches()) {
                 id = m.group(1);
             } else {
-                _logger.warning("Request not recognized: " + req.getRequestURI());
+                _log.warn("Request not recognized: {}", req.getRequestURI());
                 res.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
@@ -79,7 +78,7 @@ public class HttpServiceDispatcher extends HttpServlet {
 
         Pair<Service, Persistence> service = ServicePlatform.getService(id);
         if (service == null) {
-            _logger.warning("Request not recognized: " + req.getRequestURI());
+            _log.warn("Request not recognized: {}", req.getRequestURI());
             res.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -228,7 +227,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                     task.run();
                 }
             } catch (Throwable t) {
-                _logger.warning("In post-service processing caught " + t.getClass() + ": " + t.getMessage());
+                _log.warn("In post-service processing caught {}: {}", t.getClass(), t.getMessage());
             }
         } catch (Throwable x) {
             // if a new binder can't be returned from Service.run, it can be placed in the original binder as a named object
@@ -262,7 +261,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                 x.printStackTrace(new PrintWriter(sw));
                 String stack = sw.toString();
                 if (sst) binder.put(Service.FAILURE_STACK, stack);
-                if (pst) _logger.warning(x.getClass().getSimpleName() + " caught in (" + id + "): " + message + '\n' + stack);
+                if (pst) _log.warn("{} caught in '{}': {}\n{}", x.getClass().getSimpleName(), id, message, stack);
             }
         } finally {
             // post-service filter
@@ -289,9 +288,9 @@ public class HttpServiceDispatcher extends HttpServlet {
 
                 // return status only?
                 if ((status = binder.get(Service.SERVICE_DO_REDIRECT)) != null) {
-                    try { res.sendRedirect(status); } catch (Exception x) { _logger.log(Level.WARNING, x.getMessage(), x); }
+                    try { res.sendRedirect(status); } catch (Exception x) { _log.warn(x.getMessage(), x); }
                 } else if ((status = binder.get(Service.SERVICE_HTTP_STATUS)) != null) {
-                    try { res.setStatus(Integer.parseInt(status)); } catch (Exception x) { _logger.log(Level.WARNING, x.getMessage(), x); }
+                    try { res.setStatus(Integer.parseInt(status)); } catch (Exception x) { _log.warn(x.getMessage(), x); }
                 } else {
                     String page = binder.get(Service.SERVICE_PAGE_TARGET);
 
@@ -304,7 +303,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                                 encoder.encode(res.getOutputStream(), binder).flush();
                             } catch (Exception x) {
                                 // bugs in the encoder?
-                                _logger.log(Level.FINE, x.getMessage(), x);
+                                _log.debug(x.getMessage(), x);
                             }
                         } else
                         if (binder.find(Service.SERVICE_XML_CONTENT) != null) {
@@ -314,7 +313,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                                 XDBCodec.encode(res.getWriter(), binder).flush();
                             } catch (Exception x) {
                                 // bugs in the codec?
-                                _logger.log(Level.FINE, x.getMessage(), x);
+                                _log.debug(x.getMessage(), x);
                             }
                         } else {
                             String callback = binder.get(Service.REQUEST_JS_CALLBACK);
@@ -342,7 +341,7 @@ public class HttpServiceDispatcher extends HttpServlet {
                             }
                         }
                     } else {
-                        _logger.fine("\t=> " + getServletContext().getResource(page));
+                        _log.debug("\t=> {}", getServletContext().getResource(page));
                         req.setAttribute(Service.SERVICE_DATA_BINDER, binder);
                         getServletContext().getRequestDispatcher(page).include(req, res);
                     }

@@ -1,8 +1,5 @@
 package lab.gear.util;
 
-import javax.sql.DataSource;
-import javax.annotation.Resource;
-
 import java.util.*;
 import java.sql.*;
 
@@ -11,10 +8,6 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.context.*;
 import org.springframework.context.support.GenericApplicationContext;
 
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.transaction.TransactionConfiguration;
-import org.springframework.test.context.testng.AbstractTransactionalTestNGSpringContextTests;
-import org.springframework.transaction.annotation.Transactional;
 import org.testng.annotations.*;
 
 import org.xillium.base.beans.*;

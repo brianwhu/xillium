@@ -2,9 +2,6 @@ package lab;
 
 import java.util.*;
 import org.xillium.base.beans.*;
-//import org.xillium.base.etc.*;
-//import org.xillium.base.*;
-
 import org.testng.annotations.*;
 
 

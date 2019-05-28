@@ -1,7 +1,5 @@
 package org.xillium.data.persistence.xml;
 
-//import java.util.*;
-import java.util.logging.*;
 import java.lang.reflect.*;
 import org.xillium.base.beans.Beans;
 import org.xillium.data.DataObject;
@@ -11,8 +9,6 @@ import org.xillium.data.DataObject;
  * A java bean mapped to a sql-rs:row element.
  */
 public class Row<T extends DataObject> {
-    private static final Logger _logger = Logger.getLogger(Row.class.getName());
-
     public final T data;
 
     /**

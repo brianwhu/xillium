@@ -1,6 +1,5 @@
 package org.xillium.data.validation;
 
-import org.xillium.base.Trace;
 import org.xillium.base.beans.Beans;
 import org.xillium.base.type.typeinfo;
 import org.xillium.base.util.ValueOf;
@@ -12,6 +11,7 @@ import java.util.regex.*;
 /**
  * A data validator associated with a member (field) of a DataObject.
  */
+@lombok.extern.log4j.Log4j2
 public class Validator {
     private static class Range<T extends Comparable<T>> {
         T min, max;
@@ -42,7 +42,7 @@ public class Validator {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Validator(String name, Class<?> type, Field field) throws IllegalArgumentException {
-        Trace.g.std.note(Validator.class, "Enter Validator.<init>(" + name + ", " + field + ')');
+        _log.trace("Enter Validator.<init>({}, {}, {})", name, type, field);
         _name = name;
 
         typeinfo info = field.getAnnotation(typeinfo.class);
@@ -116,13 +116,13 @@ public class Validator {
      */
     public void preValidate(String text) throws DataValidationException {
         // size
-        Trace.g.std.note(Validator.class, "preValidate: size = " + _size);
+        _log.trace("preValidate: size = {}", _size);
         if (_size > 0 && text.length() > _size) {
             throw new DataValidationException("SIZE", _name, text);
         }
 
         // pattern
-        Trace.g.std.note(Validator.class, "preValidate: pattern = " + _pattern);
+        _log.trace("preValidate: pattern = {}", _pattern);
         if (_pattern != null && !_pattern.matcher(text).matches()) {
             throw new DataValidationException("PATTERN", _name, text);
         }

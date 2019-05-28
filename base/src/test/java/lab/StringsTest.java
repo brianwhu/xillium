@@ -3,9 +3,6 @@ package lab;
 import java.util.*;
 import javax.xml.bind.DatatypeConverter;
 import org.xillium.base.beans.*;
-//import org.xillium.base.etc.*;
-//import org.xillium.base.*;
-
 import org.testng.annotations.*;
 
 

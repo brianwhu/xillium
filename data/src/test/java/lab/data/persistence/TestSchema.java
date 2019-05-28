@@ -1,14 +1,11 @@
 package lab.data.persistence;
 
 import java.util.*;
-import java.util.logging.*;
 import java.sql.*;
 import javax.sql.DataSource;
 import javax.annotation.Resource;
 
-//import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
-//import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 import org.testng.annotations.*;
 
@@ -19,8 +16,8 @@ import org.springframework.test.context.testng.AbstractTransactionalTestNGSpring
  * Testing Persistence
  */
 @ContextConfiguration(locations={"/application-context.xml"})
-//@TransactionConfiguration(transactionManager="transactionManager", defaultRollback=false)
 @Transactional
+@lombok.extern.log4j.Log4j2
 public class TestSchema extends AbstractTransactionalTestNGSpringContextTests {
 	private static final int COLUMN_NAME = 4;
 	private static final int COLUMN_TYPE = 5;	// java.sql.Types.#
@@ -28,31 +25,13 @@ public class TestSchema extends AbstractTransactionalTestNGSpringContextTests {
 	private static final int PKEY_SEQ = 5;
 	private static final int PKEY_NAME = 6;
 
-    private Logger _logger = Logger.getLogger(TestSchema.class.getName());
-
     @Resource
     private DataSource dataSource;
-
-    //private PersistenceStrategies strategies;
-
-    public TestSchema() throws Exception {
-/*
-        strategies = (PersistenceStrategies)new XMLBeanAssembler(new DefaultObjectFactory()).build(
-            TestSchema.class.getResourceAsStream("/persistence-strategies.xml")
-        );
-        _logger.info(Beans.toString(strategies));
-*/
-    }
 
 
     @Test(groups={ "basic" })
     public void testAccess() {
-        _logger.info("DataSource = " + dataSource);
-    }
-
-    @Test(groups={ "basic" })
-    public void testStrategies() {
-        //_logger.info("PersistenceStrategies = " + strategies);
+        _log.info("DataSource = " + dataSource);
     }
 
     @Test(groups={ "schema" })
@@ -120,26 +99,13 @@ public class TestSchema extends AbstractTransactionalTestNGSpringContextTests {
                     int type = indices.getInt(7);
                     sb.append(String.format("%32s: %4s %12s(%s) %s", indices.getString(6), type, indexType(type), indices.getString(8), indices.getString(9))).append('\n');
                 }
-    /*
-                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-                String command = null;
-                DataObject data = new DataObject(model);
-                while ((command = reader.readLine()) != null) {
-                }
-    */
             }
         } finally {
             connection.close();
         }
 
-        _logger.info(sb.toString());
+        _log.info(() -> sb.toString());
 	}
-
-    @Test(groups={ "schema" })
-	public void testStorageModel() throws Exception {
-        //strategies.prepare(dataSource);
-        //_logger.info(strategies.print(new StringBuilder()).toString());
-    }
 
 	private static String indexType(int type) {
 		switch (type) {

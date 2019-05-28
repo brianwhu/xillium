@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <prerequisites>
@@ -9,7 +9,7 @@
     <groupId>org.xillium</groupId>
     <artifactId>xillium</artifactId>
     <packaging>pom</packaging>
-    <version>1.1.8</version><!--@-->
+    <version>1.2.0-SNAPSHOT</version>
     <name>Xillium Platform</name>
     <description>
         The Xillium Service Platform is put in place to allow fast and quality construction
@@ -31,6 +31,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <test.log.level>INFO</test.log.level>
+
+        <projectlombok.version>1.18.8</projectlombok.version>
+        <springframework.version>5.1.7.RELEASE</springframework.version>
+        <jackson.version>2.9.9</jackson.version>
+        <log4j2.version>2.11.2</log4j2.version>
+        <testng.version>6.14.3</testng.version>
     </properties>
 
     <build>
@@ -52,7 +58,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.16</version>
                 <configuration>
-                    <argLine>-Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties -Dorg.xillium.level=${test.log.level}</argLine>
+                    <argLine>-Dlog4j2.level=TRACE -Dorg.xillium.level=${test.log.level}</argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -118,10 +124,33 @@
     </distributionManagement>
 
     <dependencies>
+        <!-- Boilerplate Code Generation with Project Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${projectlombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Logging with Log4j2 -->
+        <dependency>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-api</artifactId>
+          <version>${log4j2.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-core</artifactId>
+          <version>${log4j2.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Unit Testing with TestNG -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>6.9.13.6</version>
+            <version>${testng.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

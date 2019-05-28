@@ -1,6 +1,5 @@
 package org.xillium.core;
 
-import java.util.logging.*;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.xillium.core.management.Reloadable;
@@ -9,8 +8,8 @@ import org.xillium.core.management.Reloadable;
 /**
  * A JMX bean that controls the service platform life cycle
  */
+@lombok.extern.log4j.Log4j2
 public class PlatformControl implements Reloadable {
-    private static final Logger _logger = Logger.getLogger(PlatformControl.class.getName());
     private static ServicePlatform _platform;
     private static XmlWebApplicationContext _root;
     private static ClassLoader _cloader;
@@ -49,7 +48,7 @@ public class PlatformControl implements Reloadable {
                 _platform.realize(_root, _context);
                 return null;
             } catch (Exception x) {
-                _logger.log(Level.WARNING, x.getMessage(), x);
+                _log.warn(x.getMessage(), x);
                 return x.getMessage();
             } finally {
                 Thread.currentThread().setContextClassLoader(original);
@@ -69,7 +68,7 @@ public class PlatformControl implements Reloadable {
                 _context = null;
                 return null;
             } catch (Exception x) {
-                _logger.log(Level.WARNING, x.getMessage(), x);
+                _log.warn(x.getMessage(), x);
                 return x.getMessage();
             } finally {
                 Thread.currentThread().setContextClassLoader(original);

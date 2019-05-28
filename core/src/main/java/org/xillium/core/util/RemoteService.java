@@ -4,7 +4,6 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
-import java.util.logging.*;
 import org.xillium.base.util.Bytes;
 import org.xillium.data.DataObject;
 import org.xillium.data.DataBinder;
@@ -20,8 +19,8 @@ import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
 /**
  * An interface to a remote Xillium service.
  */
+@lombok.extern.log4j.Log4j2
 public class RemoteService {
-    private static final Logger _logger = Logger.getLogger(RemoteService.class.getName());
     private static final boolean _urlencoding = System.getProperty("xillium.service.remote.DisableURLEncoding") == null;
     private static final ObjectMapper _mapper = new ObjectMapper()
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -95,7 +94,7 @@ public class RemoteService {
                     try {
                         list.add(field.getName() + '=' + URLEncoder.encode(value.toString(), "UTF-8"));
                     } catch (UnsupportedEncodingException x) {
-                        _logger.log(Level.WARNING, value.toString(), x);
+                        _log.warn(value.toString(), x);
                     }
                 } else {
                     list.add(field.getName() + '=' + value);
@@ -128,7 +127,7 @@ public class RemoteService {
                 try {
                     list.add(name + '=' + URLEncoder.encode(entry.getValue(), "UTF-8"));
                 } catch (UnsupportedEncodingException x) {
-                    _logger.log(Level.WARNING, entry.getValue(), x);
+                    _log.warn(entry.getValue(), x);
                 }
             } else {
                 list.add(name + '=' + entry.getValue());
@@ -155,7 +154,7 @@ public class RemoteService {
             connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
             PrintWriter pw = new PrintWriter(new OutputStreamWriter(connection.getOutputStream(), "utf-8"));
             for (String param: params) {
-                _logger.fine(param);
+                _log.trace(param);
                 pw.print(param); pw.print('&');
             }
             pw.close();
@@ -174,7 +173,7 @@ public class RemoteService {
                     }
                     return response;
                 } catch (JsonProcessingException x) {
-                    _logger.log(Level.WARNING, new String(bytes, "UTF-8"));
+                    _log.warn(new String(bytes, "UTF-8"));
                     throw x;
                 }
             } finally {

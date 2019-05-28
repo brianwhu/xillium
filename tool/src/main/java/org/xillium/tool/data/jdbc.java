@@ -1,7 +1,6 @@
 package org.xillium.tool.data;
 
 import java.util.*;
-import java.util.logging.*;
 import java.io.*;
 import java.sql.*;
 import javax.sql.*;
@@ -28,7 +27,6 @@ public class jdbc {
             System.exit(0);
         }
 
-        Logger.getLogger(XMLBeanAssembler.class.getName()).setLevel(Level.FINE);
         BurnedInArgumentsObjectFactory factory = new BurnedInArgumentsObjectFactory();
         XMLBeanAssembler assembler = new XMLBeanAssembler(factory);
         DataSource dataSource = (DataSource)("-".equals(args[0]) ? assembler.build(System.in) : assembler.build(args[0]));

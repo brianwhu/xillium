@@ -1,7 +1,6 @@
 package org.xillium.core;
 
 import java.util.List;
-import java.util.logging.*;
 import org.xillium.data.*;
 import org.xillium.core.util.CompoundServiceFilter;
 

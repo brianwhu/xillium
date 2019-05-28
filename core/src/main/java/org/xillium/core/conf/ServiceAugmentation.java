@@ -2,7 +2,6 @@ package org.xillium.core.conf;
 
 import java.util.List;
 import java.util.Map;
-import java.util.logging.*;
 
 import org.xillium.base.util.Pair;
 import org.xillium.data.persistence.Persistence;
@@ -36,9 +35,8 @@ import org.xillium.core.Service;
  * <li>a fully qualified service name</li>
  * </ul>
  */
+@lombok.extern.log4j.Log4j2
 public class ServiceAugmentation {
-    private static final Logger _logger = Logger.getLogger(ServiceAugmentation.class.getName());
-
     public static String GLOBAL_ALL_SERVICES = "*";
     public static String MODULE_ALL_SERVICES = "/";
 
@@ -97,7 +95,7 @@ public class ServiceAugmentation {
                             ServiceMilestone.attach(service.getValue().first, spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                         }
                     } catch (Exception x) {
-                        _logger.log(Level.WARNING, service.getKey(), x);
+                        _log.warn(service.getKey(), x);
                     }
                 }
             } else if (spec.service.equals(MODULE_ALL_SERVICES)) {
@@ -111,7 +109,7 @@ public class ServiceAugmentation {
                             ServiceMilestone.attach(service.getValue().first, spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                         }
                     } catch (Exception x) {
-                        _logger.log(Level.WARNING, service.getKey(), x);
+                        _log.warn(service.getKey(), x);
                     }
                 }
             } else if (spec.service.indexOf('/') > -1) {
@@ -122,7 +120,7 @@ public class ServiceAugmentation {
                         ServiceMilestone.attach(services.get(spec.service).first, spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                     }
                 } catch (Exception x) {
-                    _logger.log(Level.WARNING, spec.service, x);
+                    _log.warn(spec.service, x);
                 }
             } else {
                 try {
@@ -132,7 +130,7 @@ public class ServiceAugmentation {
                         ServiceMilestone.attach(services.get(_module + '/' + spec.service).first, spec.milestone, (ServiceMilestone.Evaluation)spec.augment);
                     }
                 } catch (Exception x) {
-                    _logger.log(Level.WARNING, spec.service, x);
+                    _log.warn(spec.service, x);
                 }
             }
         }

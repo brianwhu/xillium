@@ -12,8 +12,6 @@ import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
-import java.util.logging.*;
-import java.util.jar.*;
 import java.util.regex.Pattern;
 import javax.management.*;
 import javax.script.*;
@@ -31,9 +29,8 @@ import org.xillium.core.util.*;
 /**
  * Managed platform
  */
+@lombok.extern.log4j.Log4j2
 public abstract class ManagedPlatform extends ManagementService implements ServletContextListener {
-    private static final Logger _logger = Logger.getLogger(ManagedPlatform.class.getName());
-
     public static final String INSTANCE = "x!/mgmt";
 
     protected static final Map<String, Pair<Service, Persistence>> _registry = new HashMap<>();
@@ -63,7 +60,7 @@ public abstract class ManagedPlatform extends ManagementService implements Servl
 
         _context = event.getServletContext();
         _application = _context.getContextPath();
-        _logger.config("application: " + _application);
+        _log.trace("application: " + _application);
         if (_application.charAt(0) == '/') _application = _application.substring(1);
 
         try { ManagementFactory.getPlatformMBeanServer().setAttribute(
@@ -85,6 +82,7 @@ public abstract class ManagedPlatform extends ManagementService implements Servl
      * @param path - a directory in the local file system where extension modules can be found
      * @return a Set of URLs as strings
      */
+/*
     protected Set<String> discover(String path) {
         Set<String> modules = new HashSet<String>();
 
@@ -122,10 +120,12 @@ public abstract class ManagedPlatform extends ManagementService implements Servl
             }
         }
     }
+*/
 
     /*#
      * Detects service modules in a given set of JARs, and returns them in a sorted list.
      */
+/*
     protected ModuleSorter.Sorted sort(ServletContext context, Set<String> jars) {
         final ModuleSorter sorter = new ModuleSorter();
 
@@ -143,6 +143,7 @@ public abstract class ManagedPlatform extends ManagementService implements Servl
 
         return sorter.sort();
     }
+*/
 
 
     @Override

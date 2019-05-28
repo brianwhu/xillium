@@ -3,7 +3,6 @@ package org.xillium.gear.util;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.*;
 import javax.management.*;
 
 import org.xillium.base.util.Objects;
@@ -41,8 +40,8 @@ import org.xillium.core.management.*;
  *      schedule.shutdown();
  * }</pre>
  */
+@lombok.extern.log4j.Log4j2
 public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable {
-    private static final Logger _logger = Logger.getLogger(DaySchedule.class.getName());
     private static final int MILLISECONDS_PER_MINUTE = 60000;
     private static final int MILLISECONDS_PER_DAY = 24*60*MILLISECONDS_PER_MINUTE;
 
@@ -129,9 +128,9 @@ public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable
                     _schedule._user.performActivity(event, tag, _schedule._date);
                 }
             } catch (InterruptedException x) {
-                _logger.info("Termination request detected at " + Throwables.getRootCause(x).getStackTrace()[0]);
+                _log.info("Termination request detected at {}", Throwables.getRootCause(x).getStackTrace()[0]);
             } catch (Exception x) {
-                _logger.log(Level.WARNING, "Failure in scheduled event", x);
+                _log.warn("Failure in scheduled event", x);
             } finally {
                 _active = false;
             }
@@ -277,7 +276,7 @@ public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable
     @Override
     public void run() {
         try {
-            _logger.info("started");
+            _log.info("started");
 
             // Step 1. read clock and calibrate date
             int clock = trueToLogical(trueClockMillis(true));
@@ -302,11 +301,11 @@ public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable
                 // Fire "dayStarting" even if the next activity is "dayFinished".
                 _worker.execute(activities[0]);
                 if (pointer > 1) { // an activity is supposed to be going on ... for each different tag
-                    _logger.info("DaySchedule (re)started amid ...");
+                    _log.info("DaySchedule (re)started amid ...");
                     Set<String> tags = new HashSet<String>();
                     for (int p = pointer - 1; p > 0; --p) {
                         if (!tags.contains(activities[p].tag)) {
-                            _logger.info("\t" + activities[p]);
+                            _log.info("\t" + activities[p]);
                             _worker.execute(activities[p]);
                             tags.add(activities[p].tag);
                         }
@@ -316,9 +315,9 @@ public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable
 
             while (!isInterrupted()) {
                 if (pointer == activities.length) {
-                    _logger.info("The day is over - sleep till midnight + 1 full second - just to make sure we are into the next day");
+                    _log.info("The day is over - sleep till midnight + 1 full second - just to make sure we are into the next day");
                     sleepTill(MILLISECONDS_PER_DAY + 1000);
-                    _logger.info("Waking up into a new day");
+                    _log.info("Waking up into a new day");
                     // calibrate the date after waking up
                     trueClockMillis(true);
                     // reload scheduled activities
@@ -328,22 +327,22 @@ public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable
                     if (activities.length == 0) continue;
                 }
 
-                _logger.info("Sleeping till ...  [" + pointer + "] = " + activities[pointer]);
+                _log.info("Sleeping till ...  [{}] = {}", pointer, activities[pointer]);
                 sleepTill(activities[pointer].clock);
-                _logger.info("... and wake up on [" + pointer + "] = " + activities[pointer]);
+                _log.info("... and wake up on [{}] = {}", pointer, activities[pointer]);
                 _worker.execute(activities[pointer]);
                 // next activity
                 ++pointer;
             }
         } catch (InterruptedException x) {
-            _logger.log(Level.WARNING, "Interrupted", x);
+            _log.warn("Interrupted", x);
         } catch (RuntimeException x) {
-            _logger.log(Level.WARNING, x.getMessage(), x);
+            _log.warn(x.getMessage(), x);
             throw x;
         } finally {
             _worker.shutdownNow();
             try { _worker.awaitTermination(1, TimeUnit.HOURS); } catch (InterruptedException x) {}
-            _logger.info("terminated");
+            _log.info("terminated");
         }
     }
 
@@ -352,7 +351,7 @@ public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable
      */
     public void shutdown() {
         interrupt();
-        try { join(); } catch (Exception x) { _logger.log(Level.WARNING, "Failed to see DaySchedule thread joining", x); }
+        try { join(); } catch (Exception x) { _log.warn("Failed to see DaySchedule thread joining", x); }
     }
 
     @SuppressWarnings("unchecked")
@@ -375,7 +374,7 @@ public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable
             }
         }
 
-        if (_logger.isLoggable(Level.INFO)) {
+        if (_log.isInfoEnabled()) {
             StringBuilder sb = new StringBuilder("new DaySchedule {\n");
             for (Activity<T> a: set) {
                 sb.append(String.format("\t[%02d:%02d] (%02d:%02d) %16s %s",
@@ -388,7 +387,7 @@ public class DaySchedule<T extends Enum<T>> extends Thread implements Manageable
                 )).append('\n');
             }
             sb.append("}");
-            _logger.info(sb.toString());
+            _log.info(sb);
         }
 
         return set.toArray((Activity<T>[])Array.newInstance(Activity.class, set.size()));

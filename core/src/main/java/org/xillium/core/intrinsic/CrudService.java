@@ -3,7 +3,6 @@ package org.xillium.core.intrinsic;
 import java.sql.*;
 import javax.sql.DataSource;
 import java.util.Map;
-import java.util.logging.*;
 import java.util.regex.*;
 import org.xillium.data.*;
 import org.xillium.data.validation.*;
@@ -17,8 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Service description.
  */
+@lombok.extern.log4j.Log4j2
 public class CrudService extends ExtendableAndSecured implements DynamicService {
-    private static final Logger _logger = Logger.getLogger(CrudService.class.getName());
     private static final Pattern CONSTRAINT = Pattern.compile("\\([A-Z0-9_]+\\.([A-Z0-9_]+)\\)");
 
     private final CrudCommand _command;
@@ -118,10 +117,10 @@ public class CrudService extends ExtendableAndSecured implements DynamicService 
         int count = 0;
         try {
             DataObject request = dict.collect(_command.getRequestType().newInstance(), binder);
-            if (_logger.isLoggable(Level.FINE)) {
-                _logger.fine("CrudService.run: request = " + DataObject.Util.describe(request.getClass()));
+            if (_log.isTraceEnabled()) {
+                _log.trace("CrudService.run: request = {}", () -> DataObject.Util.describe(request.getClass()));
                 for (int i = 0; i < _command.getStatements().length; ++i) {
-                    _logger.fine(_command.getStatements()[i].getSQL());
+                    _log.trace(_command.getStatements()[i].getSQL());
                 }
             }
 
@@ -157,9 +156,9 @@ public class CrudService extends ExtendableAndSecured implements DynamicService 
                 break;
             }
         } catch (SQLSyntaxErrorException x) {
-            _logger.warning("Check SQL syntax!");
+            _log.warn("Check SQL syntax!");
             for (int i = 0; i < _command.getStatements().length; ++i) {
-                _logger.warning(_command.getStatements()[i].getSQL());
+                _log.warn(_command.getStatements()[i].getSQL());
             }
             throw new ServiceException(x.getMessage(), x);
         } catch (SQLIntegrityConstraintViolationException x) {

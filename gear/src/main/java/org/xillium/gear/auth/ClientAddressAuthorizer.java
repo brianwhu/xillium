@@ -2,7 +2,6 @@ package org.xillium.gear.auth;
 
 import java.util.*;
 import java.util.regex.*;
-import java.util.logging.*;
 import java.net.InetAddress;
 import org.xillium.base.beans.Strings;
 import org.xillium.data.*;
@@ -31,8 +30,8 @@ import org.xillium.core.management.ManagedComponent;
  *  </bean>
  * }</pre>
  */
+@lombok.extern.log4j.Log4j2
 public class ClientAddressAuthorizer extends ManagedComponent implements Authorizer {
-	private static final Logger _logger = Logger.getLogger(ClientAddressAuthorizer.class.getName());
     private static final Pattern IPv4_ADDRESS_PATTERN = Pattern.compile(
         "([0-9*]{1,3})\\.([0-9*]{1,3})\\.([0-9*]{1,3})\\.([0-9*]{1,3})"
     );
@@ -89,19 +88,19 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
                     try {
                         address[i] = Short.parseShort(p);
                         if (address[i] > 255) {
-                            _logger.warning("Invalid pattern ignored: " + pattern);
+                            _log.warn("Invalid pattern ignored: {}", pattern);
                             continue patterns;
                         }
                     } catch (Exception x) {
                         if ("*".equals(p)) {
                             address[i] = 256;
                         } else {
-                            _logger.warning("Invalid pattern ignored: " + pattern);
+                            _log.warn("Invalid pattern ignored: {}", pattern);
                             continue patterns;
                         }
                     }
                 }
-                _logger.fine("normalized ipv4 address pattern = " + Strings.join(address, '.'));
+                _log.trace("normalized ipv4 address pattern = {}", () -> Strings.join(address, '.'));
                 _ipv4patterns.add(address);
             } else if ((matcher = IPv6_ADDRESS_PATTERN.matcher(pattern)).matches()) {
                 short[] address = new short[16];
@@ -116,15 +115,15 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
                             address[i] = 256;
                             address[i+1] = 256;
                         } else {
-                            _logger.warning("Invalid pattern ignored: " + pattern);
+                            _log.warn("Invalid pattern ignored: {}", pattern);
                             continue patterns;
                         }
                     }
                 }
-                _logger.fine("normalized ipv6 address pattern = " + Strings.join(address, '.'));
+                _log.trace("normalized ipv6 address pattern = {}", () -> Strings.join(address, '.'));
                 _ipv6patterns.add(address);
             } else {
-                _logger.warning("Invalid pattern ignored: " + pattern);
+                _log.warn("Invalid pattern ignored: {}", pattern);
             }
         }
     }
@@ -132,7 +131,7 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
     @Override
     public void authorize(Service service, String deployment, DataBinder parameters, Persistence persist) throws AuthorizationException {
         String address = parameters.get(Service.REQUEST_CLIENT_ADDR);
-        _logger.fine("checking address " + address);
+        _log.trace("checking address {}", address);
         try {
             InetAddress inet = InetAddress.getByName(address); 
             if (_allowingPrivate && (inet.isLoopbackAddress() || inet.isLinkLocalAddress() || inet.isSiteLocalAddress())) {
@@ -147,7 +146,7 @@ public class ClientAddressAuthorizer extends ManagedComponent implements Authori
                         continue patterns;
                     }
                 }
-                _logger.fine("pattern match " + Strings.join(pattern, '.'));
+                _log.trace("pattern match {}", () -> Strings.join(pattern, '.'));
                 return;
             }
         } catch (java.net.UnknownHostException x) {

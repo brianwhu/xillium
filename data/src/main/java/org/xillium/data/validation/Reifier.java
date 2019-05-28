@@ -1,6 +1,5 @@
 package org.xillium.data.validation;
 
-import org.xillium.base.Trace;
 import org.xillium.data.DataObject;
 import java.lang.reflect.*;
 import java.util.*;
@@ -9,6 +8,7 @@ import java.util.*;
 /**
  * A Reifier of extended types for data reification and validation.
  */
+@lombok.extern.log4j.Log4j2
 public class Reifier {
     protected static final Map<Class<?>, Map<String, Validator>> _cached = new HashMap<Class<?>, Map<String, Validator>>();
 
@@ -39,10 +39,10 @@ public class Reifier {
                 try {
                     _named.put(name, new Validator(name, field.getType(), field));
                 } catch (IllegalArgumentException x) {
-                    Trace.g.std.note(Reifier.class, "Ignored " + name + ": " + x.getMessage());
+                    _log.trace("Ignored {}: {}", name, x.getMessage());
                 }
             } else {
-                Trace.g.std.note(Reifier.class, "Ignored non-public field: " + field.getName());
+                _log.trace("Ignored non-public field: {}", field.getName());
             }
         }
 
@@ -75,20 +75,20 @@ public class Reifier {
             Class<?> ftype = field.getType();
             String name = field.getName();
             String qualified = prefix != null ? prefix + '.' + name : name;
-            Trace.g.std.note(Reifier.class, "collect(): qualified = " + qualified);
+            _log.trace("collect(): qualified = {}", qualified);
 
             if (ftype.isArray()) {
-                Trace.g.std.note(Reifier.class, "collect(): field is an array");
+                _log.trace("collect(): field is an array");
                 ArrayList<Object> list = new ArrayList<Object>();
                 Class<?> ctype = ftype.getComponentType();
                 
                 if (DataObject.class.isAssignableFrom(ctype)) {
-                    Trace.g.std.note(Reifier.class, "collect(): DataObject array");
+                    _log.trace("collect(): DataObject array");
                     for (int index = 0; true; ++index) {
                         try {
                             list.add(collect((DataObject)ctype.newInstance(), binder, qualified + '[' + index + ']'));
                         } catch (EmptyDataObjectException x) {
-                            Trace.g.std.note(Reifier.class, "DataObject array '" + qualified + "': no more elements");
+                            _log.trace("DataObject array '{}': no more elements", qualified);
                             break;
                         } catch (InstantiationException x) {
                             throw new ValidationSpecificationException("Impossible to instantiate " + ctype.getName(), x);
@@ -97,27 +97,27 @@ public class Reifier {
                         }
                     }
                 } else {
-                    Trace.g.std.note(Reifier.class, "collect(): simple array");
+                    _log.trace("collect(): simple array");
                     for (int index = 0; true; ++index) {
                         String text = binder.get(qualified + '[' + index + ']');
                         if (text != null) {
                             list.add(translate(field, name, text));
                         } else {
-                            Trace.g.std.note(Reifier.class, "Simple array '" + qualified + "': no more elements");
+                            _log.trace("Simple array '{}': no more elements", qualified);
                             break;
                         }
                     }
                 }
-                Trace.g.std.note(Reifier.class, "collect(): array - get elements " + list.size());
+                _log.trace("collect(): array - get elements {}", list.size());
                 if (list.size() > 0) {
-                    Trace.g.std.note(Reifier.class, "Storing array '" + qualified + "' with length " + list.size());
+                    _log.trace("Storing array '{}' with length {}", qualified, list.size());
                     try {
                         field.set(data, list.toArray((Object[])Array.newInstance(ctype, list.size())));
                     } catch (IllegalAccessException x) {
                         // should not happen
                         throw new RuntimeException("While setting array field " + field, x);
                     }
-                    Trace.g.std.note(Reifier.class, "Array '" + qualified + "' stored");
+                    _log.trace("Array '{}' stored", qualified );
                 } else if (field.getAnnotation(required.class) != null) {
                     throw new MissingParameterException(
                         name, (prefix != null ? prefix : "") + '(' + data.getClass().getName() + ')'
@@ -173,7 +173,7 @@ public class Reifier {
                 }
             }
 
-            Trace.g.std.note(Reifier.class, "Got " + name);
+            _log.trace("Got {}", name);
             ++present;
         }
 
@@ -202,11 +202,11 @@ public class Reifier {
 
             Validator inplaceValidator = find(field.getDeclaringClass(), name);
             if (inplaceValidator == null) {
-                Trace.g.std.note(Reifier.class, "New Validator for type " + type);
+                _log.trace("New Validator for type {}", type);
                 inplaceValidator = cache(field.getDeclaringClass(), name, new Validator(name, type, field));
             }
             /*
-            Trace.g.std.note(Reifier.class, "New Validator for type " + type);
+            _log.trace("New Validator for type " + type);
             Validator inplaceValidator = new Validator(name, type, field);
             */
 
@@ -246,10 +246,10 @@ public class Reifier {
             //if (present == 0) {
             if (present == 0 && prefix != null) { // Brian 3/9/2012
                 // hold the exception report as long as the data object is empty
-                Trace.g.std.note(Reifier.class, "Hold the exception report on field " + name);
+                _log.trace("Hold the exception report on field {}", name);
                 return true;
             } else {
-                Trace.g.std.note(Reifier.class, "Data object already has " + present + " member values");
+                _log.trace("Data object already has {} member values", present );
                 throw new MissingParameterException(
                     name, (prefix != null ? prefix : "") + '(' + data.getClass().getName() + ')'
                 );

@@ -1,6 +1,5 @@
 package org.xillium.gear.util;
 
-import java.util.logging.*;
 import java.util.concurrent.Callable;
 import org.xillium.base.Functor;
 import org.xillium.core.util.RemoteService;

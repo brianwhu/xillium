@@ -2,12 +2,13 @@ package org.xillium.core.management;
 
 import java.lang.reflect.*;
 import java.util.concurrent.Executor;
-import java.util.logging.*;
+import java.util.logging.Level;
 import javax.management.*;
 import org.xillium.base.util.Objects;
 import org.xillium.base.beans.Beans;
 import org.xillium.base.beans.Throwables;
 import org.xillium.core.util.*;
+import org.apache.logging.log4j.Logger;
 
 
 public abstract class ManagedComponent implements Manageable, Reporting, NotificationEmitter {
@@ -144,7 +145,7 @@ public abstract class ManagedComponent implements Manageable, Reporting, Notific
     @Override
     public void emit(Level level, String message, long sequence, Logger logger) {
         emit(level, message, sequence);
-        logger.log(level, message);
+        logger.log(org.apache.logging.log4j.Level.forName("ALERT_"+level.toString(), level.intValue()), message);
     }
 
     /**

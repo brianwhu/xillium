@@ -1,6 +1,5 @@
 package org.xillium.core;
 
-import java.util.logging.*;
 import org.xillium.data.DataBinder;
 import org.xillium.data.persistence.Persistence;
 
@@ -8,9 +7,8 @@ import org.xillium.data.persistence.Persistence;
 /**
  * An implementation of Service.Secured, this abstract service authorizes invocation using an injected Authorizer.
  */
+@lombok.extern.log4j.Log4j2
 public abstract class SecuredService implements Service.Secured {
-	private static final Logger _logger = Logger.getLogger(SecuredService.class.getName());
-
 	private Authorizer _authorizer;
 
 	public void setAuthorizer(Authorizer auth) {
@@ -21,7 +19,7 @@ public abstract class SecuredService implements Service.Secured {
 		if (_authorizer != null) {
 			_authorizer.authorize(this, deployment, parameters, persist);
 		} else {
-			_logger.fine("No Authorizer configured");
+			_log.trace("No Authorizer configured");
 		}
 	}
 }

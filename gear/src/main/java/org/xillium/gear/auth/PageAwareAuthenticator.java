@@ -24,7 +24,6 @@ public abstract class PageAwareAuthenticator implements Authenticator {
         if (_page != null) {
             binder.mul(Service.SERVICE_HTTP_HEADER, String.class, String.class).add("Content-Type", "text/html; charset=utf-8");
             binder.put(Service.SERVICE_PAGE_TARGET, _page + "?_redirect_=" + binder.get(Service.REQUEST_TARGET_PATH));
-//_logger.log(Level.FINE, "redirecting to {0}", binder.get(Service.SERVICE_PAGE_TARGET));
         }
     }
 }

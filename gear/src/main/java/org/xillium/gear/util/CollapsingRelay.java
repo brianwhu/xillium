@@ -3,7 +3,6 @@ package org.xillium.gear.util;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
-import java.util.logging.*;
 import org.xillium.base.Functor;
 
 
@@ -11,9 +10,8 @@ import org.xillium.base.Functor;
  * A CollapsingRelay is a protective relay placed in front of a resource to collapse high frequency requests to
  * the resource into lower frequency, consolidated requests. This helps reduce contention on the resource.
  */
+@lombok.extern.log4j.Log4j2
 public class CollapsingRelay<T> extends Thread {
-    private static final Logger _logger = Logger.getLogger(CollapsingRelay.class.getName());
-
     private final long _laziness;
     private final Functor<Void, Collection<T>> _worker;
     private Collection<T> _list;
@@ -58,10 +56,10 @@ public class CollapsingRelay<T> extends Thread {
     }
 
     public void run() {
-        _logger.config(getName() + " starts, laziness = " + _laziness);
+        _log.trace("{} starts, laziness = {}", getName(), _laziness);
 
 running:while (!isInterrupted()) {
-            _logger.log(Level.FINE, "{0}: waiting for next updates", getName());
+            _log.trace("{}: waiting for next updates", getName());
             synchronized (this) {
                 while (_list.size() == 0) {
                     try { wait(); } catch (InterruptedException x) { break running; }
@@ -70,16 +68,16 @@ running:while (!isInterrupted()) {
                 _list = _free;
                 _free = l;
             }
-            _logger.log(Level.FINE, "{0}: received some updates", getName());
+            _log.trace("{}: received some updates", getName());
 
             while (!isInterrupted()) {
                 try {
-                    _logger.log(Level.FINE, "{0}: performing requested update", getName());
+                    _log.trace("{}: performing requested update", getName());
                     _worker.invoke(_free);
-                    _logger.log(Level.FINE, "{0}:  completed requested update", getName());
+                    _log.trace("{}:  completed requested update", getName());
                     break;
                 } catch (Throwable t) {
-                    _logger.log(Level.WARNING, "{0}: failure in requested update, will retry", getName());
+                    _log.warn("{}: failure in requested update, will retry", getName());
                     try { Thread.sleep(500); } catch (InterruptedException x) { break running; }
                 }
             }
@@ -88,6 +86,6 @@ running:while (!isInterrupted()) {
             _free.clear();
         }
 
-        _logger.config(getName() + " closes");
+        _log.trace("{} closes", getName());
     }
 }

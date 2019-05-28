@@ -11,6 +11,7 @@ import java.util.HashMap;
 public class BurnedInArgumentsObjectFactory extends DefaultObjectFactory {
     private Map<Class<?>, Object[]> _arguments = new HashMap<Class<?>, Object[]>();
     private Map<Class<?>, Object> _singleton = new HashMap<Class<?>, Object>();
+    private boolean _polymorphic;
 
     public BurnedInArgumentsObjectFactory() {
     }
@@ -30,15 +31,18 @@ public class BurnedInArgumentsObjectFactory extends DefaultObjectFactory {
     }
 
     /**
+     * Sets whether to look up burned-in arguments polymorphically.
+     */
+    public BurnedInArgumentsObjectFactory setPolymorphic(boolean polymorphic) {
+        _polymorphic = polymorphic;
+        return this;
+    }
+
+    /**
      * Creates a new object of a given class with arguments.
      */
     public Object create(String name, Object... args)
-    throws ClassNotFoundException,
-           NoSuchMethodException,
-           IllegalAccessException,
-           InstantiationException,
-           InvocationTargetException
-    {
+    throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException {
         try {
             return super.create(name, args);
         } catch (NoSuchMethodException x) {
@@ -48,7 +52,7 @@ public class BurnedInArgumentsObjectFactory extends DefaultObjectFactory {
             if (singleton != null) {
                 return singleton;
             } else {
-                Object[] burnedin = _arguments.get(type);
+                Object[] burnedin = _polymorphic ? lookup(type) : _arguments.get(type);
                 if (burnedin != null) {
                     Object[] nargs = new Object[burnedin.length + args.length];
                     System.arraycopy(burnedin, 0, nargs, 0, burnedin.length);
@@ -59,5 +63,11 @@ public class BurnedInArgumentsObjectFactory extends DefaultObjectFactory {
                 }
             }
         }
+    }
+
+    private Object[] lookup(Class<?> type) {
+        Object[] burnedin = null;
+        while (type != Object.class && (burnedin = _arguments.get(type)) == null) type = type.getSuperclass();
+        return burnedin;
     }
 }

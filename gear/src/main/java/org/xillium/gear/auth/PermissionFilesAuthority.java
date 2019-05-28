@@ -2,7 +2,6 @@ package org.xillium.gear.auth;
 
 import java.io.*;
 import java.util.*;
-import java.util.logging.*;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -13,8 +12,8 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
  * A permission file is a plain text document containing lines of permission specifications. Each permission specification is given
  * in a single line with the format "ROLE_ID:FUNCTION:PERMISSION".
  */
+@lombok.extern.log4j.Log4j2
 public class PermissionFilesAuthority implements Authority {
-	private static final Logger _logger = Logger.getLogger(PermissionFilesAuthority.class.getName());
 	private final List<Permission> _permissions = new ArrayList<Permission>();
 
     /**
@@ -37,7 +36,7 @@ public class PermissionFilesAuthority implements Authority {
                             try {
                                 _permissions.add(new Permission(parts[0], parts[1], Integer.parseInt(parts[2])));
                             } catch (Exception x) {
-                                _logger.warning("Ignored invalid permission: " + line);
+                                _log.warn("Ignored invalid permission: {}", line);
                             }
                         }
                     } finally {

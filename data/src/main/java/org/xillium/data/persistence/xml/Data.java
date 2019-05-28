@@ -2,7 +2,6 @@ package org.xillium.data.persistence.xml;
 
 import java.io.*;
 import java.util.List;
-import java.util.logging.*;
 import org.xillium.data.*;
 import org.xillium.base.beans.*;
 
@@ -45,8 +44,6 @@ import org.xillium.base.beans.*;
  * </ol>
  */
 public class Data<T extends DataObject, C extends Collector<T>> {
-    private static final Logger _logger = Logger.getLogger(Data.class.getName());
-
     private final C _collector;
     private final String _name;
 

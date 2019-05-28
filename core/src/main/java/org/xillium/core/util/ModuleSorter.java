@@ -1,6 +1,7 @@
 package org.xillium.core.util;
 
 import java.util.*;
+import lombok.Getter;
 
 
 public class ModuleSorter {
@@ -14,23 +15,15 @@ public class ModuleSorter {
     }
 
     public class Sorted {
-        public Iterator<ServiceModule> specials() {
-            return _special.iterator();
-        }
-
-        public Iterator<ServiceModule> regulars() {
-            return _regular.iterator();
-        }
-
-        private final SortedSet<ServiceModule> _special = new TreeSet<ServiceModule>(new Comparator());
-        private final List<ServiceModule> _regular = new ArrayList<ServiceModule>();
+        @Getter private final SortedSet<ServiceModule> specials = new TreeSet<ServiceModule>(new Comparator());
+        @Getter private final List<ServiceModule> regulars = new ArrayList<ServiceModule>();
 
         Sorted(Collection<ServiceModule> entries) {
             for (ServiceModule e: entries) {
                 if (e.isSpecial()) {
-                    _special.add(e);
+                    specials.add(e);
                 } else {
-                    _regular.add(e);
+                    regulars.add(e);
                 }
             }
         }

@@ -77,14 +77,8 @@ public class ModuleSorterTest {
         ModuleSorter.Sorted sorted = sorter.sort();
 
         List<ServiceModule> list = new ArrayList<ServiceModule>();
-        Iterator<ServiceModule> it = sorted.specials();
-        while (it.hasNext()) {
-            list.add(it.next());
-        }
-        it = sorted.regulars();
-        while (it.hasNext()) {
-            list.add(it.next());
-        }
+        list.addAll(sorted.getSpecials());
+        list.addAll(sorted.getRegulars());
 
         System.out.println("Sorted: " + list.size());
         for (int i = 0; i < NAME.length; ++i) {

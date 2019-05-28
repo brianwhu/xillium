@@ -1,6 +1,5 @@
 package org.xillium.gear.util;
 
-import java.util.logging.*;
 import org.xillium.base.beans.*;
 import org.xillium.data.persistence.Persistence;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Progression is an implementation of Progressive.
  */
+@lombok.extern.log4j.Log4j2
 public class Progression implements Progressive {
-    private static final Logger _logger = Logger.getLogger(Progression.class.getName());
     private final Persistence _persistence;
     private final String _qRecallState;
     private final String _qRecallParam;
@@ -45,15 +44,14 @@ public class Progression implements Progressive {
     @Override
     @Transactional
     public <E extends Enum<E>, T, F> T doStateful(State state, E current, int step, F facility, Persistence.Task<T, F> task) {
-        //_logger.info(".param = " + state.param);
         try {
             try {
                 State last = _persistence.getObject(_qRecallState, state);
-                _logger.info("Module " + state.moduleId + " at " + last);
+                _log.info("Module " + state.moduleId + " at " + last);
                 if (last != null && last.previous != null) {
                     @SuppressWarnings("unchecked") int previous = Enum.valueOf(current.getClass(), last.previous).ordinal();
                     if (previous > current.ordinal() || (previous == current.ordinal() && last.step >= step)) {
-                        _logger.info("Module " + state.moduleId + " fast-forwarding beyond state " + current + '/' + step);
+                        _log.info("Module {} fast-forwarding beyond state {}/{}", state.moduleId, current, step);
                         return null;
                     }
                 }
@@ -64,14 +62,14 @@ public class Progression implements Progressive {
             state.param = null;
             //state.assessProgress(current);
             markAttempt(state);
-            _logger.info("Module " + state.moduleId + " to " + current);
+            _log.info("Module {} to {}", state.moduleId, current);
 
             T result = task.run(facility, _persistence);
 
             state.previous = current.toString();
             state.step = step;
             _persistence.executeUpdate(_uCommitState, state);
-            _logger.info("Module " + state.moduleId + " .. " + current);
+            _log.info("Module {} .. {}", state.moduleId, current);
             return result;
         } catch (Exception x) {
             String message = Throwables.getRootCause(x).getMessage();
@@ -88,7 +86,7 @@ public class Progression implements Progressive {
         try {
             return _persistence.executeSelect(_qRecallParam, state, Persistence.StringRetriever);
         } catch (Exception x) {
-            _logger.log(Level.WARNING, "failure in reading param", x);
+            _log.warn("failure in reading param", x);
             throw new RuntimeException(x.getMessage(), x);
         }
     }
@@ -99,7 +97,7 @@ public class Progression implements Progressive {
         try {
             _persistence.executeUpdate(_uMarkAttempt, state);
         } catch (Exception x) {
-            _logger.log(Level.WARNING, "failure in logging attempt: " + state, x);
+            _log.warn("failure in logging attempt: " + state, x);
         }
     }
 }

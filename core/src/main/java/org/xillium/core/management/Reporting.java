@@ -1,7 +1,7 @@
 package org.xillium.core.management;
 
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.Logger;
 
 
 /**

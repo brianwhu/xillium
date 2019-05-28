@@ -2,7 +2,6 @@ package org.xillium.gear.auth;
 
 import java.io.*;
 import java.util.*;
-import java.util.logging.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -23,9 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * An Authenticator that authenticates clients by checking their X509 certificates against claimed identities.
  */
+@lombok.extern.log4j.Log4j2
 public class X509CertificateAuthenticator extends PageAwareAuthenticator {
-	private static final Logger _logger = Logger.getLogger(X509CertificateAuthenticator.class.getName());
-
 	private final Persistence _persistence;
     private final String _identityName;
     private final String _qRolesByCredential;
@@ -83,11 +81,11 @@ public class X509CertificateAuthenticator extends PageAwareAuthenticator {
                             _roles.put(authorization.credential, authorization.roles);
                         }
                     } catch (Exception x) {
-                        _logger.log(Level.WARNING, x.getMessage(), x);
+                        _log.warn(x.getMessage(), x);
                     }
                 }
             } catch (Exception x) {
-                _logger.log(Level.WARNING, x.getMessage(), x);
+                _log.warn(x.getMessage(), x);
             }
         }
     }
@@ -122,11 +120,11 @@ public class X509CertificateAuthenticator extends PageAwareAuthenticator {
                 certificate = (X509Certificate)CertificateFactory.getInstance("X.509").generateCertificate(data);
                 data.close();
             }
-            _logger.fine(certificate.toString());
+            _log.trace(certificate);
 
             if (certificate != null) {
                 Credential credential = new Credential(binder.get(_identityName), getPrincipalIdentity(certificate.getSubjectX500Principal().getName()));
-                _logger.fine(org.xillium.base.beans.Beans.toString(credential));
+                _log.trace(() -> org.xillium.base.beans.Beans.toString(credential));
                 List<Role> roles = (_persistence != null) ? _persistence.getResults(_qRolesByCredential, credential, Role.class) : _roles.get(credential);
                 if (roles != null && roles.size() > 0) {
                     return roles;
@@ -134,7 +132,7 @@ public class X509CertificateAuthenticator extends PageAwareAuthenticator {
                     throw new AuthorizationException("InvalidCertificateIdentity{" + credential.password + '}');
                 }
             } else {
-                _logger.info("no client certificate in request");
+                _log.info("no client certificate in request");
                 throw new AuthenticationRequiredException("AuthenticationRequired");
             }
         } catch (AuthorizationException x) {

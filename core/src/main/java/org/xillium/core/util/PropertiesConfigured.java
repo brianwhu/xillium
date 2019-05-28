@@ -3,7 +3,7 @@ package org.xillium.core.util;
 import java.io.*;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.*;
+import org.apache.logging.log4j.Logger;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.xillium.base.beans.Beans;
 
@@ -84,7 +84,7 @@ public abstract class PropertiesConfigured {
             }
         } catch (Exception x) {
             try {
-                ((Logger)Beans.getKnownField(getClass(), "_logger").get(null)).warning("Ignoring failure in loading '" + location + "': " + x.getMessage());
+                ((Logger)Beans.getKnownField(getClass(), "_log").get(null)).warn("Ignoring failure in loading '{}': {}", location, x.getMessage());
             } catch (Throwable t) {}
         }
         return properties;

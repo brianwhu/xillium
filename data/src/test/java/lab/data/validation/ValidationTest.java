@@ -12,9 +12,6 @@ import org.testng.annotations.*;
 public class ValidationTest {
     @Test(groups={"validation"})
     public void testCollection() throws Exception {
-        //Trace.g.configure(new StandardTrace()).std.setFilter(Reifier.class);
-        Trace.g.configure(new StandardTrace());
-
         Reifier reifier = new XMLBeanAssembler(new DefaultObjectFactory()).build(getClass().getResourceAsStream("/validation/reifier.xml"), Reifier.class);
         System.err.println("Reifier = " + Beans.toString(reifier));
         System.err.println("SubmitPurchaseOrderData = " + DataObject.Util.describe(lab.data.validation.SubmitPurchaseOrderData.class));
@@ -24,7 +21,6 @@ public class ValidationTest {
 
         //DataUtil.loadFromArgs(binder, args, 1);
 
-        Trace.g.configure(new NullTrace());
         long now = System.currentTimeMillis();
         DataObject object = reifier.collect(new lab.data.validation.SubmitPurchaseOrderData(), binder);
         //for (int i = 0; i < 300; ++i) {

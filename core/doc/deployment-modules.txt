@@ -1,0 +1,33 @@
+DEPLOYMENT MODULES
+------------------
+
+The deployment modules package microservices into deployable units.
+
+
+Option 1. Traditional WAR
+=========================
+
+    Define a web application context at
+
+        src/main/webapp/WEB-INF/applicationContext.xml
+
+Use of PlatformControl
+----------------------
+
+    Declare a PlatformControl bean in web application context
+
+    Declare all application components in a classpath application context at
+
+        src/main/resources/applicationContext.xml
+
+No PlatformControl
+------------------
+
+    Declare all application components in web application context
+
+
+Option 2. Spring Boot Uber JAR/WAR
+==================================
+
+    Define NO web application context. A WebServerApplicationContext is to be created by Spring.
+

@@ -4,7 +4,6 @@ import java.lang.reflect.Array;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.logging.*;
 import java.sql.SQLException;
 import org.springframework.transaction.annotation.*;
 import org.xillium.base.util.Pair;
@@ -21,7 +20,6 @@ import org.xillium.data.persistence.Persistence;
  * Any specified DataBinder parameter renaming (mapping) is also performed before the ParametricStatement is called.
  */
 public class DatabaseService extends ExtendableAndSecured implements DynamicService {
-    private static final Logger _logger = Logger.getLogger(DatabaseService.class.getName());
     private static final String RSET = "results";
 
     private final Persistence _persistence;
