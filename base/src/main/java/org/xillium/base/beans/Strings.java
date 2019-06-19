@@ -365,13 +365,14 @@ public class Strings {
      * @param separator - a separator character
      * @return the string from joining elements in the iterable
      */
+    @SafeVarargs
     public static <T> String join(Iterable<T> iterable, char separator, T... pieces) {
         StringBuilder sb = new StringBuilder();
         for (T element: iterable) {
             sb.append(element != null ? element.toString() : "null").append(separator);
         }
-        for (int i = 0; i < pieces.length; ++i) {
-            sb.append(pieces[i] != null ? pieces[i].toString() : "null").append(separator);
+        for (T piece: pieces) {
+            sb.append(piece != null ? piece.toString() : "null").append(separator);
         }
         if (sb.length() > 0) sb.setLength(sb.length()-1);
         return sb.toString();

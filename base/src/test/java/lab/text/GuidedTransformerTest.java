@@ -105,13 +105,16 @@ public class GuidedTransformerTest {
 
     @Test(groups={"functional", "text", "transformer"})
     public void testNestedParentheses() {
+        System.out.println("=== testNestedParentheses ===");
         String text = "NVL(return_error_type, result_type) first argument,second argument,(f a, (g 1, 3))";
+System.out.println("Original input:");
+System.out.println(text);
 
         final Map<String, String> store = new HashMap<>();
         GuidedTransformer<Map<String, String>> encoder = new GuidedTransformer<Map<String, String>>(PARENTHESES,
             new Trifunctor<StringBuilder, StringBuilder, Map<String, String>, Matcher>() {
                 public StringBuilder invoke(StringBuilder sb, Map<String, String> store, Matcher matcher) {
-                    sb.append("{#").append(store.size()).append('}');
+                    sb.append("{{#").append(store.size()).append("}}");
                     store.put("#" + store.size(), matcher.group(0));
                     return sb;
                 }
@@ -126,7 +129,9 @@ public class GuidedTransformerTest {
             text = encoder.invoke(sb.delete(0, sb.length()), store, text).toString();
         } while (size != store.size());
 
+System.out.print("store: ");
 System.out.println(Beans.toString(store));
+System.out.print("text after parenthesis encoding: ");
 System.out.println(text);
 
         String[] args = text.split(",");
@@ -138,7 +143,7 @@ System.out.println(text);
                     }
                 });
                 if (arg.equals(args[i])) {
-                    args[i] = arg;
+                    //args[i] = arg;
                     break;
                 } else {
                     args[i] = arg;
@@ -146,6 +151,7 @@ System.out.println(text);
             }
         }
 
+        System.out.println("Nested args after parsing:");
         System.out.println(Beans.toString(args));
         assert args.length == 3;
         assert args[0].equals("NVL(return_error_type, result_type) first argument");

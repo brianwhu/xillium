@@ -25,7 +25,7 @@ import org.xillium.base.util.ValueOf;
  * </p>
  */
 public class Macro {
-    private static final Pattern PARAMETER = Pattern.compile("\\{([^{}@:-]+)(?::-([^{}@]+))?\\}");
+    private static final Pattern PARAMETER = Pattern.compile("\\{\\{([^{}@:-]+)(?::-([^{}@]+))?\\}\\}");
     private static final Pattern REFERENCE = Pattern.compile("\\{([^{}@]+)?@([^{}@]+)@([^{}@]+)?\\}");
 
     /**
@@ -54,6 +54,7 @@ public class Macro {
      *         subsequence markup expansion
      * @return the fully expanded text
      */
+    @SuppressWarnings("fallthrough")
     public static String expand(Map<String, String> resources, final String name, final Object object, String[] args) {
         String text = resources.get(name);
         if (text == null) {
@@ -167,7 +168,7 @@ public class Macro {
      * This method is a specialization of {@link #expand(String, Pattern, Functor, String[]) Macro.expand(String, Pattern, Functor, String[])}
      * </p>
      * <p>
-     * A parameter is marked up as {@code {MEMBER:-DEFAULT}}, where
+     * A parameter is marked up as {@code {{MEMBER:-DEFAULT}}}, where
      * <ul>
      * <li>{@code MEMBER} is a required element, which gives the name of the data member within the accompnaying object that
      *     is to be used to provide a value for this parameter</li>
@@ -188,7 +189,7 @@ public class Macro {
         }, args);
     }
 
-    public static String expand(String markup, final Object object) {
+    public static String expand(String markup, Object object) {
         return expand(markup, object, null);
     }
 

@@ -70,5 +70,22 @@ public class StringsTest {
         assert Strings.join(new int[]{ 1, 3, 5, 7, 9 }, '-', 11, 13).equals("1-3-5-7-9-11-13");
         assert Strings.join(new String[]{ "Hello", "Mr.", "Jones" }, ' ').equals("Hello Mr. Jones");
         assert Strings.join(new String[]{ "Good", "Morning" }, ' ', "Adam").equals("Good Morning Adam");
+
+        String join1 = null, join2 = null;
+        List<Integer> numbers = new ArrayList<>();
+        for (int i = 0; i < 128; ++i) numbers.add(i);
+        long time = System.currentTimeMillis();
+        for (int i = 0; i < 1000; ++i) {
+            join1 = Strings.join(numbers, ',');
+        }
+        long cost = System.currentTimeMillis() - time;
+        System.out.println("Strings.join milliseconds = " + cost);
+        time = System.currentTimeMillis();
+        for (int i = 0; i < 1000; ++i) {
+            join2 = numbers.stream().map(m -> m.toString()).collect(java.util.stream.Collectors.joining(","));
+        }
+        cost = System.currentTimeMillis() - time;
+        System.out.println("Streams join milliseconds = " + cost);
+        assert join1.equals(join2);
     }
 }

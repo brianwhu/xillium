@@ -28,7 +28,7 @@ public class MacroNestedTest {
     @Test(groups={"functional", "text", "macro-nested"})
     public void testTranslation() {
         Map<String, String> res = new HashMap<>();
-        res.put("statement", "CASE WHEN {condition} THEN {statement}{ ELSE @statement:otherwise@} END '{condition}'");
+        res.put("statement", "CASE WHEN {{condition}} THEN {{statement}}{ ELSE @statement:otherwise@} END '{{condition}}'");
 
         Struct struct = new Struct("A", "statement group 1",
                             new Struct("B", "statement group 2",
