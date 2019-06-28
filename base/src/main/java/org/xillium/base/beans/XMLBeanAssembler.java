@@ -707,7 +707,7 @@ _log.trace("endElement " + element);
             --len;
         }
         if (len > 0) {
-            if (_chars.length() > 0) {
+            if (_chars.length() > 0 && _stack.get(_stack.size()-1).inst.get("@trim") == null) {
                 _chars.append(' ');
             }
             _chars.append(ch, start, len);
