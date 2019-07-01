@@ -96,9 +96,9 @@ public class info {
         }
 
         Set<String> restriction = null;
-        if (args.length > 1) {
+        if (args.length > index) {
             restriction = new HashSet<>();
-            for (int i = 1; i < args.length; ++i) {
+            for (int i = index; i < args.length; ++i) {
                 //restriction.add(args[i].toUpperCase());
                 restriction.add(args[i]);
             }
