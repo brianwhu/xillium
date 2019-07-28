@@ -1,6 +1,7 @@
 package org.xillium.base.beans;
 
 import java.lang.reflect.Array;
+import java.util.Date;
 
 
 /**
@@ -125,6 +126,8 @@ public class JSONBuilder {
                 }
             } else if (Number.class.isAssignableFrom(t) || Boolean.class.isAssignableFrom(t)) {
                 _sb.append(value.toString());
+            } else if (Date.class.isAssignableFrom(t)) {
+                _sb.append(((Date)value).getTime());
             } else if (String.class == t) {
                 quote((String)value);
             } else {
