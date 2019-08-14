@@ -103,6 +103,10 @@ public class CrudCommand {
         }
 
         /**
+         * An Action with column list (args).
+         *
+         * For CREATE operation, args columns are excluded from the INSERT statement so that they'd take either NULL or default values.
+         *
          * @param args - applies to CREATE, UPDATE, SEARCH. A leading asterisk indicates a required fields for SEARCH operation.
          */
         public Action(Operation op, String[] args) {

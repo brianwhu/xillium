@@ -302,7 +302,7 @@ public final class ServicePlatform extends ManagedPlatform {
                         _log.trace("Scanning module " + module.name + ", loading appl context and resources, special=" + isSpecial);
 
                         JarEntry entry;
-                        ByteArrayInputStream serviceConfiguration = null;
+                        GenericApplicationContext current = null;
                         List<ByteArrayInputStream> resources = new ArrayList<>();
                         boolean usingStorage = false;
                         while ((entry = jis.getNextJarEntry()) != null) {
@@ -311,7 +311,9 @@ public final class ServicePlatform extends ManagedPlatform {
 
                             if (SERVICE_CONFIG.equals(jarname)) {
                                 _log.trace("ServiceConfiguration:" + module.path + ":" + jarname);
-                                serviceConfiguration = new ByteArrayInputStream(Bytes.read(jis));
+                                try (ByteArrayInputStream stream = new ByteArrayInputStream(Bytes.read(jis))) {
+                                    current = init(wac, module, stream, info);
+                                }
                             } else if (jarname.startsWith(STORAGE_PREFIX) && jarname.endsWith(".xml")) {
                                 _log.trace("StorageConfiguration:" + module.path + ":" + jarname);
                                 usingStorage = true;
@@ -324,13 +326,6 @@ public final class ServicePlatform extends ManagedPlatform {
                                 resources.add(new ByteArrayInputStream(Bytes.read(jis)));
                             }
                         }
-                        if (serviceConfiguration != null) {
-                            if (isSpecial) {
-                                wac = load(wac, module, serviceConfiguration, info);
-                            } else {
-                                _applc.push(load(wac, module, serviceConfiguration, info));
-                            }
-                        }
 
                         if (info.persistence.second != null) {
                             factory.setBurnedIn(ObjectAssembly.class, info.persistence.second.getStatementMap(), module.simple);
@@ -340,6 +335,14 @@ public final class ServicePlatform extends ManagedPlatform {
                         factory.setBurnedIn(TextResources.class, module.simple);
                         for (ByteArrayInputStream stream: resources) {
                             assembler.build(stream);
+                        }
+
+                        if (current != null) {
+                            if (isSpecial) {
+                                wac = load(current, module, info);
+                            } else {
+                                _applc.push(load(current, module, info));
+                            }
                         }
                     } finally {
                         jis.close();
@@ -370,7 +373,7 @@ public final class ServicePlatform extends ManagedPlatform {
     }
 
     @SuppressWarnings("unchecked")
-    private AbstractApplicationContext load(ApplicationContext parent, ServiceModule module, InputStream stream, ServiceModuleInfo info) {
+    private GenericApplicationContext init(ApplicationContext parent, ServiceModule module, InputStream stream, ServiceModuleInfo info) {
         GenericApplicationContext gac = new GenericApplicationContext(parent);
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(gac);
         reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
@@ -386,7 +389,10 @@ public final class ServicePlatform extends ManagedPlatform {
         } else {
             info.persistence.second = info.persistence.first;
         }
+        return gac;
+    }
 
+    private AbstractApplicationContext load(GenericApplicationContext gac, ServiceModule module, ServiceModuleInfo info) {
         for (String id: gac.getBeanNamesForType(Service.class)) {
             String fullname = module.simple + '/' + id;
 

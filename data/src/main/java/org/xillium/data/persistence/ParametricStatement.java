@@ -495,19 +495,22 @@ public class ParametricStatement implements EnvironmentAware {
         switch (type) {
         case Types.NUMERIC:
             return "java.math.BigDecimal";
+        case Types.BIGINT:
+            return "java.math.BigInteger";
         case Types.INTEGER:
             return "java.lang.Integer";
         case Types.TINYINT:
             return "java.lang.Byte";
-        case Types.CHAR:
-        case Types.VARCHAR:
-            return "java.lang.String";
+        case Types.BOOLEAN:
+            return "java.lang.Boolean";
         case Types.DATE:
             return "java.sql.Date";
         case Types.TIMESTAMP:
             return "java.sql.Timestamp";
+        case Types.CHAR:
+        case Types.VARCHAR:
         default:
-            return "java.lang.Object";
+            return "java.lang.String";
         }
     }
 }
