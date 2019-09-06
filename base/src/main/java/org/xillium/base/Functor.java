@@ -4,6 +4,7 @@ package org.xillium.base;
 /**
  * A Functor embodies a single-argument function.
  */
+@FunctionalInterface
 public interface Functor<T, V> {
     /**
      * Invokes the function on the sole argument.

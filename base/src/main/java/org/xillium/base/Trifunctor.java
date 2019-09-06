@@ -4,6 +4,7 @@ package org.xillium.base;
 /**
  * A Trifunctor embodies a three-argument function.
  */
+@FunctionalInterface
 public interface Trifunctor<R, T, U, V> {
     /**
      * Invokes the function on the three arguments.

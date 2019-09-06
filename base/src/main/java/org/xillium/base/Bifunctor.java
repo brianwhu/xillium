@@ -4,6 +4,7 @@ package org.xillium.base;
 /**
  * A Bifunctor embodies a two-argument function.
  */
+@FunctionalInterface
 public interface Bifunctor<R, T, U> {
     /**
      * Invokes the function on the two arguments.

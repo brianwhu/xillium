@@ -6,6 +6,7 @@ import org.xillium.base.beans.Beans;
 /**
  * A Factory embodies an n-nary method that produces a value.
  */
+@FunctionalInterface
 public interface Factory<T> {
     /**
      * Makes an object.
