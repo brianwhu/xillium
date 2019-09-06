@@ -56,6 +56,16 @@ public class MacroTest {
         }
     }
 
+    public static class Address implements Open {
+        public String street;
+        public String city;
+
+        public Address(String s, String c) {
+            street = s;
+            city = c;
+        }
+    }
+
     public static class Values implements Open {
         public Event event[] = {
             new Event("Event-1", "Date-1", "Location-1", "Content-1"),
@@ -78,12 +88,16 @@ public class MacroTest {
             null,
             "Quote-5"
         );
+
+        public Address address = new Address("1234 Main Street", "Hometown");
     }
 
     @Test(groups={"functional", "text", "macro"})
     public void testTranslation() {
         Map<String, String> res = new HashMap<>();
-        res.put("text/document", "<h1>New Events:</h1>\n{@event@}\n<h1>Discounts:</h1>\n{@discount@}\n<h1>Quotes:</h1>\n{@quote:quotes@}\n{@footer(new, & old)@}");
+        res.put("text/document",
+    "<h1>New Events in {@text:address.city@}</h1>\n{@event@}\n<h1>Discounts</h1>\n{@discount@}\n<h1>Quotes</h1>\n{@quote:quotes@}\n{@footer(new, & old)@}"
+        );
         res.put("text/event", "<p><em>{{title}}</em> - <i>{{location}}</i> {{content}}</p>\n");
         res.put("text/discount", "<p><em>{{program}}</em> - {{content}} {{@prefix@}@product-{{quality}}:products@{@suffix@}}</p>\n");
         res.put("text/product-full", "<li><em>{{name}}</em> - {{time}}{@option:options@}</li>\n");
@@ -93,6 +107,7 @@ public class MacroTest {
         res.put("text/footer", "<h4>Thank you for visiting our {{1}} site (or {{*}} sites), {{username:-our valued customer}}!</h4>\n");
         res.put("text/prefix", "<ul>\n");
         res.put("text/suffix", "</ul>\n");
+        res.put("text/text", "{{value}}");
 
         res.put("text/malformed", "Reference to a {@NonExistent@} piece of text");
         res.put("text/recursive", "Reference to a {@recursive@} piece of text");

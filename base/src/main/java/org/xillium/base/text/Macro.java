@@ -1,7 +1,6 @@
 package org.xillium.base.text;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.regex.*;
@@ -30,25 +29,33 @@ public class Macro {
 
     /**
      * Expands a text markup by resolving embedded parameters and references to other text markups, with the help of a companion
-     * open object.
+     * {@code Open} object.
      * <p>
      * A reference pointing to another markup in the resources is marked up as {@code {PREFIX@MARKUP(ARGS):MEMBER:ALTERN(ARGS)@SUFFIX}},
      * where</p>
      * <ul>
      * <li>{@code PREFIX} and {@code SUFFIX} are optional pieces of text to be placed before and after the markup insertion.</li>
      * <li>{@code MARKUP} is a required element, which gives the name of the markup to be expanded recursively.</li>
-     * <li>{@code MEMBER} gives the name of the data member within the companion object to be used as the companion object for the
-     *     recursive expansion of the markup. If this name is "-", the current companion object is reused instead. If omitted, the
-     *     value of {@code MARKUP} is used as this name.</li>
+     * <li>{@code MEMBER} identifies the companion object for the recursive expansion of the markup. This can be
+     *     <ol>
+     *       <li>A method invocation, if {@code MEMBER} follows the method invocation syntax with optional arguments.</li>
+     *       <li>A "path" to the data member within the companion object. Any notation supported by {@link Objects.getProperty()} can be
+     *           used here. If this name is "-", the current companion object is reused instead.</li>
+     *     </ol>
+     *     If omitted, the value of {@code MARKUP} is used as the name of an immediate data member.</li>
      * <li>{@code ALTERN} is an optional element, which gives the name of an alternative markup in the case the data member has no
      *     value.</li>
      * <li>{@code (ARGS)} is an optional list of positional arguments to be passed to the markup, which refers to such arguments using
      *     positional argument parameters {@code {1}}, {@code {2}}, etc.</li>
      * </ul>
+     * During reference expansion, if a companion object for the expansion is not found within the current companion object, {@code MARKUP}
+     * is expanded with a {@code null} companion object. If the companion object is found but has no value, {@code ALTERN} is expanded with
+     * a {@code null} companion object if {@code ALTERN} is provided.
      * 
      * @param resources a collection of named text resources
      * @param name the name of the text markup to be expanded
      * @param object an object providing values to the parameters, which will be wrapped if not an open object already
+     * @param args positional arguments
      * @throws IllegalArgumentException if any reference to a text markup cannot be resolved
      * @throws NullPointerException if any reference to a data member cannot be resolved and the data member is required in the
      *         subsequence markup expansion
@@ -107,22 +114,24 @@ public class Macro {
                                     Object bean = invoke(data, params);
                                     if (bean != null) items.add(bean);
                                 } else {
-                                Field field = Beans.getKnownField(data.getClass(), member);
-                                Object bean = field.get(data);
-                                if (field.getType().isArray()) {
-                                    if (bean != null) for (int i = 0; i < Array.getLength(bean); ++i) items.add(Array.get(bean, i));
-                                } else if (Collection.class.isAssignableFrom(field.getType())) {
-                                    if (bean != null) items.addAll((Collection<?>)bean);
-                                } else {
-                                    if (bean != null) items.add(bean);
-                                }
+                                    Object bean = Objects.getProperty(data, member);
+                                    if (bean != null) {
+                                        Class<?> type = bean.getClass();
+                                        if (type.isArray()) {
+                                            for (int i = 0; i < Array.getLength(bean); ++i) items.add(Array.get(bean, i));
+                                        } else if (Collection.class.isAssignableFrom(type)) {
+                                            items.addAll((Collection<?>)bean);
+                                        } else {
+                                            items.add(bean);
+                                        }
+                                    }
                                 }
                             }
                         } else {
                             // non-existent member: allow expansion to continue
                             items.add(null);
                         }
-                    } catch (NoSuchFieldException|NoSuchMethodException|IllegalAccessException x) {
+                    } catch (NoSuchFieldException|NoSuchMethodException x) {
                         // non-existent member: allow expansion to continue
                         items.add(null);
                     }

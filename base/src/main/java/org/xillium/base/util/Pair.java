@@ -18,7 +18,7 @@ import org.xillium.base.Functor;
  *      Feature feature = new CompoundFeature(f1, new CompoundFeature(f2, new CompoundFeature(f3, f4)));
  * }</pre>
  */
-public class Pair<T, V> {
+public class Pair<T, V> implements org.xillium.base.Open {
     public T first;
     public V second;
 
