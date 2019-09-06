@@ -46,7 +46,7 @@ public class BurnedInArgumentsObjectFactory extends DefaultObjectFactory {
         try {
             return super.create(name, args);
         } catch (NoSuchMethodException x) {
-            Class<?> type = Class.forName(name);
+            Class<?> type = Class.forName(name, true, Thread.currentThread().getContextClassLoader());
             Object singleton = _singleton.get(name);
 
             if (singleton != null) {

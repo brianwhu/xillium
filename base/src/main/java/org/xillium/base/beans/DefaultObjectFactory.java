@@ -24,7 +24,7 @@ public class DefaultObjectFactory implements ObjectFactory {
 //sb.append(')');
 //System.err.println(sb);
         try {
-            Class<?> type = Class.forName(name);
+            Class<?> type = Class.forName(name, true, Thread.currentThread().getContextClassLoader());
 /*
             Constructor<?>[] constructors = type.getConstructors();
             for (Constructor<?> constructor: constructors) {

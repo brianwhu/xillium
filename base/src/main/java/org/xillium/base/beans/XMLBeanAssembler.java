@@ -143,7 +143,7 @@ public class XMLBeanAssembler extends DefaultHandler {
 
     private void guessClassReference(TypedValues list, String name) {
         try {
-            Class<?> type = Class.forName(fixPotentialArrayName(name));
+            Class<?> type = Class.forName(fixPotentialArrayName(name), true, Thread.currentThread().getContextClassLoader());
             list.add(new TypedValue(type.getClass(), type));
         } catch (ClassNotFoundException y) {
             _log.trace(name + " looked like a class reference but is not");
@@ -166,7 +166,7 @@ public class XMLBeanAssembler extends DefaultHandler {
                 try {
                     // public static refernce? (don't override access control)
                     _log.trace("public static refernce? " + value);
-                    Object object = Class.forName(value.substring(5, dot)).getField(value.substring(dot+1)).get(null);
+                    Object object = Class.forName(value.substring(5, dot), true, Thread.currentThread().getContextClassLoader()).getField(value.substring(dot+1)).get(null);
                     Class<?> type = object.getClass();
                     list.add(new TypedValue(type, object));
                     // automatic upscaling to larger types
@@ -555,7 +555,7 @@ public class XMLBeanAssembler extends DefaultHandler {
             try {
 	            if (info.name.endsWith("...")) {
 	            	// Array construction
-	            	info.type = Class.forName(info.name.substring(0, info.name.length()-3));
+	            	info.type = Class.forName(info.name.substring(0, info.name.length()-3), true, Thread.currentThread().getContextClassLoader());
 	            	info.data = new ArrayList<Object>();
 	            } else {
 	            	// Non-array construction
