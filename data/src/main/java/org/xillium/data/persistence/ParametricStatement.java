@@ -494,23 +494,40 @@ public class ParametricStatement implements EnvironmentAware {
     private static String sqlTypeName(int type) {
         switch (type) {
         case Types.NUMERIC:
+        case Types.DECIMAL:
             return "java.math.BigDecimal";
-        case Types.BIGINT:
-            return "java.math.BigInteger";
-        case Types.INTEGER:
-            return "java.lang.Integer";
-        case Types.TINYINT:
-            return "java.lang.Byte";
+        case Types.BIT:
         case Types.BOOLEAN:
             return "java.lang.Boolean";
-        case Types.DATE:
-            return "java.sql.Date";
-        case Types.TIMESTAMP:
-            return "java.sql.Timestamp";
+        case Types.TINYINT:
+            return "java.lang.Byte";
+        case Types.SMALLINT:
+            return "java.lang.Short";
+        case Types.INTEGER:
+            return "java.lang.Integer";
+        case Types.BIGINT:
+            return "java.lang.Long";
+        case Types.REAL:
+            return "java.lang.Float";
+        case Types.FLOAT:
+        case Types.DOUBLE:
+            return "java.lang.Double";
         case Types.CHAR:
         case Types.VARCHAR:
-        default:
+        case Types.LONGVARCHAR:
             return "java.lang.String";
+        case Types.BINARY:
+        case Types.VARBINARY:
+        case Types.LONGVARBINARY:
+            return "[Ljava.lang.byte;";
+        case Types.DATE:
+            return "java.sql.Date";
+        case Types.TIME:
+            return "java.sql.Time";
+        case Types.TIMESTAMP:
+            return "java.sql.Timestamp";
+        default:
+            return "java.lang.Object";
         }
     }
 }
