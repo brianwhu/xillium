@@ -132,7 +132,7 @@ public class info {
             }
             sb.append('\n');
 
-            ResultSet tables = meta.getTables(catalog, schema, "%", null);
+            ResultSet tables = meta.getTables(catalog, null, "%", null);
             while (tables.next()) {
                 if (!tables.getString(Table.TYPE).equals("TABLE")) {
                     continue;
@@ -144,7 +144,7 @@ public class info {
                 //String gen = tables.getString(Table.ID_GEN);
                 
                 sb.append(String.format("\n\t@@@%24s:", table)).append('\n');
-                ResultSet columns = meta.getColumns(catalog, schema, table, "%");
+                ResultSet columns = meta.getColumns(catalog, tables.getString(Table.SCHEMA), table, "%");
                 System.err.println("columns count " + columns.getMetaData().getColumnCount());
                 while (columns.next()) {
                     String nullable = columns.getInt(Column.NULLABLE) == DatabaseMetaData.columnNoNulls ? "NOT NULL" : "NULL";

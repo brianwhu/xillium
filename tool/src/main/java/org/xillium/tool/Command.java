@@ -7,6 +7,7 @@ import java.net.URLClassLoader;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.jar.*;
+import org.xillium.base.Throwing;
 import org.xillium.base.util.*;
 
 
@@ -47,9 +48,10 @@ public class Command {
         } else {
             if (options.get().classpath != null) {
                 String[] paths = options.get().classpath.split(System.getProperty("path.separator"));
-                URL[] urls = new URL[paths.length];
-                for (int i = 0; i < urls.length; ++i) urls[i] = new URL("file", null, new File(paths[i]).getCanonicalPath());
-                Thread.currentThread().setContextClassLoader(new URLClassLoader(urls, Thread.currentThread().getContextClassLoader()));
+                Thread.currentThread().setContextClassLoader(new URLClassLoader(
+                    Arrays.stream(paths).map(Throwing.function(p -> new File(p).toURI().toURL())).toArray(URL[]::new),
+                    Thread.currentThread().getContextClassLoader()
+                ));
             }
 
             Class<?> command = null;
