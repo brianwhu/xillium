@@ -77,7 +77,9 @@ fi
 
 # build the commons module then invoke mk()
 mc() {
-mvn -f commons/pom.xml install && mk $*
+local a
+while expr "$1" : "-.*" >/dev/null 2>&1; do a="${a:+$a }$1" && shift; done
+mvn -f commons/pom.xml install $a && mk ${a:+"$a"} $*
 }
 
 # build several modules in sequence
@@ -91,11 +93,11 @@ esac
 # build several modules in sequence then a deployment unit
 mk() {
 local a
-while expr "$1" : "-.*" >/dev/null 2>&1; do a="$a $1" && shift; done
+while expr "$1" : "-.*" >/dev/null 2>&1; do a="${a:+$a }$1" && shift; done
 case $# in
 0) ;;
-1) mvn -f deploys/$1/pom.xml install $a;;
-*) local p=$1; shift; mvn -f modules/$p/pom.xml install $a && mk $a $*;;
+1) mvn -f parcels/$1/pom.xml install $a;;
+*) local p=$1; shift; mvn -f modules/$p/pom.xml install $a && mk ${a:+"$a"} $*;;
 esac
 }
 
@@ -105,9 +107,9 @@ case $# in
 0) ;;
 1) if [ -f etc/conf/logging.properties ]
    then
-      mvn -f deploys/$1/pom.xml jetty:run-war -Djava.util.logging.config.file=etc/conf/logging.properties -Dxillium.service.PrintStackTrace=true
+      mvn -f parcels/$1/pom.xml jetty:run-war -Djava.util.logging.config.file=etc/conf/logging.properties -Dxillium.service.PrintStackTrace=true
    else
-      mvn -f deploys/$1/pom.xml jetty:run-war -Dxillium.service.PrintStackTrace=true
+      mvn -f parcels/$1/pom.xml jetty:run-war -Dxillium.service.PrintStackTrace=true
    fi;;
 *) p=$1; shift; mvn -f modules/$p/pom.xml install && mt $*;;
 esac

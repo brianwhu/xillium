@@ -31,3 +31,10 @@ Option 2. Spring Boot Uber JAR/WAR
 
     Define NO web application context. A WebServerApplicationContext is to be created by Spring.
 
+    Optionally, define a service-configuration.xml to include all top-level beans
+
+        src/main/resources/service-configuration.xml
+
+    and import it into the XilliumBootApplication subclass.
+
+        @ImportResource("classpath:/service-configuration.xml")

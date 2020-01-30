@@ -6,53 +6,42 @@
 case $# in
 1) d=/usr/local/bin;;
 2) d="$2";;
-*) echo Usage: `basename $0` "{ executable-jar | directory } [ destination ]"; exit 0;;
+*) >&2 echo "Usage: $(basename $0) { executable-jar | directory } [ destination ]"; exit 0;;
 esac
 
 if [ -d "$1" ]; then
-    if ! j=`ls -1 $1/*jar-with-dependencies.jar 2>/dev/null`; then
-        echo Error: nothing found under $1 && exit 1
-    fi
-elif expr "$1" : '.*\.jar' > /dev/null; then
-    j=$1
+    readarray -t jars <<<"$(ls -1 target/*.jar)"
+elif [[ $1 =~ ^.*\.jar$ ]]; then
+    readarray -t jars <<<"$1"
 else
-    echo Error: "'$1'" is not a jar file && exit 1
+    >&2 echo "Error: '$1' is not a jar file" && exit 1
 fi
-
+if [ ${#jars[@]} -eq 0 ]; then
+    >&2 echo "Error: nothing found under $1" && exit 1
+fi
 if [ ! -d "$d" ]; then
-    echo Error: "'$d'" is not a directory && exit 1
+    >&2 echo "Error: '$d' is not a directory" && exit 1
 fi
-
 if [ ! -x "$d/jwrapper" ]; then
-    echo Error: jwrapper not installed in $d && exit 1
+    >&2 echo "Error: jwrapper not installed in $d" && exit 1
 fi
 
-#
-# copy the jar to the destination directory
-#
-cp "$j" "$d"
+for j in "${jars[@]}"; do
+    # copy the jar to the destination directory
+    cp "$j" "$d"
 
-#
-# command name = file stem name but without version info
-#
-filename=`basename -- "$j"`
-command=`expr "$filename" : '\(.*\)-[0-9].*\.jar'`
+    # command name = file stem name but without version
+    filename=$(basename -- "$j")
+    if [[ $filename =~ (.*)-[0-9].*\.jar ]]; then
+        command="${BASH_REMATCH[1]}"
+        ln -sf "$filename" "$d"/"$command".jar
+    else
+        command=${filename%%.jar}
+    fi
 
-if [ -z "$command" ]; then
-#
-# no version info, use the file stem name
-#
-    command=`expr "$filename" : '\(.*\)\.jar'`
-else
-#
-# create a sym link for the version-free name
-#
-    ln -sf "$filename" "$d"/"$command".jar
-fi
-#
-# link the command to jwrapper
-#
-ln -sf jwrapper "$d"/"$command"
+    # link the command to jwrapper
+    ln -sf jwrapper "$d"/"$command"
+done
 
 ##############################################################################
 #
