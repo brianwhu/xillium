@@ -35,7 +35,7 @@
         <projectlombok.version>1.18.8</projectlombok.version>
         <springframework.version>5.1.7.RELEASE</springframework.version>
         <jackson.version>2.9.9</jackson.version>
-        <log4j2.version>2.11.2</log4j2.version>
+        <log4j2.version>2.15.0</log4j2.version>
         <testng.version>6.14.3</testng.version>
     </properties>
 
